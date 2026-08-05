@@ -197,6 +197,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .wordmark{display:flex;align-items:center;gap:.625rem;font-weight:600;letter-spacing:-.01em}
 .wordmark .mk{display:grid;place-items:center;width:1.75rem;height:1.75rem;border-radius:calc(var(--radius) - 2px);background:hsl(var(--primary));color:hsl(var(--primary-foreground))}
 .wordmark .mk svg{width:1rem;height:1rem}
+.wordmark .mk .metlogo{width:1.5rem;height:1.5rem;display:block}
 .lib-body{flex:1;width:100%;max-width:56rem;margin:0 auto;padding:3.5rem 1.5rem 5rem}
 .lib-hero h1{margin:0 0 .5rem;font-size:2rem;font-weight:600;letter-spacing:-.03em;line-height:1.15}
 .lib-hero p{margin:0;font-size:.9375rem;color:hsl(var(--muted-foreground));max-width:34rem}
@@ -342,9 +343,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   color:inherit;font:inherit;font-size:.8125rem;font-weight:500;text-align:left;cursor:pointer}
 .acc-head:hover .acc-ic{background:hsl(var(--accent-foreground)/.12)}
 .acc-head:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring));border-radius:calc(var(--radius) - 3px)}
-.acc-ic{flex:0 0 auto;display:grid;place-items:center;width:1.5rem;height:1.5rem;border-radius:calc(var(--radius) - 3px);
+.acc-ic{flex:0 0 auto;display:grid;place-items:center;width:2rem;height:2rem;border-radius:calc(var(--radius) - 2px);
   background:hsl(var(--muted));color:hsl(var(--muted-foreground));transition:background-color .15s,color .15s}
-.acc-ic svg{width:.875rem;height:.875rem}
+.acc-ic svg{width:1rem;height:1rem}
 .acc-head[aria-expanded="true"] .acc-ic{background:hsl(var(--primary));color:hsl(var(--primary-foreground))}
 .acc-label{flex:0 0 auto}
 .acc-sum{flex:1;min-width:0;text-align:right;font-weight:400;font-size:.75rem;color:hsl(var(--muted-foreground));
@@ -543,9 +544,9 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
   letter-spacing:var(--doc-display-tracking);margin:0 0 3mm;color:var(--doc-head)}
 .tocRule{height:2px;width:22mm;background:var(--doc-accent-vis);margin:0 0 9mm}
 .tocList{list-style:none;margin:0;padding:0}
-.tocList li{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0;border-bottom:1px solid var(--doc-hair2)}
-.tocList li.l2{padding-left:9mm;border-bottom:1px dotted var(--doc-hair3)}
-.tocList li.l3{padding-left:16mm;border-bottom:1px dotted var(--doc-hair3)}
+.tocList li{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0}
+.tocList li.l2{padding-left:9mm}
+.tocList li.l3{padding-left:16mm}
 .tocList li.l3 .t{font-size:9pt;color:var(--doc-toc-l2)}
 .tocList .n{font-family:var(--doc-util);font-size:8pt;color:var(--doc-accent-vis);min-width:8mm;letter-spacing:.08em}
 .tocList .t{font-size:11pt}
@@ -553,6 +554,10 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 .tocList .lead{flex:1;border-bottom:1px dotted var(--doc-lead);transform:translateY(-2px)}
 .tocList .p{font-family:var(--doc-util);font-size:9.5pt;color:var(--doc-toc-p);font-variant-numeric:tabular-nums}
 .tocEmpty{color:var(--doc-faint);font-style:italic}
+/* closing page — just the mark, centred on the sheet, following the palette */
+.endMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.endMark svg{width:30mm;height:30mm;fill:var(--doc-accent-vis)}
+.node.sys-end .ic svg{fill:currentColor}
 
 /* editing affordances */
 [data-t="image"] img,[data-t="image"] .ph{cursor:grab;touch-action:none;user-select:none;-webkit-user-drag:none}
@@ -622,7 +627,7 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 <!-- ======================= LIBRARY ======================= -->
 <section class="view" id="view-library">
   <header class="lib-top">
-    <div class="wordmark"><span class="mk" data-icon="book"></span> Report Studio</div>
+    <div class="wordmark"><span class="mk"><svg class="metlogo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M76.2711 28.3223C77.6234 26.9699 79.7183 27.0496 80.5845 28.4815C81.5213 30.0193 82.2282 31.6808 82.732 33.4219C83.0149 34.4119 82.6878 35.5696 81.8658 36.3916L55.3756 62.8819C53.7757 64.4816 51.7868 65.5864 49.6744 66.0371L47.4742 66.5059C45.3706 66.9655 43.364 68.0703 41.773 69.6612L21.4342 90C20.568 86.659 20.1885 84.4049 22.9019 81.6914L76.2711 28.3223ZM82.0084 39.7344C82.8923 38.8506 84.254 39.3636 84.1656 40.5303C83.6176 47.6719 80.2142 55.1935 74.151 61.2569C69.5282 66.3215 56.4818 74.0645 47.1568 79.253C45.2476 80.3136 43.6919 78.0508 45.2564 76.4864L82.0084 39.7344ZM69.8189 17.6104C70.6586 16.7708 71.8962 16.5934 72.7447 17.1768C74.5125 18.3789 76.1647 20.121 77.0133 22.2246C77.3313 23.0377 77.0579 24.0362 76.3599 24.7344L47.8277 53.2666C46.2279 54.8664 44.239 55.9711 42.1265 56.4219L39.9254 56.8907C37.8218 57.3503 35.8151 58.455 34.2242 60.0459L16.6265 77.6446C15.7603 74.3035 16.1757 71.2536 18.8892 68.5401L69.8189 17.6104ZM57.7271 12.5381C59.3181 10.9471 61.5984 10.3281 63.4722 11.0352C64.6478 11.486 65.7788 12.0345 66.8482 12.6797C68.2624 13.5282 68.3332 15.5961 67.0074 16.9219L40.9156 43.0147C39.4218 44.5084 37.3885 45.3036 35.4439 45.1621C33.4022 45.0119 31.2546 45.8516 29.6724 47.4336L15.3795 61.7266C14.5133 58.3855 15.6357 54.6286 18.3492 51.9151L22.981 47.2832L57.7271 12.5381ZM53.5474 10.001C54.8022 9.98368 55.2881 11.4772 54.3336 12.4317L22.1959 44.5694C21.2767 45.4886 19.9148 44.6579 20.4273 43.4912L24.7056 33.7686C24.9443 33.1764 25.2099 32.5748 25.5015 31.9649L25.5279 31.9033C27.994 26.6796 31.962 21.1372 35.692 17.4073C41.6759 11.4233 47.0508 10.0629 53.5474 10.001Z"/></svg></span> Report Studio</div>
     <button class="btn btn-ghost btn-icon btn-sm" id="libTheme" aria-label="Toggle dark mode"></button>
   </header>
   <div class="lib-body">
@@ -933,6 +938,8 @@ function paintIcons(root){
     el.innerHTML = svg(el.dataset.icon);
     el.dataset.painted = '1';
     el.style.display = 'inline-flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
   });
 }
 
@@ -1100,7 +1107,7 @@ function blankDoc(name){
     settings:{ accent:'#0B5D57', type:'editorial', bodySize:106, margin:'normal',
                showNum:true, showHead:false, showFoot:false, paperColor:'#FFFFFF',
                folio:{ align:'right', bottom:null, side:null, color:'auto' },
-               textColor:'auto', numberHeadings:false },
+               textColor:'#9595B2', numberHeadings:false },
     toc:{ on:true, title:'Contents' },
     blocks:[]
   };
@@ -1520,7 +1527,6 @@ function renderBlock(b, forMeasure){
     if(b.fontPt) el.style.setProperty('--tfs', b.fontPt + 'pt');
     el.innerHTML = (b.caption ? `<div class="tcap" data-f="caption" ${ce}>${esc(b.caption)}</div>` : '')
       + `<table class="doc${b.zebra?' zebra':''}">${head}${body}</table>`
-      + (b.note ? `<div class="tnote" data-f="note" ${ce}>${esc(b.note)}</div>` : '')
       + (!forMeasure && b.fontPt && b.fontPt < 9.4 ? `<div class="tfit">Text fitted to ${b.fontPt}pt</div>` : '');
   } else if(b.type === 'image'){
     const bImg = imgSrc(b.imgId);
@@ -1531,8 +1537,7 @@ function renderBlock(b, forMeasure){
     const inner = bImg
       ? `<img src="${bImg}" draggable="false" alt="">`
       : (forMeasure ? '' : `<button class="upl" type="button" contenteditable="false">${svg('upload')}<span>Upload an image or SVG</span></button>`);
-    el.innerHTML = `<figure><div class="imgwrap">${inner}${forMeasure ? '' : '<span class="rz" title="Drag to resize"></span>'}</div>`
-      + (b.caption ? `<figcaption data-f="caption" ${ce}>${esc(b.caption)}</figcaption>` : '') + `</figure>`;
+    el.innerHTML = `<figure><div class="imgwrap">${inner}${forMeasure ? '' : '<span class="rz" title="Drag to resize"></span>'}</div></figure>`;
   } else if(b.type === 'stat'){
     el.innerHTML = `<span class="sv" data-f="v" ${ce}>${esc(b.v)}</span>`
       + `<span class="sl" data-f="l" ${ce}>${esc(b.l)}</span>`
@@ -1633,6 +1638,14 @@ function renderToc(){
         <span class="t">${esc(x.text)}</span><span class="lead"></span><span class="p">${x.page}</span></li>`).join('')}</ul>`
     : `<p class="tocEmpty">Topics and subsections appear here automatically, with the page they land on.</p>`);
   page.appendChild(body);
+  return page;
+}
+/* the closing sheet: nothing but the mark, centred, in the document's accent */
+function renderEnd(){
+  const page = document.createElement('div'); page.className = 'page'; page.dataset.end = '1';
+  const mark = document.createElement('div'); mark.className = 'endMark';
+  mark.innerHTML = HEADER_MARK;
+  page.appendChild(mark);
   return page;
 }
 /* the strip bleeds to both edges, so its height follows the artwork's ratio */
@@ -1776,12 +1789,14 @@ function render(){
     host.append(sheet(page, String(pi+1), '', over));
   });
 
+  host.append(sheet(renderEnd(), 'End'));
+
   paintSelection();
   drawStructure();
   syncBandRows();
   coverInfoNote();
   accSummaries();
-  const sheets = pages.length + 1 + (D.toc.on ? 1 : 0);
+  const sheets = pages.length + 1 + (D.toc.on ? 1 : 0) + 1;
   void sheets;
   $('sheetBadge').textContent = sheets + (sheets === 1 ? ' sheet' : ' sheets');
   D.pageCount = pages.length;
@@ -1845,7 +1860,6 @@ function blockBar(b){
       }),
       btn(svg('rows'), 'Zebra stripes', () => { b.zebra = !b.zebra; commit(); }),
       btn(svg('sigma'), 'Emphasise the last row as a total', () => { b.total = !b.total; commit(); }),
-      btn(svg('note'), 'Footnote', () => { b.note = b.note ? '' : 'Note: figures in RM thousands unless stated.'; commit(); }),
       btn(svg('shrink'), 'Fit the text to the column width', () => {
         b.fontPt = fitTableFont(b);
         commit();
@@ -3513,7 +3527,8 @@ function sysRow(iconName, label, opts){
   const row = document.createElement('div');
   row.className = 'node sys';
   const tw = document.createElement('span'); tw.className = 'tw hidden';
-  const ic = document.createElement('span'); ic.className = 'ic'; ic.innerHTML = svg(iconName);
+  const ic = document.createElement('span'); ic.className = 'ic'; ic.innerHTML = opts.iconHtml || svg(iconName);
+  if(opts.rowClass) row.classList.add(opts.rowClass);
   row.append(tw, ic);
   if(opts.editable){
     row.dataset.node = '__toc';
@@ -3595,6 +3610,15 @@ function drawStructure(){
   addSec.innerHTML = svg('plus') + ' Add Topic';
   addSec.onclick = addSection;
   host.append(addSec);
+
+  const endGap = document.createElement('div'); endGap.className = 'treegap'; host.append(endGap);
+  const end = sysRow(null, 'End', {
+    iconHtml: HEADER_MARK,
+    rowClass: 'sys-end',
+    pg: '',
+    onClick: () => { const ps = desk.querySelectorAll('.page'); if(ps.length) ps[ps.length-1].scrollIntoView({ behavior:'smooth', block:'start' }); }
+  });
+  host.append(end);
 
   if(keep && keep.id){
     const back = host.querySelector(`[data-node="${keep.id}"] .node-input`);
