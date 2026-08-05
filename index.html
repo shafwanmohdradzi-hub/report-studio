@@ -234,6 +234,7 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .wordmark .mk{display:grid;place-items:center;width:1.75rem;height:1.75rem;border-radius:calc(var(--radius) - 2px);background:hsl(var(--primary));color:hsl(var(--primary-foreground))}
 .wordmark .mk svg{width:1rem;height:1rem}
 .wordmark .mk .metlogo{width:1.5rem;height:1.5rem;display:block}
+.wordmark .ver{margin-left:.125rem;padding:.0625rem .375rem;border-radius:999px;background:hsl(var(--muted));color:hsl(var(--muted-foreground));font-size:.6875rem;font-weight:600;letter-spacing:0;line-height:1.4;font-variant-numeric:tabular-nums}
 .lib-body{flex:1;width:100%;max-width:56rem;margin:0 auto;padding:3.5rem 1.5rem 5rem}
 .lib-hero h1{margin:0 0 .5rem;font-size:2rem;font-weight:600;letter-spacing:-.03em;line-height:1.15}
 .lib-hero p{margin:0;font-size:.9375rem;color:hsl(var(--muted-foreground));max-width:34rem}
@@ -245,20 +246,64 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .empty .ic svg{width:1.25rem;height:1.25rem}
 .empty h3{margin:0 0 .375rem;font-size:.9375rem;font-weight:600}
 .empty p{margin:0 auto 1.25rem;font-size:.875rem;color:hsl(var(--muted-foreground));max-width:26rem}
-.rlist{display:grid;gap:.625rem}
-.ritem{display:flex;align-items:center;gap:1rem;padding:.875rem 1rem;text-align:left;width:100%;
-  border:1px solid hsl(var(--border));border-radius:calc(var(--radius) + 4px);background:hsl(var(--card));color:inherit;
-  cursor:pointer;font:inherit;transition:background-color .15s,border-color .15s}
-.ritem:hover{background:hsl(var(--accent))}
-.ritem:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
-.thumb{flex:0 0 auto;width:2.125rem;height:3rem;border-radius:.1875rem;border:1px solid hsl(var(--border));overflow:hidden;background:hsl(var(--muted));position:relative}
-.thumb img{width:100%;height:100%;object-fit:cover;display:block}
-.thumb .fb{position:absolute;inset:0;display:grid;place-items:end start;padding:.25rem}
-.thumb .fb i{display:block;width:60%;height:2px;background:currentColor;opacity:.9}
-.ritem .meta{flex:1;min-width:0;display:block}
-.ritem .nm{display:block;font-weight:500;font-size:.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ritem .sub{display:block;font-size:.8125rem;color:hsl(var(--muted-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ritem .acts{display:flex;gap:.125rem;flex:0 0 auto}
+/* Bookshelf — reports stand as 3D books resting on shelves */
+.shelf{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:2.75rem 0;padding:2.5rem 0 0}
+.slot{--bw:8.5rem;--bh:12rem;--bd:1.35rem;
+  flex:0 0 auto;width:calc(var(--bw) + 3.6rem);
+  position:relative;cursor:pointer;color:inherit;font:inherit;text-align:center;
+  display:flex;flex-direction:column;align-items:center;border-radius:8px}
+.slot:focus-visible{outline:2px solid hsl(var(--ring));outline-offset:4px}
+.stage{height:var(--bh);width:100%;display:flex;align-items:flex-end;justify-content:center;perspective:1300px}
+.book{position:relative;width:var(--bw);height:var(--bh);transform-style:preserve-3d;
+  transform:rotateY(32deg);transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+.slot:hover .book,.slot:focus-visible .book{transform:rotateY(14deg) translateY(-.4rem)}
+.book .cover,.book .spine{position:absolute;top:0;left:0}
+.book .cover{width:var(--bw);height:var(--bh);backface-visibility:hidden;
+  transform:translateZ(calc(var(--bd)/2));border-radius:2px 5px 5px 2px;overflow:hidden;
+  background:hsl(var(--muted));
+  box-shadow:inset .55rem 0 .9rem -.55rem rgba(0,0,0,.4), 0 0 0 1px rgba(0,0,0,.07),
+    .55rem .75rem .9rem -.5rem rgba(0,0,0,.5)}
+.book .cover img{width:100%;height:100%;object-fit:cover;display:block}
+.book .cover .fb{position:absolute;inset:0;padding:1rem .85rem;display:flex;flex-direction:column;
+  justify-content:space-between;text-align:left;color:#fff;
+  background:linear-gradient(155deg,rgba(255,255,255,.16),rgba(0,0,0,.32)),var(--accent,#0B5D57)}
+.book .cover .fb .band{width:2rem;height:2px;background:currentColor;opacity:.85}
+.book .cover .fb .t{font-size:.8125rem;font-weight:600;line-height:1.2;letter-spacing:-.01em;
+  text-shadow:0 1px 2px rgba(0,0,0,.35);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.book .cover .fb .y{font-size:.6875rem;opacity:.85;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.book .spine{width:var(--bd);height:var(--bh);transform-origin:center;
+  transform:translateX(calc(var(--bd)/-2)) rotateY(-90deg);border-radius:2px 0 0 2px;
+  background:linear-gradient(to right,rgba(0,0,0,.45),rgba(0,0,0,.05)),var(--accent,#0B5D57);
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.book .spine span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;
+  font-size:.55rem;font-weight:600;color:#fff;opacity:.92;text-shadow:0 1px 1px rgba(0,0,0,.5);
+  max-height:calc(var(--bh) - 1.4rem);overflow:hidden;text-overflow:ellipsis}
+.plank{width:100%;height:.7rem;margin-top:.1rem;position:relative;
+  background:linear-gradient(hsl(var(--muted)),color-mix(in srgb,hsl(var(--muted)) 62%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+.plank::after{content:'';position:absolute;left:0;right:0;top:100%;height:.4rem;
+  background:linear-gradient(rgba(0,0,0,.22),transparent)}
+.cap{margin-top:.6rem;width:calc(var(--bw) + 1.4rem);display:flex;flex-direction:column;gap:.1rem}
+.cap .nm{font-size:.8125rem;font-weight:600;letter-spacing:-.01em;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cap .sub{font-size:.6875rem;color:hsl(var(--muted-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot .acts{position:absolute;top:-.5rem;right:.25rem;z-index:5;display:flex;gap:.15rem;
+  opacity:0;transform:translateY(-.2rem);transition:opacity .15s,transform .15s;pointer-events:none}
+.slot:hover .acts,.slot:focus-within .acts{opacity:1;transform:none;pointer-events:auto}
+.slot .acts .btn{background:hsl(var(--card));border:1px solid hsl(var(--border));box-shadow:0 1px 3px rgba(0,0,0,.14)}
+/* action books — New report / Open a file, sitting on the shelf like real books */
+.book-add .cover{background:hsl(var(--card));border:1.5px dashed hsl(var(--border));box-shadow:none;
+  display:flex;flex-direction:column;overflow:hidden;padding:0}
+.book-add .spine{background:hsl(var(--muted));box-shadow:none}
+.add-row{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+  border:0;background:none;font:inherit;cursor:pointer;padding:.5rem;color:hsl(var(--muted-foreground));
+  transition:background-color .15s,color .15s}
+.add-row + .add-row{border-top:1.5px dashed hsl(var(--border))}
+.add-row:hover,.add-row:focus-visible{background:hsl(var(--accent));color:hsl(var(--foreground));outline:none}
+.add-row .ic{width:1.9rem;height:1.9rem;display:grid;place-items:center;border-radius:999px;background:hsl(var(--muted))}
+.add-row .ic svg{width:1rem;height:1rem}
+.add-row .lbl{font-size:.7rem;font-weight:600;color:hsl(var(--foreground));text-align:center;line-height:1.15}
+@media(max-width:520px){.slot{--bw:7rem;--bh:9.9rem;--bd:1.15rem;width:calc(var(--bw) + 2.4rem)}}
 .notice{display:flex;gap:.75rem;border:1px solid hsl(var(--border));border-radius:var(--radius);padding:.875rem 1rem;font-size:.875rem;margin-bottom:1.5rem}
 .notice svg{width:1rem;height:1rem;flex:0 0 auto;margin-top:.15rem;color:hsl(var(--muted-foreground))}
 
@@ -666,20 +711,16 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 <!-- ======================= LIBRARY ======================= -->
 <section class="view" id="view-library">
   <header class="lib-top">
-    <div class="wordmark"><span class="mk"><svg class="metlogo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M76.2711 28.3223C77.6234 26.9699 79.7183 27.0496 80.5845 28.4815C81.5213 30.0193 82.2282 31.6808 82.732 33.4219C83.0149 34.4119 82.6878 35.5696 81.8658 36.3916L55.3756 62.8819C53.7757 64.4816 51.7868 65.5864 49.6744 66.0371L47.4742 66.5059C45.3706 66.9655 43.364 68.0703 41.773 69.6612L21.4342 90C20.568 86.659 20.1885 84.4049 22.9019 81.6914L76.2711 28.3223ZM82.0084 39.7344C82.8923 38.8506 84.254 39.3636 84.1656 40.5303C83.6176 47.6719 80.2142 55.1935 74.151 61.2569C69.5282 66.3215 56.4818 74.0645 47.1568 79.253C45.2476 80.3136 43.6919 78.0508 45.2564 76.4864L82.0084 39.7344ZM69.8189 17.6104C70.6586 16.7708 71.8962 16.5934 72.7447 17.1768C74.5125 18.3789 76.1647 20.121 77.0133 22.2246C77.3313 23.0377 77.0579 24.0362 76.3599 24.7344L47.8277 53.2666C46.2279 54.8664 44.239 55.9711 42.1265 56.4219L39.9254 56.8907C37.8218 57.3503 35.8151 58.455 34.2242 60.0459L16.6265 77.6446C15.7603 74.3035 16.1757 71.2536 18.8892 68.5401L69.8189 17.6104ZM57.7271 12.5381C59.3181 10.9471 61.5984 10.3281 63.4722 11.0352C64.6478 11.486 65.7788 12.0345 66.8482 12.6797C68.2624 13.5282 68.3332 15.5961 67.0074 16.9219L40.9156 43.0147C39.4218 44.5084 37.3885 45.3036 35.4439 45.1621C33.4022 45.0119 31.2546 45.8516 29.6724 47.4336L15.3795 61.7266C14.5133 58.3855 15.6357 54.6286 18.3492 51.9151L22.981 47.2832L57.7271 12.5381ZM53.5474 10.001C54.8022 9.98368 55.2881 11.4772 54.3336 12.4317L22.1959 44.5694C21.2767 45.4886 19.9148 44.6579 20.4273 43.4912L24.7056 33.7686C24.9443 33.1764 25.2099 32.5748 25.5015 31.9649L25.5279 31.9033C27.994 26.6796 31.962 21.1372 35.692 17.4073C41.6759 11.4233 47.0508 10.0629 53.5474 10.001Z"/></svg></span> Report Studio</div>
+    <div class="wordmark"><span class="mk"><svg class="metlogo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M76.2711 28.3223C77.6234 26.9699 79.7183 27.0496 80.5845 28.4815C81.5213 30.0193 82.2282 31.6808 82.732 33.4219C83.0149 34.4119 82.6878 35.5696 81.8658 36.3916L55.3756 62.8819C53.7757 64.4816 51.7868 65.5864 49.6744 66.0371L47.4742 66.5059C45.3706 66.9655 43.364 68.0703 41.773 69.6612L21.4342 90C20.568 86.659 20.1885 84.4049 22.9019 81.6914L76.2711 28.3223ZM82.0084 39.7344C82.8923 38.8506 84.254 39.3636 84.1656 40.5303C83.6176 47.6719 80.2142 55.1935 74.151 61.2569C69.5282 66.3215 56.4818 74.0645 47.1568 79.253C45.2476 80.3136 43.6919 78.0508 45.2564 76.4864L82.0084 39.7344ZM69.8189 17.6104C70.6586 16.7708 71.8962 16.5934 72.7447 17.1768C74.5125 18.3789 76.1647 20.121 77.0133 22.2246C77.3313 23.0377 77.0579 24.0362 76.3599 24.7344L47.8277 53.2666C46.2279 54.8664 44.239 55.9711 42.1265 56.4219L39.9254 56.8907C37.8218 57.3503 35.8151 58.455 34.2242 60.0459L16.6265 77.6446C15.7603 74.3035 16.1757 71.2536 18.8892 68.5401L69.8189 17.6104ZM57.7271 12.5381C59.3181 10.9471 61.5984 10.3281 63.4722 11.0352C64.6478 11.486 65.7788 12.0345 66.8482 12.6797C68.2624 13.5282 68.3332 15.5961 67.0074 16.9219L40.9156 43.0147C39.4218 44.5084 37.3885 45.3036 35.4439 45.1621C33.4022 45.0119 31.2546 45.8516 29.6724 47.4336L15.3795 61.7266C14.5133 58.3855 15.6357 54.6286 18.3492 51.9151L22.981 47.2832L57.7271 12.5381ZM53.5474 10.001C54.8022 9.98368 55.2881 11.4772 54.3336 12.4317L22.1959 44.5694C21.2767 45.4886 19.9148 44.6579 20.4273 43.4912L24.7056 33.7686C24.9443 33.1764 25.2099 32.5748 25.5015 31.9649L25.5279 31.9033C27.994 26.6796 31.962 21.1372 35.692 17.4073C41.6759 11.4233 47.0508 10.0629 53.5474 10.001Z"/></svg></span> Report Studio<span class="ver">v1</span></div>
     <button class="btn btn-ghost btn-icon btn-sm" id="libTheme" aria-label="Toggle dark mode"></button>
   </header>
   <div class="lib-body">
     <div id="storageNotice"></div>
     <div class="lib-hero">
-      <h1>Annual reports, set in A4.</h1>
+      <h1>Meteora Report Studio</h1>
       <p>Build a report page by page — cover, contents, sections and tables — then export a PDF that matches what you saw on screen.</p>
-      <div class="lib-actions">
-        <button class="btn btn-default" id="newBtn"><span data-icon="plus"></span> New report</button>
-        <button class="btn btn-outline" id="importBtn"><span data-icon="upload"></span> Open a file</button>
-        <input type="file" id="importIn" accept="application/json" hidden>
-      </div>
     </div>
+    <input type="file" id="importIn" accept="application/json" hidden>
     <div class="lib-head"><h2>Your reports</h2><span class="muted" style="font-size:.8125rem" id="libCount"></span></div>
     <p class="muted" style="font-size:.8125rem;margin:-.375rem 0 .875rem">Saved in this browser. To hand a report to someone else, open it and use Save file.</p>
     <div id="libList"></div>
@@ -1446,30 +1487,48 @@ function drawLibrary(){
      <span class="muted">Private windows and some privacy settings disable it, so anything you build lives in this tab only — use <b style="font-weight:500">Save file</b> to keep it.</span></div></div>`;
   const host = $('libList');
   $('libCount').textContent = INDEX.length ? INDEX.length + (INDEX.length===1?' report':' reports') : '';
-  if(!INDEX.length){
-    host.innerHTML = `<div class="empty">
-      <div class="ic">${svg('file')}</div>
-      <h3>No reports yet</h3>
-      <p>Create one and you'll get a cover, a contents page that numbers itself, and A4 sheets you can export straight to PDF.</p>
-      <button class="btn btn-default" id="emptyNew">${svg('plus')} New report</button>
+  const addRow = (action, icon, label) =>
+    `<button class="add-row" type="button" data-action="${action}" aria-label="${label}"><span class="ic">${svg(icon)}</span><span class="lbl">${label}</span></button>`;
+  const actions = `
+    <div class="slot slot-action">
+      <div class="stage">
+        <div class="book book-add">
+          <div class="cover">${addRow('new','plus','New report')}${addRow('open','upload','Open a file')}</div>
+          <div class="spine"></div>
+        </div>
+      </div>
+      <div class="plank"></div>
+      <div class="cap"><span class="nm">Start a report</span></div>
     </div>`;
-    $('emptyNew').onclick = openNewDialog;
-    return;
-  }
-  host.innerHTML = `<div class="rlist">${INDEX.map(e => `
-    <div class="ritem" role="button" tabindex="0" data-open-id="${e.id}">
-      <span class="thumb">${e.thumb ? `<img src="${e.thumb}" alt="">`
-        : `<span class="fb" style="color:${esc(e.accent||'#0B5D57')}"><i></i></span>`}</span>
-      <span class="meta">
-        <span class="nm">${esc(e.name)}</span>
-        <span class="sub">${esc(e.company || 'No company set')} · ${esc(e.year||'')} · ${e.pages||1} ${e.pages===1?'page':'pages'} · edited ${relTime(e.updated)}</span>
-      </span>
-      <span class="acts">
+  host.innerHTML = `<div class="shelf">${INDEX.map(e => {
+    const accent = esc(e.accent||'#0B5D57');
+    const cover = e.thumb ? `<img src="${e.thumb}" alt="">`
+      : `<span class="fb" style="--accent:${accent}"><span class="band"></span>
+           <span><span class="t">${esc(e.name)}</span></span>
+           <span class="y">${esc(e.year||'')}</span></span>`;
+    return `
+    <div class="slot" role="button" tabindex="0" data-open-id="${e.id}"
+         aria-label="${esc(e.name)} — ${esc(e.company || 'No company set')}, ${esc(e.year||'')}, ${e.pages||1} ${e.pages===1?'page':'pages'}">
+      <div class="acts">
         <button class="btn btn-ghost btn-icon btn-sm" data-dup="${e.id}" aria-label="Duplicate ${esc(e.name)}">${svg('copy')}</button>
         <button class="btn btn-ghost btn-icon btn-sm" data-del="${e.id}" aria-label="Delete ${esc(e.name)}">${svg('trash')}</button>
-      </span>
-    </div>`).join('')}</div>`;
+      </div>
+      <div class="stage">
+        <div class="book" style="--accent:${accent}">
+          <div class="cover">${cover}</div>
+          <div class="spine"><span>${esc(e.name)}</span></div>
+        </div>
+      </div>
+      <div class="plank"></div>
+      <div class="cap">
+        <span class="nm">${esc(e.name)}</span>
+        <span class="sub">${esc(e.year||'')} · ${e.pages||1} ${e.pages===1?'page':'pages'} · edited ${relTime(e.updated)}</span>
+      </div>
+    </div>`;}).join('')}${actions}</div>`;
 
+  host.querySelectorAll('[data-action]').forEach(el => {
+    el.onclick = () => el.dataset.action === 'new' ? openNewDialog() : $('importIn').click();
+  });
   host.querySelectorAll('[data-open-id]').forEach(el => {
     el.onclick = e => { if(e.target.closest('[data-dup],[data-del]')) return; openReport(el.dataset.openId); };
     el.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openReport(el.dataset.openId); } };
@@ -1498,7 +1557,6 @@ function openNewDialog(){
   $('nStart').value = 'sample';
   showDialog('dlgNew','nName');
 }
-$('newBtn').onclick = openNewDialog;
 $('createBtn').onclick = async () => {
   const name = $('nName').value.trim();
   if(!name){ $('nName').focus(); toast('Give the report a name first'); return; }
@@ -1512,7 +1570,6 @@ $('createBtn').onclick = async () => {
   await saveDoc(doc); await touchIndex(doc, true);
   openEditor(doc);
 };
-$('importBtn').onclick = () => $('importIn').click();
 $('importIn').onchange = () => {
   const f = $('importIn').files[0]; if(!f) return;
   const fr = new FileReader();
