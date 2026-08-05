@@ -1,0 +1,5 @@
+# Build archives — regenerate from source, don't commit
+*.zip
+
+# Conductor workspace scratch
+.context/

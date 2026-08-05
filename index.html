@@ -4,10 +4,34 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Report Studio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=Instrument+Serif:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..600&family=IBM+Plex+Mono:wght@400;500;600&family=Archivo:wght@400..700&family=Playfair+Display:wght@400..800&family=EB+Garamond:ital,wght@0,400..700;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2318181b'/%3E%3Cpath d='M11 8h9a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-9z' fill='none' stroke='%23fff' stroke-width='2'/%3E%3Cpath d='M11 8v16' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E">
+
 <style>
+/* FONTS — self-hosted. Page breaks are measured from real font metrics, so
+   they must not depend on a third-party CDN. Licences in fonts/OFL-*.txt */
+@font-face{font-family:'EB Garamond';font-style:italic;font-weight:400;font-display:swap;src:url('fonts/eb-garamond-italic-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'EB Garamond';font-style:italic;font-weight:400;font-display:swap;src:url('fonts/eb-garamond-italic-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'EB Garamond';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/eb-garamond-normal-400_700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'EB Garamond';font-style:normal;font-weight:400 700;font-display:swap;src:url('fonts/eb-garamond-normal-400_700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-normal-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/ibm-plex-mono-normal-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-normal-500-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/ibm-plex-mono-normal-500-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-normal-600-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/ibm-plex-mono-normal-600-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('fonts/instrument-serif-italic-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('fonts/instrument-serif-italic-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/instrument-serif-normal-400-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/instrument-serif-normal-400-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/inter-normal-300_700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Inter';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/inter-normal-300_700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:300 600;font-display:swap;src:url('fonts/newsreader-italic-300_600-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Newsreader';font-style:italic;font-weight:300 600;font-display:swap;src:url('fonts/newsreader-italic-300_600-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Newsreader';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/newsreader-normal-300_700-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Newsreader';font-style:normal;font-weight:300 700;font-display:swap;src:url('fonts/newsreader-normal-300_700-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400 800;font-display:swap;src:url('fonts/playfair-display-normal-400_800-latin-ext.woff2') format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400 800;font-display:swap;src:url('fonts/playfair-display-normal-400_800-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+
 /* ==========================================================================
    shadcn/ui tokens — the default zinc theme, same variable names so this
    ports straight into a real shadcn project.
@@ -167,6 +191,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;margin-top:-.375
 input[type=range]::-moz-range-track{height:.5rem;border-radius:999px;background:hsl(var(--secondary))}
 input[type=range]::-moz-range-thumb{width:1.25rem;height:1.25rem;border:2px solid hsl(var(--primary));border-radius:999px;background:hsl(var(--background))}
 input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(var(--ring)/.35)}
+
+/* SCROLLBARS — macOS overlay style: a thin rounded pill that stays invisible
+   until you hover (or focus/scroll) the area it belongs to. Firefox uses the
+   standard properties; WebKit/Blink use the ::-webkit-scrollbar pseudos with a
+   transparent border so the visible thumb reads as a slim floating pill. */
+*{scrollbar-width:thin;scrollbar-color:transparent transparent}
+*:hover,*:focus-within{scrollbar-color:hsl(var(--muted-foreground)/.4) transparent}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:transparent;border:3px solid transparent;border-radius:999px;background-clip:padding-box;transition:background-color .2s}
+:hover::-webkit-scrollbar-thumb,:focus-within::-webkit-scrollbar-thumb{background:hsl(var(--muted-foreground)/.4);background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:hsl(var(--muted-foreground)/.6);background-clip:padding-box}
 
 .dialog-overlay{position:fixed;inset:0;background:rgb(0 0 0/.8);z-index:60;display:none}
 .dialog-overlay[data-open]{display:block}
@@ -556,7 +592,10 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 .tocEmpty{color:var(--doc-faint);font-style:italic}
 /* closing page — just the mark, centred on the sheet, following the palette */
 .endMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-.endMark svg{width:30mm;height:30mm;fill:var(--doc-accent-vis)}
+.endMark svg{width:30mm;height:30mm}
+/* Plain: single flat colour, chosen in the panel (falls back to the accent).
+   Coloured: keep the SVG's own gradient, so no fill override here. */
+.endMark.plain svg{fill:var(--end-fill,var(--doc-accent-vis))}
 .node.sys-end .ic svg{fill:currentColor}
 
 /* editing affordances */
@@ -642,6 +681,7 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
       </div>
     </div>
     <div class="lib-head"><h2>Your reports</h2><span class="muted" style="font-size:.8125rem" id="libCount"></span></div>
+    <p class="muted" style="font-size:.8125rem;margin:-.375rem 0 .875rem">Saved in this browser. To hand a report to someone else, open it and use Save file.</p>
     <div id="libList"></div>
   </div>
 </section>
@@ -781,6 +821,25 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
             <button class="btn btn-outline btn-sm" id="folioAuto" style="width:100%;margin-bottom:.5rem">Reset to automatic</button>
             <p class="helptext" id="folioNote" style="margin:0"></p>
           </div>
+        </div>
+      </div>
+
+      <div class="acc" data-acc="end">
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="flag"></span><span class="acc-label">End mark</span><span class="acc-sum" id="sumEnd"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <div class="acc-body" hidden>
+          <div class="field"><label class="label">Logo</label>
+            <div class="tabs-list" id="endVariant">
+              <button class="tabs-trigger" data-variant="colored" data-state="inactive">Colored</button>
+              <button class="tabs-trigger" data-variant="plain" data-state="active">Plain</button>
+            </div>
+          </div>
+          <div id="endPlainBox">
+            <div class="field"><label class="label">Colour</label><div class="swatches" id="endSwatches"></div></div>
+            <div class="field"><label class="label" for="endCustom">Custom colour</label><input type="color" class="colorfield" id="endCustom"></div>
+          </div>
+          <div class="field"><label class="label">Opacity <span class="muted" id="endOpacityV"></span></label>
+            <input type="range" id="endOpacity" min="10" max="100" step="5"></div>
+          <p class="helptext" id="endNote" style="margin:0"></p>
         </div>
       </div>
 
@@ -926,7 +985,8 @@ const ICONS = {
   shrink:'<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
   'chevron-down':'<path d="m6 9 6 6 6-6"/>',
   layers:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>',
-  breakpage:'<path d="M12 3v6"/><path d="M12 15v6"/><path d="M3 12h18"/><path d="m9 6 3-3 3 3"/>'
+  breakpage:'<path d="M12 3v6"/><path d="M12 15v6"/><path d="M3 12h18"/><path d="m9 6 3-3 3 3"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/>'
 };
 function svg(name, cls){
   const d = ICONS[name] || '';
@@ -969,19 +1029,74 @@ const K_DOC = id => 'studio:doc:' + id;
 const K_IMG = (docId, imgId) => `studio:img:${docId}:${imgId}`;
 let storageOK = true;
 
+/* ==========================================================================
+   STORAGE — IndexedDB, so reports survive a refresh and images aren't capped
+   by localStorage's few megabytes. Values are JSON strings, the same shape the
+   rest of the app already expects.
+   ========================================================================== */
+const DB_NAME = 'report-studio', DB_VERSION = 1, STORE = 'kv';
+let dbPromise = null;
+function openDb(){
+  if(dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    if(!('indexedDB' in window)) return reject(new Error('no indexedDB'));
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('indexedDB blocked'));
+    req.onblocked = () => reject(new Error('indexedDB blocked'));
+  });
+  return dbPromise;
+}
+function idb(mode, fn){
+  return openDb().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, mode);
+    const out = fn(tx.objectStore(STORE));
+    tx.oncomplete = () => resolve(out ? out.result : undefined);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  }));
+}
 async function sGet(key){
-  try{ const r = await window.storage.get(key); return r && r.value ? JSON.parse(r.value) : null; }
-  catch(e){ return null; }
+  try{
+    const v = await idb('readonly', st => st.get(key));
+    return v == null ? null : JSON.parse(v);
+  }catch(e){ return null; }
 }
 async function sSet(key, val){
-  try{ await window.storage.set(key, JSON.stringify(val)); storageOK = true; return true; }
-  catch(e){ storageOK = false; return false; }
+  try{
+    await idb('readwrite', st => st.put(JSON.stringify(val), key));
+    storageOK = true;
+    requestPersistence();
+    return true;
+  }catch(e){ storageOK = false; return false; }
 }
-async function sDel(key){ try{ await window.storage.delete(key); }catch(e){} }
-
+async function sDel(key){ try{ await idb('readwrite', st => st.delete(key)); }catch(e){} }
+async function sList(prefix){
+  try{
+    const keys = await idb('readonly', st => st.getAllKeys(IDBKeyRange.bound(prefix, prefix + '\uffff')));
+    return { keys: keys || [] };
+  }catch(e){ return null; }
+}
+/* ask the browser not to evict the library when disk gets tight */
+let persistAsked = false;
+async function requestPersistence(){
+  if(persistAsked) return;
+  persistAsked = true;
+  try{
+    if(navigator.storage && navigator.storage.persist){
+      if(!(await navigator.storage.persisted())) await navigator.storage.persist();
+    }
+  }catch(e){}
+}
 async function probeStorage(){
-  try{ await window.storage.set('studio:probe', '1'); storageOK = true; }
-  catch(e){ storageOK = false; }
+  try{
+    await idb('readwrite', st => st.put('1', 'studio:probe'));
+    storageOK = true;
+  }catch(e){ storageOK = false; }
 }
 let INDEX = [];          // [{id,name,company,year,updated,pages,accent,thumb}]
 const MEM = {};          // in-memory fallback when storage is unavailable
@@ -1034,7 +1149,7 @@ async function loadDoc(id){
    the way we asked — filter by the prefix here as well. */
 async function listKeys(prefix){
   try{
-    const r = await window.storage.list(prefix);
+    const r = await sList(prefix);
     if(!r || !Array.isArray(r.keys)) return [];
     return r.keys.filter(k => typeof k === 'string' && k.startsWith(prefix));
   }catch(e){ return []; }
@@ -1107,6 +1222,7 @@ function blankDoc(name){
     settings:{ accent:'#0B5D57', type:'editorial', bodySize:106, margin:'normal',
                showNum:true, showHead:false, showFoot:false, paperColor:'#FFFFFF',
                folio:{ align:'right', bottom:null, side:null, color:'auto' },
+               end:{ variant:'plain', color:'auto', opacity:100 },
                textColor:'#9595B2', numberHeadings:false },
     toc:{ on:true, title:'Contents' },
     blocks:[]
@@ -1204,6 +1320,7 @@ function migrate(raw){
   const out = Object.assign(base, raw);
   out.settings = Object.assign(base.settings, raw.settings || {});
   out.settings.folio = Object.assign({ align:'right', bottom:null, side:null, color:'auto' }, out.settings.folio || {});
+  out.settings.end = Object.assign({ variant:'plain', color:'auto', opacity:100 }, out.settings.end || {});
   if(!out.settings.paperColor) out.settings.paperColor = out.settings.paper === 'dark' ? '#111519' : '#FFFFFF';
   delete out.settings.paper;
   out.meta = Object.assign(base.meta, raw.meta || {});
@@ -1249,7 +1366,7 @@ function applyUi(){
     b.innerHTML = svg(uiDark ? 'sun' : 'moon');
     b.setAttribute('aria-label', uiDark ? 'Use the light interface' : 'Use the dark interface');
   });
-  try{ window.storage.set('studio:ui', uiDark ? 'dark' : 'light'); }catch(e){}
+  sSet('studio:ui', uiDark ? 'dark' : 'light');
 }
 
 /* ==========================================================================
@@ -1317,8 +1434,8 @@ function relTime(ts){
 }
 function drawLibrary(){
   $('storageNotice').innerHTML = storageOK ? '' :
-    `<div class="notice">${svg('info')}<div><b style="font-weight:600">Reports won't persist here.</b>
-     <span class="muted">This copy is running without storage, so anything you build lives in this tab only — use <b style="font-weight:500">Save file</b> to keep it.</span></div></div>`;
+    `<div class="notice">${svg('info')}<div><b style="font-weight:600">This browser is blocking local storage.</b>
+     <span class="muted">Private windows and some privacy settings disable it, so anything you build lives in this tab only — use <b style="font-weight:500">Save file</b> to keep it.</span></div></div>`;
   const host = $('libList');
   $('libCount').textContent = INDEX.length ? INDEX.length + (INDEX.length===1?' report':' reports') : '';
   if(!INDEX.length){
@@ -1643,8 +1760,13 @@ function renderToc(){
 /* the closing sheet: nothing but the mark, centred, in the document's accent */
 function renderEnd(){
   const page = document.createElement('div'); page.className = 'page'; page.dataset.end = '1';
-  const mark = document.createElement('div'); mark.className = 'endMark';
-  mark.innerHTML = HEADER_MARK;
+  const e = endSettings();
+  const mark = document.createElement('div');
+  const plain = e.variant !== 'colored';
+  mark.className = 'endMark ' + (plain ? 'plain' : 'colored');
+  mark.innerHTML = plain ? HEADER_MARK : COLORED_MARK;
+  if(plain) mark.style.setProperty('--end-fill', endFill(e.color));
+  mark.style.opacity = Math.max(0, Math.min(100, e.opacity == null ? 100 : e.opacity)) / 100;
   page.appendChild(mark);
   return page;
 }
@@ -1700,6 +1822,13 @@ function ensureBandMetrics(){
    its colour from the header and follow the paper. An uploaded logo keeps its
    own colours, which is what you want for someone else's brand. */
 const HEADER_MARK = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M76.2711 28.3223C77.6234 26.9699 79.7183 27.0496 80.5845 28.4815C81.5213 30.0193 82.2282 31.6808 82.732 33.4219C83.0149 34.4119 82.6878 35.5696 81.8658 36.3916L55.3756 62.8819C53.7757 64.4816 51.7868 65.5864 49.6744 66.0371L47.4742 66.5059C45.3706 66.9655 43.364 68.0703 41.773 69.6612L21.4342 90C20.568 86.659 20.1885 84.4049 22.9019 81.6914L76.2711 28.3223ZM82.0084 39.7344C82.8923 38.8506 84.254 39.3636 84.1656 40.5303C83.6176 47.6719 80.2142 55.1935 74.151 61.2569C69.5282 66.3215 56.4818 74.0645 47.1568 79.253C45.2476 80.3136 43.6919 78.0508 45.2564 76.4864L82.0084 39.7344ZM69.8189 17.6104C70.6586 16.7708 71.8962 16.5934 72.7447 17.1768C74.5125 18.3789 76.1647 20.121 77.0133 22.2246C77.3313 23.0377 77.0579 24.0362 76.3599 24.7344L47.8277 53.2666C46.2279 54.8664 44.239 55.9711 42.1265 56.4219L39.9254 56.8907C37.8218 57.3503 35.8151 58.455 34.2242 60.0459L16.6265 77.6446C15.7603 74.3035 16.1757 71.2536 18.8892 68.5401L69.8189 17.6104ZM57.7271 12.5381C59.3181 10.9471 61.5984 10.3281 63.4722 11.0352C64.6478 11.486 65.7788 12.0345 66.8482 12.6797C68.2624 13.5282 68.3332 15.5961 67.0074 16.9219L40.9156 43.0147C39.4218 44.5084 37.3885 45.3036 35.4439 45.1621C33.4022 45.0119 31.2546 45.8516 29.6724 47.4336L15.3795 61.7266C14.5133 58.3855 15.6357 54.6286 18.3492 51.9151L22.981 47.2832L57.7271 12.5381ZM53.5474 10.001C54.8022 9.98368 55.2881 11.4772 54.3336 12.4317L22.1959 44.5694C21.2767 45.4886 19.9148 44.6579 20.4273 43.4912L24.7056 33.7686C24.9443 33.1764 25.2099 32.5748 25.5015 31.9649L25.5279 31.9033C27.994 26.6796 31.962 21.1372 35.692 17.4073C41.6759 11.4233 47.0508 10.0629 53.5474 10.001Z"/></svg>';
+/* The colour version keeps the Met gradient. Inlined (not an <img>) so it scales
+   crisply and prints as vector. The gradient id is kept unique to this mark. */
+const COLORED_MARK = '<svg viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M32.7963 12.1783C33.3778 11.5969 34.2783 11.6312 34.6508 12.2466C35.0537 12.908 35.358 13.6229 35.5747 14.3716C35.6961 14.7972 35.5558 15.2946 35.2026 15.648L23.812 27.0396C23.124 27.7275 22.2682 28.2022 21.3598 28.3961L20.4135 28.5972C19.509 28.7949 18.6464 29.2706 17.9624 29.9547L9.21724 38.6998C8.84477 37.2631 8.6813 36.2943 9.8481 35.1275L32.7963 12.1783ZM35.2631 17.0855C35.6432 16.7054 36.2289 16.9266 36.1909 17.4283C35.9551 20.499 34.4922 23.7333 31.8852 26.3404C29.8975 28.5181 24.2875 31.8477 20.2778 34.0787C19.4568 34.5348 18.7877 33.562 19.4604 32.8892L35.2602 17.0894L35.2631 17.0855ZM30.0219 7.57282C30.3829 7.2118 30.9149 7.13557 31.2797 7.3863C32.0398 7.90317 32.7508 8.65172 33.1157 9.55622C33.2525 9.90583 33.1346 10.3351 32.8344 10.6353L20.5659 22.9049C19.8781 23.5926 19.0229 24.0674 18.1147 24.2613L17.1684 24.4625C16.2638 24.6601 15.4004 25.1358 14.7163 25.8199L7.14888 33.3873C6.77641 31.9506 6.95569 30.6391 8.12251 29.4722L12.5385 25.0552L30.0219 7.57282ZM24.8227 5.39118C25.5068 4.70713 26.4877 4.44065 27.2934 4.7447C27.7987 4.93847 28.2849 5.1744 28.7446 5.45173C29.3527 5.81659 29.383 6.70584 28.8129 7.27595L17.5932 18.4957C16.9509 19.138 16.0768 19.4803 15.2407 19.4195C14.3629 19.355 13.4395 19.716 12.7592 20.3961L6.61275 26.5425C6.2403 25.106 6.72347 23.4906 7.89009 22.3238L24.8227 5.39118ZM23.0249 4.30036C23.5645 4.29276 23.7739 4.93479 23.3637 5.34528L17.5366 11.1715L12.6723 16.0367L9.54439 19.1646C9.14911 19.5599 8.5632 19.2024 8.78365 18.7008L10.6235 14.5201C10.7261 14.2655 10.8399 14.0069 10.9653 13.7447L10.977 13.7183C12.0374 11.4721 13.7442 9.08881 15.3481 7.48493C17.921 4.91222 20.2316 4.32701 23.0249 4.30036Z" fill="url(#paint0_linear_318_2010)"/><defs><linearGradient id="paint0_linear_318_2010" x1="41.731" y1="4.3413" x2="12.0899" y2="38.6144" gradientUnits="userSpaceOnUse"><stop stop-color="#F5BD00"/><stop offset="0.364891" stop-color="#F54B00"/><stop offset="1" stop-color="#6E45FF"/></linearGradient></defs></svg>';
+/* named choices for the plain mark; a #rrggbb from the picker is used as-is */
+const END_COLORS = { auto:'var(--doc-accent-vis)', muted:'var(--doc-dim)', light:'#F9F9FB', ink:'var(--doc-body-color)' };
+function endSettings(){ return Object.assign({ variant:'plain', color:'auto', opacity:100 }, D.settings.end || {}); }
+function endFill(c){ return END_COLORS[c] || (/^#[0-9a-f]{6}$/i.test(c || '') ? c : END_COLORS.auto); }
 /* the header band takes the footer's height so the two are balanced */
 function headerBandMm(){
   const strip = footerStripMm();
@@ -3799,6 +3928,39 @@ $('folioAuto').onclick = () => {
   commit();
   toast('Page number back to automatic placement');
 };
+
+/* END MARK — colour or plain logo on the closing page, with tint and opacity.
+   render() calls syncBandRows() → syncEndRows(), so the panel tracks changes. */
+const END_SWATCHES = [['auto','Accent','var(--doc-accent-vis)'],['muted','Muted','var(--doc-dim)'],
+  ['light','Light','#F9F9FB'],['ink','Ink','var(--doc-body-color)']];
+END_SWATCHES.forEach(([key,name,css]) => {
+  const b = document.createElement('button');
+  b.className = 'sw'; b.style.background = css; b.title = name; b.setAttribute('aria-label', name);
+  b.dataset.end = key;
+  b.onclick = () => { D.settings.end.color = key; commit(); };
+  $('endSwatches').appendChild(b);
+});
+document.querySelectorAll('#endVariant .tabs-trigger').forEach(btn => btn.onclick = () => {
+  D.settings.end.variant = btn.dataset.variant;
+  commit();
+});
+on('endCustom','input', e => { D.settings.end.color = e.target.value; render(); save(); });
+on('endOpacity','input', e => { D.settings.end.opacity = +e.target.value; $('endOpacityV').textContent = e.target.value + '%'; render(); save(); });
+function syncEndRows(){
+  const e = endSettings();
+  const plain = e.variant !== 'colored';
+  $('endPlainBox').hidden = !plain;
+  document.querySelectorAll('#endVariant .tabs-trigger').forEach(x =>
+    x.dataset.state = (x.dataset.variant === (plain ? 'plain' : 'colored')) ? 'active' : 'inactive');
+  document.querySelectorAll('#endSwatches .sw').forEach(x =>
+    x.setAttribute('aria-pressed', String(x.dataset.end === e.color)));
+  $('endCustom').value = /^#[0-9a-f]{6}$/i.test(e.color || '') ? e.color : '#0B5D57';
+  $('endOpacity').value = e.opacity == null ? 100 : e.opacity;
+  $('endOpacityV').textContent = (e.opacity == null ? 100 : e.opacity) + '%';
+  $('endNote').textContent = plain
+    ? 'A single flat colour, so the mark sits quietly on any paper.'
+    : 'The Met gradient, shown at full colour. Opacity still applies.';
+}
 function syncFolioRows(){
   const f = D.settings.folio || {};
   const pl = folioPlacement();
@@ -3836,6 +3998,7 @@ function syncFolioRows(){
 }
 function syncBandRows(){
   syncFolioRows();
+  syncEndRows();
   $('headUpload').hidden = !D.settings.showHead;
   $('footUpload').hidden = !D.settings.showFoot;
   const note = $('footNote');
@@ -3937,6 +4100,8 @@ function accSummaries(){
   set('sumBands', bands.length ? esc(bands.join(' + ')) : 'off');
   const f = folioPlacement();
   set('sumFolio', D.settings.showNum ? `${f.align} · ${f.bottom.toFixed(1)} mm` : 'off');
+  const e = endSettings();
+  set('sumEnd', `${e.variant === 'colored' ? 'colored' : 'plain'} · ${e.opacity == null ? 100 : e.opacity}%`);
 }
 
 /* tabs */
@@ -4006,10 +4171,8 @@ $('printBtn').onclick = doPrint;
 (async function init(){
   paintIcons();
   await probeStorage();
-  try{
-    const r = await window.storage.get('studio:ui');
-    if(r && r.value) uiDark = r.value === 'dark';
-  }catch(e){}
+  const savedUi = await sGet('studio:ui');
+  if(savedUi === 'dark' || savedUi === 'light') uiDark = savedUi === 'dark';
   applyUi();
   const savedAcc = await sGet('studio:designOpen');
   if(savedAcc) setAcc(savedAcc);

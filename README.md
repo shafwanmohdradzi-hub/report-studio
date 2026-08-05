@@ -4,15 +4,25 @@ A4 annual report builder. Single static page, no build step, no server.
 
 ## Deploy to Vercel
 
+`index.html` lives at the repository root, so Vercel serves it with no
+configuration. Two ways to ship:
+
+**GitHub sync (recommended).** In the Vercel dashboard, *Add New → Project*
+and import this repository. Leave every setting at its default — Framework
+Preset **Other**, no build command, no output directory. Vercel finds the
+root `index.html` and serves the repo as static files. Every push to the
+default branch then deploys automatically.
+
+**CLI.**
+
 ```bash
-cd report-studio
 npx vercel          # first run links/creates the project
 npx vercel --prod
 ```
 
-Or drag this folder onto the Vercel dashboard. No `package.json`, no
-framework preset, no configuration required — Vercel serves it as static
-files.
+No `package.json`, no framework preset, no `vercel.json` — Vercel serves it
+as static files. The only requirement is that `fonts/` sits next to
+`index.html` at the root, which it does.
 
 Any static host works the same way (Netlify, Cloudflare Pages, GitHub
 Pages, S3, nginx). The only requirement is that `fonts/` is served
