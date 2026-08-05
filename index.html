@@ -695,6 +695,8 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
     <span class="badge badge-secondary" id="sheetBadge">—</span>
     <span class="muted" id="saveState" style="font-size:.75rem"></span>
     <div class="grow"></div>
+    <button class="btn btn-ghost btn-icon btn-sm" id="undoBtn" aria-label="Undo" title="Undo (⌘Z)" disabled><span data-icon="undo"></span></button>
+    <button class="btn btn-ghost btn-icon btn-sm" id="redoBtn" aria-label="Redo" title="Redo (⇧⌘Z)" disabled><span data-icon="redo"></span></button>
     <div class="zoomgrp">
       <button id="zOut" aria-label="Zoom out"><span data-icon="minus"></span></button>
       <output id="zVal">75%</output>
@@ -900,6 +902,8 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
   <button data-cmd="italic" title="Italic" style="font-style:italic;font-family:Georgia,serif">I</button>
   <button data-cmd="insertUnorderedList" title="Bulleted list"><span data-icon="list"></span></button>
   <button data-cmd="insertOrderedList" title="Numbered list"><span data-icon="listnum"></span></button>
+  <button data-cmd="justifyLeft" title="Align left"><span data-icon="alignleft"></span></button>
+  <button data-cmd="justifyFull" title="Justify"><span data-icon="alignjustify"></span></button>
   <button data-link="set" title="Add or edit a link"><span data-icon="link"></span></button>
   <button data-link="clear" title="Remove the link"><span data-icon="unlink"></span></button>
   <button data-cmd="removeFormat" title="Clear formatting"><span data-icon="eraser"></span></button>
@@ -953,6 +957,10 @@ const ICONS = {
   list:'<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
   listnum:'<path d="M10 6h11"/><path d="M10 12h11"/><path d="M10 18h11"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
   eraser:'<path d="m7 21-4-4 10-10 4 4-7 7"/><path d="M11 21h10"/><path d="m13 7 4 4"/>',
+  alignleft:'<path d="M15 12H3"/><path d="M17 6H3"/><path d="M21 18H3"/>',
+  alignjustify:'<path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/>',
+  undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
+  redo:'<path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/>',
   panel:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/>',
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
   file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h6"/>',
@@ -1564,6 +1572,7 @@ function openEditor(doc){
   ensureBandMetrics();
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
   $('saveState').textContent = '';
+  histReset();
 }
 
 /* ---------- pagination ---------- */
@@ -2285,6 +2294,82 @@ function scheduleRepaginate(){
   }, 320);
 }
 function commit(){ render(); save(); }
+
+/* ==========================================================================
+   UNDO / REDO
+   A snapshot history over the whole document. Each step is the JSON of the
+   body (docBody drops the heavy image blobs — those are keyed separately and
+   kept in memory across a restore, so undoing a deleted block brings its
+   picture back too). Typing bursts coalesce into one step via a short idle
+   debounce off save(); structural edits (delete, move, add…) all route through
+   save() as well, so every change is captured. Cmd/Ctrl+Z and ⇧+Z / Ctrl+Y
+   drive it, overriding the browser's per-field native undo so a restore and a
+   rebuilt DOM never fall out of sync.
+   ========================================================================== */
+let histStack = [], histIdx = -1, histT = null, restoring = false;
+const HIST_MAX = 100;
+function histSnapshot(){ return JSON.stringify(docBody(D)); }
+function histReset(){
+  clearTimeout(histT); histT = null;
+  histStack = D ? [histSnapshot()] : [];
+  histIdx = histStack.length - 1;
+  updateHistButtons();
+}
+function histCommit(){
+  clearTimeout(histT); histT = null;
+  if(!D || restoring) return;
+  const snap = histSnapshot();
+  if(histStack[histIdx] === snap) return;      // nothing actually changed
+  histStack = histStack.slice(0, histIdx + 1);  // drop any redo branch
+  histStack.push(snap);
+  if(histStack.length > HIST_MAX) histStack.shift();
+  histIdx = histStack.length - 1;
+  updateHistButtons();
+}
+function histSchedule(){
+  if(restoring || !D) return;
+  clearTimeout(histT);
+  histT = setTimeout(histCommit, 500);
+}
+function histRestore(snap){
+  const imgs = D ? D.images : {};
+  D = migrate(JSON.parse(snap));
+  D.images = imgs || {};
+  restoring = true;
+  sel = null; selCell = null;
+  $('nameField').value = D.name;
+  applyTheme(); syncControls(); render();
+  flushSave(false);
+  restoring = false;
+  updateHistButtons();
+}
+function undo(){
+  histCommit();                    // fold a pending edit into history first
+  if(histIdx <= 0){ toast('Nothing to undo'); return; }
+  histIdx--;
+  histRestore(histStack[histIdx]);
+  toast('Undo');
+}
+function redo(){
+  if(histIdx >= histStack.length - 1){ toast('Nothing to redo'); return; }
+  histIdx++;
+  histRestore(histStack[histIdx]);
+  toast('Redo');
+}
+function updateHistButtons(){
+  const u = $('undoBtn'), r = $('redoBtn');
+  if(u) u.disabled = histIdx <= 0;
+  if(r) r.disabled = histIdx >= histStack.length - 1;
+}
+$('undoBtn').onclick = undo;
+$('redoBtn').onclick = redo;
+document.addEventListener('keydown', e => {
+  if($('view-editor').hidden) return;
+  if(!(e.metaKey || e.ctrlKey) || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if(k === 'z'){ e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if(k === 'y'){ e.preventDefault(); redo(); }
+});
 
 /* ==========================================================================
    PASTING A TABLE
@@ -4141,6 +4226,7 @@ if(innerWidth < 900) $('panelBtn').style.display = 'inline-flex';
 let saveT;
 function save(){
   if(!D) return;
+  histSchedule();
   clearTimeout(saveT);
   $('saveState').textContent = 'Saving…';
   saveT = setTimeout(() => flushSave(false), 1000);
