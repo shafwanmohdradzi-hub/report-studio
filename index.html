@@ -362,10 +362,15 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   background:hsl(var(--popover));color:hsl(var(--popover-foreground));border:1px solid hsl(var(--border));
   border-radius:calc(var(--radius) - 4px);padding:.125rem .375rem;font-size:.6875rem;font-weight:500;white-space:nowrap;
   box-shadow:0 4px 12px -4px rgb(0 0 0/.3)}
-.node{display:flex;align-items:center;gap:.125rem;min-width:0;border-radius:calc(var(--radius) - 2px);min-height:1.875rem;padding-right:.125rem}
+.node{display:flex;align-items:center;gap:.125rem;min-width:0;border-radius:calc(var(--radius) - 2px);min-height:1.875rem;padding-right:.125rem;color:hsl(var(--muted-foreground))}
 .node:hover{background:hsl(var(--accent))}
 .node.active{background:hsl(var(--accent))}
-.node.sys{color:hsl(var(--foreground))}
+/* the sheet currently centred in the desk gets a faint wash */
+.node.onpage:not(.active):not(:hover){background:hsl(var(--accent)/.5)}
+/* focused / selected / hovered layers read at full strength; the rest stay subtle */
+.node.active,.node.onpage,.node:hover,.node:focus-within{color:hsl(var(--foreground))}
+.node.active .pv,.node.active .ty,.node.onpage .pv,.node.onpage .ty,
+.node:hover .pv,.node:hover .ty,.node:focus-within .pv,.node:focus-within .ty{color:hsl(var(--foreground))}
 .node.d1{margin-left:1.125rem}
 .node.d2{margin-left:2.25rem}
 .node.d3{margin-left:3.375rem}
@@ -416,6 +421,14 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .menu button:hover{background:hsl(var(--accent))}
 .menu button svg{width:.875rem;height:.875rem;color:hsl(var(--muted-foreground))}
 .menu .msep{height:1px;background:hsl(var(--border));margin:.25rem 0}
+.menu.tabbed{min-width:13.5rem}
+.menu .mtabs{display:flex;flex-wrap:wrap;gap:.125rem;padding:.125rem .125rem .25rem;margin:-.25rem -.25rem .25rem;border-bottom:1px solid hsl(var(--border))}
+.menu .mtab{width:auto;flex:0 0 auto;padding:.25rem .5rem;font-size:.75rem;line-height:1;color:hsl(var(--muted-foreground));
+  border-radius:calc(var(--radius) - 4px);cursor:pointer}
+.menu .mtab:hover{background:hsl(var(--accent));color:hsl(var(--foreground))}
+.menu .mtab.on{background:hsl(var(--accent));color:hsl(var(--foreground));font-weight:600}
+.menu .mpanel{display:none}
+.menu .mpanel.on{display:block}
 
 /* collapsible groups in the design panel */
 .acc{border-bottom:1px solid hsl(var(--border))}
@@ -519,8 +532,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 [data-t="body"] ul,[data-t="body"] ol{margin:0 0 3.2mm;padding-left:6mm}
 [data-t="body"] li{margin-bottom:1.2mm}
 [data-t="body"] strong{font-weight:600}
-[data-t="body"] a{color:var(--doc-accent-vis);text-decoration:underline;
-  text-decoration-thickness:.055em;text-underline-offset:.16em}
+[data-t="body"] a,.blurb-body a,[data-t="quote"] a{color:var(--doc-link,var(--doc-accent-vis));
+  text-decoration:var(--doc-link-ud,underline);text-decoration-thickness:.055em;text-underline-offset:.16em}
 [data-t="quote"]{border-left:2px solid var(--doc-accent-vis);padding:1mm 0 1mm 6mm;margin:0 0 5mm;
   font-family:var(--doc-display);font-size:15.5pt;line-height:1.32;color:var(--doc-quote)}
 [data-t="quote"] cite{display:block;font-family:var(--doc-util);font-style:normal;font-size:8pt;letter-spacing:.12em;
@@ -543,6 +556,14 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 [data-t="grid"][data-bg="accent"]{background:color-mix(in srgb, var(--doc-accent-vis) 12%, var(--paper))}
 .gcell{position:relative;min-width:0}
 .gcell > .blk:last-child{margin-bottom:0}
+/* draggable column divider — sits centred on the gap, shows when the block is selected */
+.colrz{position:absolute;top:0;bottom:0;width:14px;margin-right:-7px;right:calc(var(--ggap,6mm) / -2);
+  z-index:6;display:none;cursor:col-resize;touch-action:none}
+.colrz::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);
+  background:hsl(var(--ring));border-radius:2px;opacity:0;transition:opacity .1s}
+.blk[data-t="grid"].sel .colrz{display:block}
+.blk[data-t="grid"].sel .colrz:hover::before,.colrz.dragging::before{opacity:1}
+@media print{ .colrz{display:none!important} }
 .gcell-empty{display:flex;align-items:center;justify-content:center;min-height:18mm;border:1px dashed var(--doc-rule);
   border-radius:1mm;color:var(--doc-faint);font-family:var(--doc-util);font-size:7pt;letter-spacing:.12em;text-transform:uppercase}
 .gcell-empty button{border:0;background:none;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:.5rem;padding:2mm}
@@ -599,6 +620,32 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 @media print{ [data-t="image"] .rz,[data-t="image"] .upl{display:none!important} .rzlabel{display:none!important} }
 [data-t="image"] figcaption{font-family:var(--doc-util);font-size:7.6pt;color:var(--doc-dim);margin-top:2mm;letter-spacing:.04em}
 [data-t="divider"]{height:1px;background:var(--doc-rule);margin:0 0 5mm}
+/* ---- graph / chart placeholder ---- */
+[data-t="chart"]{margin:0 0 5mm;clear:both}
+[data-t="chart"] .chartimg{width:100%;aspect-ratio:var(--ar,16/9)}
+[data-t="chart"] .chartimg img{width:100%;height:100%;display:block;object-fit:contain}
+[data-t="chart"] .chartph{position:relative;width:100%;aspect-ratio:16/9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;
+  border:1px dashed var(--doc-rule);background:var(--doc-holder);color:var(--doc-faint);cursor:pointer;
+  font-family:var(--doc-util);font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase}
+[data-t="chart"] .chartph:hover{color:var(--doc-accent-vis);border-color:var(--doc-accent-vis)}
+[data-t="chart"] .chartph .glyph{width:54px;height:34px;color:var(--doc-accent-vis);opacity:.75}
+[data-t="chart"] .chartph:hover .glyph{opacity:1}
+/* ---- blurb: a designed statement panel ---- */
+[data-t="blurb"]{padding:16mm 14mm;border-radius:2mm;margin:0 0 5mm;clear:both;
+  background:var(--blurb-bg);color:var(--blurb-fg)}
+[data-t="blurb"][data-tone="dark"]{--blurb-bg:#1A1D22;--blurb-fg:#ECECF0}
+[data-t="blurb"][data-tone="paper"]{--blurb-bg:var(--doc-holder);--blurb-fg:var(--doc-text)}
+[data-t="blurb"][data-tone="accent"]{--blurb-bg:var(--doc-accent-vis);--blurb-fg:#FFFFFF}
+.blurb-mark{margin-bottom:11mm;line-height:0}
+.blurb-mark svg{width:15mm;height:15mm;color:var(--blurb-fg)}
+.blurb-mark img{width:15mm;height:15mm;object-fit:contain}
+.blurb-title{font-family:var(--doc-display);font-weight:var(--doc-display-weight);font-size:29pt;line-height:1.06;
+  letter-spacing:var(--doc-display-tracking);margin-bottom:8mm;max-width:135mm}
+.blurb-title em,.blurb-title i{font-style:italic}
+.blurb-body{font-family:var(--doc-body);font-size:9.4pt;line-height:1.62;opacity:.82;max-width:112mm}
+.blurb-body p{margin:0 0 3.6mm}
+.blurb-body p:last-child{margin-bottom:0}
+[data-t="blurb"] [contenteditable]:focus{outline:none}
 
 .cover{position:absolute;inset:0;overflow:hidden;background:#0E1116}
 .cover .art{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
@@ -697,6 +744,9 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
   .blk.sel,.blk:hover{box-shadow:none!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+.themebar{padding:.75rem;margin:0 0 1rem;border:1px solid hsl(var(--border));border-radius:var(--radius);background:hsl(var(--muted)/.4)}
+.themebtns{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
+.themebtns .btn{flex:1 1 auto}
 @media screen and (max-width:900px){
   #view-editor{grid-template-columns:1fr}
   .ed-side{position:fixed;z-index:50;top:3.25rem;bottom:0;left:-20rem;width:19rem;background:hsl(var(--background));transition:left .2s;box-shadow:0 0 40px rgb(0 0 0/.2)}
@@ -762,6 +812,20 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
     </div>
 
     <div class="pane" id="pane-design" hidden>
+      <div class="themebar">
+        <div class="field" style="margin:0">
+          <label class="label" for="themeSel">Theme</label>
+          <select class="select" id="themeSel"></select>
+        </div>
+        <div class="themebtns">
+          <button class="btn btn-outline btn-sm" id="themeSave"><span data-icon="plus"></span> Save current</button>
+          <button class="btn btn-ghost btn-sm" id="themeExport"><span data-icon="download"></span> Export</button>
+          <button class="btn btn-ghost btn-sm" id="themeUpload"><span data-icon="upload"></span> Upload</button>
+          <button class="btn btn-ghost btn-sm" id="themeDelete" hidden><span data-icon="trash"></span> Delete</button>
+          <input type="file" id="themeIn" accept="application/json,.json" hidden>
+        </div>
+        <p class="helptext" id="themeNote" style="margin:.5rem 0 0">A theme stores every design setting — type, colours, margins, header, footer, page numbers and end mark — so you can reuse a look across reports and hand it to someone else.</p>
+      </div>
       <div class="acc" data-acc="cover">
         <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="image"></span><span class="acc-label">Cover</span><span class="acc-sum" id="sumCover"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
@@ -807,6 +871,17 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
           <div class="field"><label class="label" for="textCustom">Custom text colour</label><input type="color" class="colorfield" id="textCustom"></div>
           <p class="helptext" id="textNote" style="margin:0 0 .375rem"></p>
           <p class="helptext" style="margin:0">This sets the whole document. To colour part of a paragraph, select the words and use the colour dots on the floating toolbar.</p>
+        </div>
+      </div>
+
+      <div class="acc" data-acc="links">
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="link"></span><span class="acc-label">Links</span><span class="acc-sum" id="sumLinks"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <div class="acc-body" hidden>
+          <p class="grouplbl">Colour</p>
+          <div class="swatches" id="linkSwatches"></div>
+          <div class="field"><label class="label" for="linkCustom">Custom link colour</label><input type="color" class="colorfield" id="linkCustom"></div>
+          <div class="switch-row"><span class="label">Underline links</span><button class="switch" id="linkUnderline" role="switch" aria-checked="true"></button></div>
+          <p class="helptext" style="margin:.375rem 0 0">Sets every link in the document. Add links by selecting words and using the link button on the floating toolbar — they stay clickable in the exported PDF.</p>
         </div>
       </div>
 
@@ -938,6 +1013,17 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
   </div>
 </div>
 
+<div class="dialog" id="dlgTheme" role="dialog" aria-modal="true" aria-labelledby="dlgThemeTitle">
+  <h2 id="dlgThemeTitle">Save theme</h2>
+  <p class="dsc">Name this design so you can apply it to other reports later. It captures every setting in the Design panel, not the report's text or images.</p>
+  <div class="field"><label class="label" for="themeName">Theme name</label>
+    <input class="input" id="themeName" placeholder="e.g. Selat house style" autocomplete="off"></div>
+  <div class="dialog-footer">
+    <button class="btn btn-ghost" data-close>Cancel</button>
+    <button class="btn btn-default" id="themeSaveConfirm">Save theme</button>
+  </div>
+</div>
+
 <div class="fmtbar" id="fmtbar">
   <button data-cmd="bold" title="Bold" style="font-weight:700">B</button>
   <button data-cmd="italic" title="Italic" style="font-style:italic;font-family:Georgia,serif">I</button>
@@ -1025,6 +1111,8 @@ const ICONS = {
   unlink:'<path d="M13.3 8.7 15 7a5 5 0 0 1 7 7l-1.7 1.7"/><path d="M10.7 15.3 9 17a5 5 0 0 1-7-7l1.7-1.7"/><path d="m2 2 20 20"/>',
   toclist:'<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>',
   stat:'<path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M2 22h20"/>',
+  chart:'<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="13" width="3" height="4" rx="1"/>',
+  blurb:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.8"/><path d="M6.5 13h11"/><path d="M6.5 16h7"/>',
   frame:'<rect x="3" y="3" width="18" height="18" rx="2"/>',
   paint:'<path d="M19 11h-8a2 2 0 0 1-2-2V4"/><rect x="3" y="2" width="6" height="6" rx="1"/><path d="M15 11v3a2 2 0 0 1-2 2H9"/><rect x="5" y="16" width="8" height="6" rx="1"/>',
   col1:'<rect x="5" y="4" width="14" height="16" rx="1"/>',
@@ -1272,7 +1360,8 @@ function blankDoc(name){
                showNum:true, showHead:false, showFoot:false, paperColor:'#FFFFFF',
                folio:{ align:'right', bottom:null, side:null, color:'auto' },
                end:{ variant:'plain', color:'auto', opacity:100 },
-               textColor:'#9595B2', numberHeadings:false },
+               textColor:'#9595B2', numberHeadings:false,
+               linkColor:'accent', linkUnderline:true },
     toc:{ on:true, title:'Contents' },
     blocks:[]
   };
@@ -1316,6 +1405,7 @@ function newBlock(type){
     b.type = 'grid';
     b.cols = Number(type.slice(4));
     b.cells = Array.from({length:b.cols}, () => []);
+    b.colw = Array.from({length:b.cols}, () => 1);
     b.align = 'full'; b.width = 100;
     b.border = false; b.bg = 'none'; b.pad = 0; b.gap = 6; b.radius = 0;
   }
@@ -1327,6 +1417,14 @@ function newBlock(type){
     b.num=[false,true,true,true]; b.zebra=true; b.total=false; b.note='';
   }
   if(type==='image'){ b.imgId=null; b.w=0; b.h=0; b.scale=100; b.wrap='none'; b.caption='Caption'; }
+  if(type==='chart'){ b.imgId=null; b.w=0; b.h=0; b.style='bar'; b.caption='Figure 1 — Chart title'; b.note=''; }
+  if(type==='blurb'){
+    b.tone = 'dark';
+    b.imgId = null; b.w = 0; b.h = 0;   // optional custom mark
+    b.title = 'A shared <em>idea</em>, stated simply';
+    b.body = '<p>Use a blurb to open a section with a designed statement — a mark, a large line with one word set in italic, and a short passage that frames what follows.</p>'
+      + '<p>Select any word in the heading and press ⌘I to italicise it. Everything here is editable, and the panel tone can switch to match the page.</p>';
+  }
   if(type==='spacer'){ b.mm=12; }
   return b;
 }
@@ -1370,6 +1468,8 @@ function migrate(raw){
   out.settings = Object.assign(base.settings, raw.settings || {});
   out.settings.folio = Object.assign({ align:'right', bottom:null, side:null, color:'auto' }, out.settings.folio || {});
   out.settings.end = Object.assign({ variant:'plain', color:'auto', opacity:100 }, out.settings.end || {});
+  if(out.settings.linkColor == null) out.settings.linkColor = 'accent';
+  if(out.settings.linkUnderline == null) out.settings.linkUnderline = true;
   if(!out.settings.paperColor) out.settings.paperColor = out.settings.paper === 'dark' ? '#111519' : '#FFFFFF';
   delete out.settings.paper;
   out.meta = Object.assign(base.meta, raw.meta || {});
@@ -1446,6 +1546,7 @@ document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeDialog);
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && openDlg) closeDialog();
   if(e.key === 'Enter' && openDlg === 'dlgNew'){ e.preventDefault(); $('createBtn').click(); }
+  if(e.key === 'Enter' && openDlg === 'dlgTheme'){ e.preventDefault(); $('themeSaveConfirm').click(); }
 });
 let confirmAction = null;
 function confirmDelete(name, fn){
@@ -1679,6 +1780,34 @@ function paginate(){
   return overflowing;
 }
 
+/* column widths as fr weights, one per column; backfilled and length-matched
+   to b.cols so an older grid (or a changed column count) still renders evenly */
+function colWidths(b){
+  let w = Array.isArray(b.colw) ? b.colw.slice(0, b.cols) : [];
+  while(w.length < b.cols) w.push(1);
+  w = w.map(x => (typeof x === 'number' && x > 0) ? x : 1);
+  b.colw = w;
+  return w;
+}
+/* placeholder artwork for a graph block before a real chart image is dropped in */
+function chartGlyph(style){
+  if(style === 'line'){
+    return '<svg class="glyph" viewBox="0 0 64 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+      + '<path d="M4 34 L20 20 L34 26 L60 6"/>'
+      + '<circle cx="4" cy="34" r="2.5" fill="currentColor" stroke="none"/><circle cx="20" cy="20" r="2.5" fill="currentColor" stroke="none"/>'
+      + '<circle cx="34" cy="26" r="2.5" fill="currentColor" stroke="none"/><circle cx="60" cy="6" r="2.5" fill="currentColor" stroke="none"/></svg>';
+  }
+  return '<svg class="glyph" viewBox="0 0 64 40" fill="currentColor" aria-hidden="true">'
+    + '<rect x="4" y="20" width="9" height="20" rx="1"/><rect x="18" y="10" width="9" height="30" rx="1"/>'
+    + '<rect x="32" y="24" width="9" height="16" rx="1"/><rect x="46" y="4" width="9" height="36" rx="1"/></svg>';
+}
+/* the default blurb mark: a ring with a comma, echoing the template */
+function blurbMark(){
+  return '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true">'
+    + '<circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3.2"/>'
+    + '<circle cx="24" cy="21" r="6.2" fill="currentColor"/>'
+    + '<path d="M25 26c0 5-2.4 8-6 9.6" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
+}
 /* ---------- block rendering ---------- */
 function renderBlock(b, forMeasure){
   const el = document.createElement('div');
@@ -1718,32 +1847,58 @@ function renderBlock(b, forMeasure){
     el.style.setProperty('--iw', (b.scale || 100) + '%');
     el.style.setProperty('--ar', (b.w && b.h) ? (b.w + ' / ' + b.h) : '3 / 2');
     const inner = bImg
-      ? `<img src="${bImg}" draggable="false" alt="">`
+      ? `<img src="${bImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}>`
       : (forMeasure ? '' : `<button class="upl" type="button" contenteditable="false">${svg('upload')}<span>Upload an image or SVG</span></button>`);
     el.innerHTML = `<figure><div class="imgwrap">${inner}${forMeasure ? '' : '<span class="rz" title="Drag to resize"></span>'}</div></figure>`;
+  } else if(b.type === 'chart'){
+    const cImg = imgSrc(b.imgId);
+    el.style.setProperty('--ar', (b.w && b.h) ? (b.w + ' / ' + b.h) : '16 / 9');
+    const cap = `<div class="tcap" data-f="caption" ${ce}>${esc(b.caption || '')}</div>`;
+    const note = b.note ? `<div class="tnote" data-f="note" ${ce}>${esc(b.note)}</div>` : '';
+    const figure = cImg
+      ? `<div class="chartimg"><img src="${cImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}></div>`
+      : (forMeasure
+          ? '<div class="chartph"></div>'
+          : `<button class="upl chartph" type="button" contenteditable="false">${chartGlyph(b.style)}<span>Graph placeholder — click to add a chart image</span></button>`);
+    el.innerHTML = cap + figure + note;
+  } else if(b.type === 'blurb'){
+    el.dataset.tone = b.tone || 'dark';
+    const mImg = imgSrc(b.imgId);
+    const mark = `<div class="blurb-mark">${mImg ? `<img src="${mImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}>` : blurbMark()}</div>`;
+    el.innerHTML = mark
+      + `<div class="blurb-title" data-f="title" data-rich ${ce}>${b.title || ''}</div>`
+      + `<div class="blurb-body" data-f="body" data-rich ${ce}>${b.body || '<p></p>'}</div>`;
   } else if(b.type === 'stat'){
     el.innerHTML = `<span class="sv" data-f="v" ${ce}>${esc(b.v)}</span>`
       + `<span class="sl" data-f="l" ${ce}>${esc(b.l)}</span>`
       + (b.note ? `<span class="sn" data-f="note" ${ce}>${esc(b.note)}</span>` : '');
   } else if(b.type === 'grid'){
+    const cw = colWidths(b);
     el.dataset.cols = b.cols;
     el.dataset.align = b.align || 'full';
     el.dataset.bg = b.bg || 'none';
     if(b.border) el.dataset.border = '1';
+    el.style.gridTemplateColumns = cw.map(w => `minmax(0,${w}fr)`).join(' ');
     el.style.setProperty('--gcols', b.cols);
     el.style.setProperty('--ggap', (b.gap ?? 6) + 'mm');
     el.style.setProperty('--gpad', (b.pad ?? 0) + 'mm');
     el.style.setProperty('--grad', (b.radius ?? 0) + 'mm');
     if((b.align || 'full') !== 'full') el.style.width = (b.width || 60) + '%';
     (b.cells || []).forEach((cell, ci) => {
-      const cw = document.createElement('div');
-      cw.className = 'gcell';
-      cw.dataset.cell = ci;
-      if(cell.length) cell.forEach(kid => cw.appendChild(renderBlock(kid, forMeasure)));
+      const cellEl = document.createElement('div');
+      cellEl.className = 'gcell';
+      cellEl.dataset.cell = ci;
+      if(cell.length) cell.forEach(kid => cellEl.appendChild(renderBlock(kid, forMeasure)));
       else if(!forMeasure){
-        cw.innerHTML = `<div class="gcell-empty"><button type="button" data-celladd="${ci}">${svg('plus')}<span>Add</span></button></div>`;
+        cellEl.innerHTML = `<div class="gcell-empty"><button type="button" data-celladd="${ci}">${svg('plus')}<span>Add</span></button></div>`;
       }
-      el.appendChild(cw);
+      /* a divider on every boundary but the last, to drag column widths */
+      if(!forMeasure && ci < b.cols - 1){
+        const h = document.createElement('span');
+        h.className = 'colrz'; h.dataset.ci = ci; h.title = 'Drag to resize the columns';
+        cellEl.appendChild(h);
+      }
+      el.appendChild(cellEl);
     });
   } else if(b.type === 'spacer'){
     el.style.height = b.mm + 'mm'; el.style.marginBottom = '0';
@@ -1781,6 +1936,16 @@ function tocEntries(){
   return out;
 }
 function imgSrc(id){ return (id && D.images && D.images[id]) || null; }
+/* an image the browser can't decode (unsupported format, broken data) falls
+   back to the same placeholder an empty image block shows, so nothing breaks */
+function imgFallback(img){
+  const wrap = img.closest('.imgwrap');
+  if(!wrap || wrap.querySelector('.upl')) return;
+  const btn = document.createElement('button');
+  btn.className = 'upl'; btn.type = 'button'; btn.setAttribute('contenteditable', 'false');
+  btn.innerHTML = svg('upload') + '<span>Image can’t be shown — click to replace</span>';
+  img.replaceWith(btn);
+}
 function putImage(dataUrl){
   D.images = D.images || {};
   const id = uid();
@@ -1789,7 +1954,7 @@ function putImage(dataUrl){
 }
 function renderCover(){
   const m = D.meta, c = m.cover, cImg = imgSrc(c.imgId);
-  const page = document.createElement('div'); page.className = 'page';
+  const page = document.createElement('div'); page.className = 'page'; page.dataset.cover = '1';
   const cov = document.createElement('div'); cov.className = 'cover ' + c.layout;
   const bare = c.layout === 'bare';
   const art = cImg
@@ -1947,7 +2112,7 @@ function render(){
 
   const box = contentBox();
   pages.forEach((pg, pi) => {
-    const page = document.createElement('div'); page.className = 'page';
+    const page = document.createElement('div'); page.className = 'page'; page.dataset.page = String(pi + 1);
     if(D.settings.showHead && !pageOpensTopic(pi)){
       const hb = document.createElement('div'); hb.className = 'headband';
       hb.style.setProperty('--hh', headerBandMm() + 'mm');
@@ -1988,6 +2153,7 @@ function render(){
 
   paintSelection();
   drawStructure();
+  markCurrentPage();
   syncBandRows();
   coverInfoNote();
   accSummaries();
@@ -1998,7 +2164,7 @@ function render(){
 }
 
 /* ---------- selection + block toolbar ---------- */
-const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',image:'Image',divider:'Divider',spacer:'Spacer'};
+const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',chart:'Graph',blurb:'Blurb',image:'Image',divider:'Divider',spacer:'Spacer'};
 /* A bar belongs to the block's own container — the page body for top-level
    blocks, or the cell for something inside a column — so it lines up in both. */
 function barHost(el){
@@ -2076,6 +2242,10 @@ function blockBar(b){
           b.cells = cells;
         }
         b.cols = n;
+        /* keep per-column widths in step with the new count */
+        let w = Array.isArray(b.colw) ? b.colw.slice(0, n) : [];
+        while(w.length < n) w.push(1);
+        b.colw = w;
         commit();
       });
       if(b.cols === n) x.dataset.on = '1';
@@ -2120,6 +2290,27 @@ function blockBar(b){
   if(b.type === 'stat'){
     extra.push(btn(svg('note'), 'Add a note under the label', () => {
       b.note = b.note ? '' : 'Against RM 1.05b a year earlier.';
+      commit();
+    }));
+  }
+  if(b.type === 'blurb'){
+    const TONES = ['dark','paper','accent'];
+    extra.push(btn(svg('paint'), 'Cycle the panel tone', () => {
+      b.tone = TONES[(TONES.indexOf(b.tone || 'dark') + 1) % TONES.length];
+      commit(); toast('Panel: ' + b.tone);
+    }),
+    btn(svg('upload'), imgSrc(b.imgId) ? 'Replace the mark' : 'Use a custom mark', () => pickImage(b)));
+    if(imgSrc(b.imgId)) extra.push(btn(svg('reset'), 'Back to the default mark', () => { b.imgId = null; b.w = 0; b.h = 0; commit(); }));
+  }
+  if(b.type === 'chart'){
+    const bar = btn(svg('chart'), 'Bar placeholder', () => { b.style = 'bar'; commit(); });
+    const line = btn(svg('stat'), 'Line placeholder', () => { b.style = 'line'; commit(); });
+    ((b.style === 'line') ? line : bar).dataset.on = '1';
+    extra.push(bar, line,
+      btn(svg('upload'), imgSrc(b.imgId) ? 'Replace the chart image' : 'Add a chart image', () => pickImage(b)));
+    if(imgSrc(b.imgId)) extra.push(btn(svg('reset'), 'Back to placeholder', () => { b.imgId = null; b.w = 0; b.h = 0; commit(); toast('Chart back to placeholder'); }));
+    extra.push(btn(svg('note'), 'Add a note under the chart', () => {
+      b.note = b.note ? '' : 'Source: internal figures, FY2026.';
       commit();
     }));
   }
@@ -2287,6 +2478,7 @@ desk.addEventListener('input', e => {
   const b = findBlock(blk.dataset.id);
   if(!b) return;
   if(host.dataset.f === 'html') b.html = cleanHtml(blk);
+  else if(host.hasAttribute('data-rich')) setPath(b, host.dataset.f, sanitizeHtml(host.innerHTML) || '');
   else setPath(b, host.dataset.f, host.textContent);
   scheduleRepaginate(); save();
 });
@@ -2806,7 +2998,7 @@ desk.addEventListener('click', e => {
     if(g && g.cells[ci]) openMenu(cellAdd, CELL_ADD_MENU, v => insertBlockAt(0, v, g.cells[ci]));
     return;
   }
-  const up = e.target.closest('[data-t="image"] .upl');
+  const up = e.target.closest('[data-t="image"] .upl, [data-t="chart"] .upl');
   if(!up) return;
   const blk = up.closest('.blk');
   const b = findBlock(blk.dataset.id);
@@ -2814,6 +3006,18 @@ desk.addEventListener('click', e => {
 });
 desk.addEventListener('pointerdown', e => {
   if(e.button !== 0) return;
+  const colh = e.target.closest('.blk[data-t="grid"] .colrz');
+  if(colh){
+    e.preventDefault(); e.stopPropagation();
+    const gEl = colh.closest('.blk[data-t="grid"]');
+    const b = findBlock(gEl.dataset.id);
+    if(!b) return;
+    const w = colWidths(b);
+    colh.classList.add('dragging');
+    colrz = { b, ci:Number(colh.dataset.ci), x0:e.clientX, w:w.slice(),
+              total:w.reduce((a,x) => a + x, 0), px:gEl.getBoundingClientRect().width, el:gEl, handle:colh };
+    return;
+  }
   const handle = e.target.closest('[data-t="image"] .rz');
   if(handle){
     e.preventDefault(); e.stopPropagation();
@@ -2893,6 +3097,26 @@ window.addEventListener('pointerup', () => {
   commit();
   toast(t.side === 'none' ? 'Placed full width'
     : (nudged ? 'Moved above the nearest paragraph so text wraps' : 'Text now wraps around the image'));
+});
+
+/* ---------- column resize ---------- */
+let colrz = null;
+window.addEventListener('pointermove', e => {
+  if(!colrz) return;
+  const c = colrz;
+  const dFr = ((e.clientX - c.x0) / c.px) * c.total;
+  const min = 0.25;
+  const pair = c.w[c.ci] + c.w[c.ci + 1];
+  let a = Math.max(min, Math.min(pair - min, c.w[c.ci] + dFr));
+  c.b.colw[c.ci] = a;
+  c.b.colw[c.ci + 1] = pair - a;
+  c.el.style.gridTemplateColumns = c.b.colw.map(w => `minmax(0,${w}fr)`).join(' ');
+});
+window.addEventListener('pointerup', () => {
+  if(!colrz) return;
+  const c = colrz; colrz = null;
+  if(c.handle) c.handle.classList.remove('dragging');
+  commit();
 });
 
 /* rich text */
@@ -3279,26 +3503,28 @@ bandUpload('footIn','footPick','footClear','footer','Footer image');
 /* ==========================================================================
    STRUCTURE — a tree derived from the flat block list
    ========================================================================== */
-const BLOCK_LABEL = { body:'Body text', table:'Table', stats:'Key figures', quote:'Pull quote',
+const BLOCK_LABEL = { body:'Body text', table:'Table', chart:'Graph', blurb:'Blurb', stats:'Key figures', quote:'Pull quote',
   image:'Image', divider:'Divider', spacer:'Spacer', pagebreak:'Page break',
   stat:'Statistic', grid:'Columns' };
-const BLOCK_ICON = { body:'pilcrow', table:'table', stats:'hash', quote:'quote',
+const BLOCK_ICON = { body:'pilcrow', table:'table', chart:'chart', blurb:'blurb', stats:'hash', quote:'quote',
   image:'image', divider:'minus', spacer:'updown', pagebreak:'breakpage',
   stat:'stat', grid:'col3' };
 const ADD_MENU = [
   ['#','Text'],
-  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'],
+  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'], ['blurb','Blurb','blurb'],
   ['#','Data'],
-  ['stat','Statistic','stat'], ['stats','Key figures','hash'], ['table','Table','table'],
+  ['stat','Statistic','stat'], ['stats','Key figures','hash'], ['table','Table','table'], ['chart','Graph','chart'],
   ['#','Layout'],
   ['grid2','2 columns','col2'], ['grid3','3 columns','col3'], ['grid4','4 columns','col4'], ['grid5','5 columns','col5'],
   ['#','Media'],
   ['image','Image','image'], ['divider','Divider','minus'], ['spacer','Spacer','updown'], ['pagebreak','Page break','breakpage']
 ];
-/* what may go inside a column: no topics or subheads (they drive the contents
-   page and the structure tree), and no nested grids */
+/* what may go inside a column: any normal component, including subheads and
+   small headings. Only topics (they open sections), nested grids and page
+   breaks are kept out. Headings inside a column render but aren't listed in
+   the contents or the structure tree. */
 const CELL_ADD_MENU = ADD_MENU.filter(([v]) =>
-  v === '#' ? true : !/^(h1|h2|h3|grid[2-5]|pagebreak)$/.test(v)
+  v === '#' ? true : !/^(h1|grid[2-5]|pagebreak)$/.test(v)
 ).filter((item, i, arr) => !(item[0] === '#' && (!arr[i+1] || arr[i+1][0] === '#')));
 const collapsed = new Set();
 
@@ -3446,6 +3672,73 @@ function setColumns(cols){
   toast(cols === 2 ? 'Split out as a two-column passage' : 'Split out as a single-column passage');
 }
 /* ==========================================================================
+   SELECT → RETYPE
+   Paste a whole document into a body block, then select any run of text,
+   right-click, and turn it into its own heading, quote or paragraph. The block
+   splits into up to three: the text before, the retyped selection, the text
+   after — so a long paste becomes structured blocks quickly.
+   ========================================================================== */
+const RETYPE_MENU = [
+  ['#', 'Turn selection into'],
+  ['h1', 'Topic', 'h1'], ['h2', 'Subsection', 'h2'], ['h3', 'Small heading', 'h3'],
+  ['body', 'Body text', 'pilcrow'], ['quote', 'Pull quote', 'quote']
+];
+function makeTypedBlock(type, html){
+  const b = newBlock(type);
+  if(type === 'body') b.html = normalizeBodyHtml(html) || '<p></p>';
+  else if(type === 'quote') b.text = plainText(html) || 'Quote';
+  else b.text = plainText(html) || 'Heading';   // h1 / h2 / h3
+  if(type === 'h1') b.newPage = false;
+  return b;
+}
+function retypeSelection(type){
+  const s = getSelection();
+  if(savedRange){ s.removeAllRanges(); s.addRange(savedRange); }
+  if(!s.rangeCount || s.isCollapsed){ toast('Select some text first'); return; }
+  const blk = bodyBlockFrom(s.anchorNode);
+  if(!blk){ toast('Select text inside a body block'); return; }
+  const b = findBlock(blk.dataset.id);
+  if(!b) return;
+  const r = s.getRangeAt(0);
+  let sc = r.startContainer, so = r.startOffset, ec = r.endContainer, eo = r.endOffset;
+  if(!blk.contains(sc)){ sc = blk; so = 0; }
+  if(!blk.contains(ec)){ ec = blk; eo = blk.childNodes.length; }
+  const before = document.createRange(); before.selectNodeContents(blk); before.setEnd(sc, so);
+  const mid = document.createRange(); mid.setStart(sc, so); mid.setEnd(ec, eo);
+  const after = document.createRange(); after.selectNodeContents(blk); after.setStart(ec, eo);
+  const headHtml = fragHtml(before.cloneContents());
+  const midHtml = fragHtml(mid.cloneContents());
+  const tailHtml = fragHtml(after.cloneContents());
+  if(!plainText(midHtml)){ toast('Select some text first'); return; }
+  const bodyKeep = h => { const nb = newBlock('body'); nb.html = h; if(b.cols === 2) nb.cols = 2; return nb; };
+  const made = [];
+  if(headHtml) made.push(bodyKeep(headHtml));
+  const target = makeTypedBlock(type, midHtml);
+  made.push(target);
+  if(tailHtml) made.push(bodyKeep(tailHtml));
+  const list = ownerList(b.id) || D.blocks;
+  list.splice(list.indexOf(b), 1, ...made);
+  sel = target.id;
+  savedRange = null;
+  commit();
+  const el = desk.querySelector(`.blk[data-id="${target.id}"]`);
+  if(el) el.scrollIntoView({ block:'nearest' });
+  const name = { h1:'topic', h2:'subsection', h3:'small heading', body:'paragraph', quote:'pull quote' }[type] || type;
+  toast('Retyped the selection as a ' + name);
+}
+desk.addEventListener('contextmenu', e => {
+  if($('view-editor').hidden) return;
+  const s = getSelection();
+  if(!s.rangeCount || s.isCollapsed) return;          // no selection → native menu
+  const blk = bodyBlockFrom(s.anchorNode);
+  if(!blk || !blk.contains(e.target)) return;          // not our body text → native menu
+  e.preventDefault();
+  rememberRange();
+  const anchor = { getBoundingClientRect: () => ({ left:e.clientX, right:e.clientX, top:e.clientY, bottom:e.clientY, width:0, height:0 }) };
+  openMenu(anchor, RETYPE_MENU, v => retypeSelection(v));
+});
+
+/* ==========================================================================
    ADDING ON THE PAGE
    Hovering a block shows a hairline with a + at its bottom edge. Everything
    in the sidebar's add menu is available here, plus Section, so the document
@@ -3507,7 +3800,8 @@ function insertBlockAt(index, type, list){
   if(el) el.scrollIntoView({ block:'nearest' });
   if(type === 'h1' || type === 'h2' || type === 'h3'){
     const inp = $('tree').querySelector(`[data-node="${b.id}"] .node-input`);
-    if(inp){ inp.focus(); inp.select(); }
+    if(inp){ inp.focus(); inp.select(); return; }
+    focusBlock(b.id);   // a heading nested in a column has no tree row to rename
     return;
   }
   if(type === 'image') pickImage(b); else focusBlock(b.id);
@@ -3532,6 +3826,8 @@ function preview(b){
   if(b.type === 'quote') return cut(b.text, 30);
   if(b.type === 'stats') return cut(b.items.map(x => x.v).join(' · '), 30);
   if(b.type === 'image') return imgSrc(b.imgId) ? (b.vector ? 'SVG · ' : '') + cut(b.caption, 26) : 'No image yet';
+  if(b.type === 'chart') return imgSrc(b.imgId) ? cut(b.caption, 26) : 'Graph placeholder';
+  if(b.type === 'blurb') return cut((b.title||'').replace(/<[^>]*>/g,' '), 28) || 'Blurb';
   if(b.type === 'stat') return cut((b.v || '') + ' · ' + (b.l || ''), 30);
   if(b.type === 'grid'){
     const n = (b.cells || []).reduce((a, c) => a + c.length, 0);
@@ -3541,22 +3837,54 @@ function preview(b){
   return '';
 }
 
-/* dropdown menu */
+/* dropdown menu — a grouped list ('#' rows are group headings) renders as tabs,
+   one group shown at a time, so a long component list stays compact */
 const menu = $('menu');
 let menuPick = null;
+let menuRect = null;   // a snapshot, so switching tabs re-anchors even if the opener (a hover + button) is already gone
+function positionMenu(){
+  if(!menuRect) return;
+  menu.style.left = Math.min(innerWidth - menu.offsetWidth - 8, Math.max(8, menuRect.left - 4)) + 'px';
+  menu.style.top = Math.min(innerHeight - menu.offsetHeight - 8, menuRect.bottom + 4) + 'px';
+}
 function openMenu(anchor, items, onPick){
-  menu.innerHTML = items.map(([v, label, ic]) => v === '#'
-    ? `<div class="mlabel">${esc(label)}</div>`
-    : `<button data-v="${v}">${svg(ic)} ${label}</button>`).join('');
+  const groups = [];
+  items.forEach(([v, label, ic]) => {
+    if(v === '#'){ groups.push({ label, items:[] }); return; }
+    if(!groups.length) groups.push({ label:'', items:[] });
+    groups[groups.length - 1].items.push([v, label, ic]);
+  });
+  const tabbed = groups.length >= 2;
+  menu.classList.toggle('tabbed', tabbed);
+  if(tabbed){
+    menu.innerHTML =
+      `<div class="mtabs" role="tablist">${groups.map((g, i) =>
+        `<button class="mtab${i === 0 ? ' on' : ''}" data-tab="${i}">${esc(g.label)}</button>`).join('')}</div>`
+      + groups.map((g, i) =>
+        `<div class="mpanel${i === 0 ? ' on' : ''}" data-panel="${i}">${g.items.map(([v, label, ic]) =>
+          `<button data-v="${v}">${svg(ic)} ${esc(label)}</button>`).join('')}</div>`).join('');
+  } else {
+    menu.innerHTML = items.map(([v, label, ic]) => v === '#'
+      ? `<div class="mlabel">${esc(label)}</div>`
+      : `<button data-v="${v}">${svg(ic)} ${esc(label)}</button>`).join('');
+  }
   menu.setAttribute('data-open','');
   const r = anchor.getBoundingClientRect();
-  menu.style.left = Math.min(innerWidth - menu.offsetWidth - 8, Math.max(8, r.left - 4)) + 'px';
-  menu.style.top = Math.min(innerHeight - menu.offsetHeight - 8, r.bottom + 4) + 'px';
+  menuRect = { left:r.left, right:r.right, top:r.top, bottom:r.bottom };
+  positionMenu();
   menuPick = onPick;
 }
-function closeMenu(){ menu.removeAttribute('data-open'); menuPick = null; }
+function closeMenu(){ menu.removeAttribute('data-open'); menuPick = null; menuRect = null; }
 menu.addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
+  const tab = e.target.closest('.mtab');
+  if(tab){
+    const i = tab.dataset.tab;
+    menu.querySelectorAll('.mtab').forEach(t => t.classList.toggle('on', t === tab));
+    menu.querySelectorAll('.mpanel').forEach(p => p.classList.toggle('on', p.dataset.panel === i));
+    positionMenu();
+    return;
+  }
+  const b = e.target.closest('button[data-v]'); if(!b) return;
   const fn = menuPick; closeMenu(); if(fn) fn(b.dataset.v);
 });
 document.addEventListener('mousedown', e => {
@@ -3794,9 +4122,56 @@ function scrollToPage(i){
   const p = desk.querySelectorAll('.page')[i];
   if(p) p.scrollIntoView({ behavior:'smooth', block:'start' });
 }
+/* mark, in the layers panel, whichever sheet is centred in the desk right now */
+function markCurrentPage(){
+  const tree = $('tree');
+  if(!tree || $('view-editor').hidden) return;
+  const dr = desk.getBoundingClientRect();
+  const mid = dr.top + desk.clientHeight / 2;
+  let best = null, bestD = Infinity;
+  desk.querySelectorAll('.page').forEach(p => {
+    const r = p.getBoundingClientRect();
+    const d = Math.abs((r.top + r.bottom) / 2 - mid);
+    if(d < bestD){ bestD = d; best = p; }
+  });
+  tree.querySelectorAll('.onpage').forEach(n => n.classList.remove('onpage'));
+  if(!best) return;
+  const mark = sel => { const r = tree.querySelector(sel); if(r) r.classList.add('onpage'); };
+  if(best.dataset.cover !== undefined) mark('[data-sheet="cover"]');
+  else if(best.dataset.toc !== undefined) mark('[data-sheet="toc"]');
+  else if(best.dataset.end !== undefined) mark('[data-sheet="end"]');
+  else if(best.dataset.page){
+    const ids = new Set(allBlocks(pages[Number(best.dataset.page) - 1] || []).map(b => b.id));
+    tree.querySelectorAll('[data-node]').forEach(n => { if(ids.has(n.dataset.node)) n.classList.add('onpage'); });
+  }
+}
+/* keep the highlighted layers in view as the page scrolls, moving the panel only
+   when the group has drifted off its edges (so it doesn't jitter) */
+function scrollLayerIntoView(){
+  const tree = $('tree');
+  const pane = tree && tree.closest('.pane');
+  if(!pane) return;
+  const nodes = tree.querySelectorAll('.onpage');
+  if(!nodes.length) return;
+  const pr = pane.getBoundingClientRect(), pad = 14;
+  const fr = nodes[0].getBoundingClientRect();
+  const lr = nodes[nodes.length - 1].getBoundingClientRect();
+  if(fr.top < pr.top + pad){
+    pane.scrollTop -= (pr.top + pad) - fr.top;
+  } else if(lr.bottom > pr.bottom - pad){
+    const room = Math.min(lr.bottom - (pr.bottom - pad), fr.top - (pr.top + pad));
+    if(room > 0) pane.scrollTop += room;
+  }
+}
+let pageScrollRAF = 0;
+desk.addEventListener('scroll', () => {
+  if(pageScrollRAF) return;
+  pageScrollRAF = requestAnimationFrame(() => { pageScrollRAF = 0; markCurrentPage(); scrollLayerIntoView(); });
+});
 function sysRow(iconName, label, opts){
   const row = document.createElement('div');
   row.className = 'node sys';
+  if(opts.sheetKey) row.dataset.sheet = opts.sheetKey;
   const tw = document.createElement('span'); tw.className = 'tw hidden';
   const ic = document.createElement('span'); ic.className = 'ic'; ic.innerHTML = opts.iconHtml || svg(iconName);
   if(opts.rowClass) row.classList.add(opts.rowClass);
@@ -3848,9 +4223,9 @@ function drawStructure(){
   const pgm = pageMap();
   host.innerHTML = '';
 
-  const cover = sysRow('image', 'Cover', { onClick: () => scrollToPage(0), pg:'' });
+  const cover = sysRow('image', 'Cover', { onClick: () => scrollToPage(0), pg:'', sheetKey:'cover' });
   host.append(cover);
-  const toc = sysRow('layers', 'Table of contents', { editable:true, toggle:true });
+  const toc = sysRow('layers', 'Table of contents', { editable:true, toggle:true, sheetKey:'toc' });
   host.append(toc);
   if(!D.toc.on) toc.style.opacity = '.55';
 
@@ -3887,6 +4262,7 @@ function drawStructure(){
     iconHtml: HEADER_MARK,
     rowClass: 'sys-end',
     pg: '',
+    sheetKey: 'end',
     onClick: () => { const ps = desk.querySelectorAll('.page'); if(ps.length) ps[ps.length-1].scrollIntoView({ behavior:'smooth', block:'start' }); }
   });
   host.append(end);
@@ -3961,15 +4337,22 @@ function applyTheme(){
   const pal = paperPalette(D.settings.paperColor);
   document.documentElement.dataset.paper = pal.dark ? 'dark' : 'light';
   const accentVis = readableAccent(D.settings.accent, pal.paper);
+  const bodyColor = D.settings.textColor === 'muted' ? pal.dim
+    : (D.settings.textColor === 'accent' ? accentVis
+    : (/^#[0-9a-f]{6}$/i.test(D.settings.textColor || '') ? D.settings.textColor : pal.text));
+  const lc = D.settings.linkColor;
+  const linkColor = lc === 'accent' ? accentVis
+    : (lc === 'muted' ? pal.dim
+    : (lc === 'text' ? bodyColor
+    : (/^#[0-9a-f]{6}$/i.test(lc || '') ? lc : accentVis)));
   const tok = {
     '--paper':pal.paper, '--doc-text':pal.text, '--doc-head':pal.head, '--doc-quote':pal.quote,
     '--doc-dim':pal.dim, '--doc-faint':pal.faint, '--doc-rule':pal.rule, '--doc-rule-strong':pal.ruleStrong,
     '--doc-hair':pal.hair, '--doc-hair2':pal.hair2, '--doc-hair3':pal.hair3, '--doc-zebra':pal.zebra,
     '--doc-total':pal.total, '--doc-holder':pal.holder, '--doc-runhead':pal.runhead, '--doc-num':pal.num,
     '--doc-toc-l2':pal.tocL2, '--doc-toc-p':pal.tocP, '--doc-lead':pal.lead,
-    '--doc-body-color': D.settings.textColor === 'muted' ? pal.dim
-      : (D.settings.textColor === 'accent' ? accentVis
-      : (/^#[0-9a-f]{6}$/i.test(D.settings.textColor || '') ? D.settings.textColor : pal.text)),
+    '--doc-body-color': bodyColor,
+    '--doc-link': linkColor, '--doc-link-ud': D.settings.linkUnderline === false ? 'none' : 'underline',
     '--doc-accent':D.settings.accent, '--doc-accent-vis':accentVis,
     '--doc-thead-fg': relLum(toRgb(accentVis)) > 0.5 ? '#12151A' : '#FFFFFF'
   };
@@ -4019,6 +4402,26 @@ TEXT_CHOICES.forEach(([key,name,css]) => {
   b.onclick = () => { D.settings.textColor = key; applyTheme(); syncControls(); save(); };
   textSws.appendChild(b);
 });
+const LINK_CHOICES = [
+  ['accent','Accent','var(--doc-accent-vis)'],
+  ['text','Body text','var(--doc-body-color,var(--doc-text))'],
+  ['muted','Muted','var(--doc-dim)'],
+  ['#2B3A8F','Indigo','#2B3A8F']
+];
+const linkSws = $('linkSwatches');
+LINK_CHOICES.forEach(([key,name,css]) => {
+  const b = document.createElement('button');
+  b.className = 'sw'; b.style.background = css; b.title = name; b.setAttribute('aria-label', name);
+  b.dataset.link = key;
+  b.onclick = () => { D.settings.linkColor = key; applyTheme(); syncControls(); save(); };
+  linkSws.appendChild(b);
+});
+on('linkCustom','input', e => { D.settings.linkColor = e.target.value; applyTheme(); syncControls(); save(); });
+$('linkUnderline').onclick = () => {
+  D.settings.linkUnderline = !(D.settings.linkUnderline !== false);
+  setSwitch($('linkUnderline'), D.settings.linkUnderline);
+  applyTheme(); accSummaries(); save();
+};
 const paperSws = $('paperSwatches');
 PAPERS.forEach(([hex,name]) => {
   const b = document.createElement('button');
@@ -4202,7 +4605,148 @@ function syncControls(){
   paperNote();
   document.querySelectorAll('#swatches .sw').forEach((x,i) =>
     x.setAttribute('aria-pressed', String(ACCENTS[i] && ACCENTS[i][0] === D.settings.accent)));
+  document.querySelectorAll('#linkSwatches .sw').forEach(x =>
+    x.setAttribute('aria-pressed', String(String(x.dataset.link).toLowerCase() === String(D.settings.linkColor||'').toLowerCase())));
+  $('linkCustom').value = /^#[0-9a-f]{6}$/i.test(D.settings.linkColor || '') ? D.settings.linkColor : '#2B3A8F';
+  setSwitch($('linkUnderline'), D.settings.linkUnderline !== false);
 }
+
+/* ==========================================================================
+   THEMES — a snapshot of every design setting, so a look can be reused across
+   reports, exported to a file, uploaded and loaded back. Content (text, blocks,
+   images) is never part of a theme.
+   ========================================================================== */
+const K_THEMES = 'studio:themes';
+const BUILTIN_THEMES = [
+  { id:'b:editorial', builtin:true, name:'Editorial White',
+    settings:{ accent:'#0B5D57', type:'editorial', paperColor:'#FFFFFF', textColor:'auto', margin:'normal', bodySize:106 } },
+  { id:'b:corporate', builtin:true, name:'Corporate Indigo',
+    settings:{ accent:'#2B3A8F', type:'corporate', paperColor:'#FFFFFF', textColor:'auto', margin:'normal', bodySize:100 } },
+  { id:'b:classic', builtin:true, name:'Classic Ivory',
+    settings:{ accent:'#7B2C2C', type:'classic', paperColor:'#FAF7F0', textColor:'auto', margin:'wide', bodySize:112 } },
+  { id:'b:gold', builtin:true, name:'Songket Gold',
+    settings:{ accent:'#A8791E', type:'editorial', paperColor:'#F1F0EC', textColor:'auto', margin:'normal', bodySize:106 } },
+  { id:'b:midnight', builtin:true, name:'Midnight',
+    settings:{ accent:'#A8791E', type:'corporate', paperColor:'#0C1524', textColor:'auto', margin:'normal', bodySize:104 } }
+];
+let userThemes = [];
+function allThemes(){ return BUILTIN_THEMES.concat(userThemes); }
+
+/* fill in any field a partial or older theme is missing, mirroring migrate() */
+function normalizeSettings(s){
+  const base = blankDoc().settings;
+  const out = Object.assign(base, s || {});
+  out.folio = Object.assign({ align:'right', bottom:null, side:null, color:'auto' }, (s && s.folio) || {});
+  out.end = Object.assign({ variant:'plain', color:'auto', opacity:100 }, (s && s.end) || {});
+  if(out.linkColor == null) out.linkColor = 'accent';
+  if(out.linkUnderline == null) out.linkUnderline = true;
+  if(!out.paperColor) out.paperColor = '#FFFFFF';
+  return out;
+}
+function themeFromCurrent(name){
+  return {
+    studioTheme:1, id:'u:'+uid(), name:(name||'Untitled theme').trim() || 'Untitled theme',
+    created:Date.now(),
+    settings: JSON.parse(JSON.stringify(D.settings)),
+    coverLayout: D.meta.cover.layout
+  };
+}
+function isThemeFile(o){ return o && typeof o === 'object' && o.settings && typeof o.settings === 'object'; }
+
+async function loadThemes(){
+  const v = await sGet(K_THEMES);
+  userThemes = Array.isArray(v) ? v : [];
+  populateThemeSelect();
+}
+function persistThemes(){ return sSet(K_THEMES, userThemes); }
+
+function populateThemeSelect(){
+  const sel = $('themeSel'); if(!sel) return;
+  const prev = sel.value;
+  let html = '<option value="" disabled selected>Load a theme…</option>';
+  html += '<optgroup label="Built-in">' +
+    BUILTIN_THEMES.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('') + '</optgroup>';
+  if(userThemes.length) html += '<optgroup label="Saved">' +
+    userThemes.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('') + '</optgroup>';
+  sel.innerHTML = html;
+  if(prev && allThemes().some(t => t.id === prev)) sel.value = prev;
+  updateThemeButtons();
+}
+function updateThemeButtons(){
+  const t = allThemes().find(x => x.id === $('themeSel').value);
+  $('themeDelete').hidden = !(t && !t.builtin);
+}
+function applyThemeObject(t){
+  if(!t) return;
+  D.settings = normalizeSettings(JSON.parse(JSON.stringify(t.settings)));
+  if(t.coverLayout) D.meta.cover.layout = t.coverLayout;
+  applyTheme(); syncControls(); render(); save();
+  toast('Loaded “' + t.name + '”');
+}
+
+$('themeSel').onchange = () => {
+  updateThemeButtons();
+  const t = allThemes().find(x => x.id === $('themeSel').value);
+  if(t) applyThemeObject(t);
+};
+$('themeSave').onclick = () => {
+  $('themeName').value = '';
+  showDialog('dlgTheme', 'themeName');
+};
+$('themeSaveConfirm').onclick = () => {
+  const t = themeFromCurrent($('themeName').value);
+  userThemes.push(t);
+  persistThemes();
+  populateThemeSelect();
+  $('themeSel').value = t.id;
+  updateThemeButtons();
+  closeDialog();
+  toast('Saved “' + t.name + '”');
+};
+$('themeExport').onclick = () => {
+  const active = allThemes().find(t => t.id === $('themeSel').value);
+  const name = (active ? active.name : (D.name || 'theme'));
+  const t = themeFromCurrent(name);
+  const blob = new Blob([JSON.stringify(t, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (name.replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'theme') + '.theme.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Theme exported');
+};
+$('themeUpload').onclick = () => $('themeIn').click();
+$('themeIn').onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let o;
+    try{ o = JSON.parse(rd.result); }catch(_){ toast('That file isn’t a theme'); return; }
+    if(!isThemeFile(o)){ toast('That file isn’t a theme'); return; }
+    const t = { studioTheme:1, id:'u:'+uid(),
+      name:(o.name || f.name.replace(/\.(theme\.)?json$/i, '') || 'Imported theme'),
+      created:Date.now(), settings:o.settings, coverLayout:o.coverLayout };
+    userThemes.push(t);
+    persistThemes();
+    populateThemeSelect();
+    $('themeSel').value = t.id;
+    applyThemeObject(t);
+  };
+  rd.readAsText(f);
+};
+$('themeDelete').onclick = () => {
+  const id = $('themeSel').value;
+  const t = userThemes.find(x => x.id === id);
+  if(!t) return;
+  userThemes = userThemes.filter(x => x.id !== id);
+  persistThemes();
+  populateThemeSelect();
+  toast('Theme deleted');
+};
+populateThemeSelect();
+loadThemes();
 
 /* ==========================================================================
    DESIGN PANEL ACCORDION — one group open at a time, remembered between
@@ -4234,6 +4778,8 @@ function accSummaries(){
   set('sumType', `${t} · ${(D.settings.bodySize / 10).toFixed(1)}pt`);
   const pal = paperPalette(D.settings.paperColor);
   set('sumColour', dots([D.settings.accent, pal.paper, getComputedStyle(document.documentElement).getPropertyValue('--doc-body-color').trim() || pal.text]));
+  const linkName = { accent:'Accent', text:'Body', muted:'Muted' }[D.settings.linkColor] || 'Custom';
+  set('sumLinks', esc(linkName) + (D.settings.linkUnderline === false ? ' · no underline' : ' · underlined'));
   const m = MARGINS[D.settings.margin];
   set('sumPage', `${D.settings.margin} · ${m.top} / ${m.side} mm`);
   const bands = [];
