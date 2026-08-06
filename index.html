@@ -591,7 +591,18 @@ table.doc thead th.num{font-size:.81em}
 table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 .tnote{font-size:8pt;color:var(--doc-dim);margin-top:2mm;font-style:italic}
 .tfit{font-family:var(--doc-util);font-size:6.5pt;letter-spacing:.1em;text-transform:uppercase;color:var(--doc-faint);margin-top:1.5mm}
-@media print{ .tfit{display:none!important} }
+table.doc.fixed{table-layout:fixed}
+table.doc thead th{position:relative}
+.tcolrz{position:absolute;top:0;bottom:0;right:-5px;width:10px;z-index:6;cursor:col-resize;touch-action:none;display:none}
+.tcolrz::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);background:hsl(var(--ring));opacity:0;transition:opacity .1s}
+.blk[data-t="table"].sel .tcolrz{display:block}
+.blk[data-t="table"].sel .tcolrz:hover::before,.tcolrz.dragging::before{opacity:1}
+.blk[data-t="table"] .selcell{outline:2px solid hsl(var(--ring));outline-offset:-2px}
+.cellpop{position:fixed;z-index:70;display:grid;grid-template-columns:repeat(5,20px);gap:5px;padding:8px;
+  background:hsl(var(--popover));border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
+.cellpop .sw{width:20px;height:20px;border-radius:5px;border:1px solid hsl(var(--border));cursor:pointer;font-size:10px;color:hsl(var(--muted-foreground));padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
+.cellpop .sw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
+@media print{ .tfit{display:none!important} .tcolrz{display:none!important} .blk[data-t="table"] .selcell{outline:none!important} }
 /* wrapped images float, so text beside them reflows automatically */
 [data-t="image"][data-wrap="left"],[data-t="image"][data-wrap="right"]{width:var(--iw);z-index:2}
 [data-t="image"][data-wrap="left"]{float:left;margin:0 6mm 3mm 0}
@@ -601,9 +612,13 @@ table.doc tr.total td{font-weight:600;background:var(--doc-total)}
 [data-t="h1"],[data-t="table"],[data-t="stats"],[data-t="divider"]{clear:both}
 [data-t="image"] figure{margin:0}
 [data-t="image"]{width:var(--iw,100%)}
-[data-t="image"] .imgwrap{position:relative;width:100%;aspect-ratio:var(--ar,3/2)}
-[data-t="image"] img{width:100%;height:100%;display:block;object-fit:cover}
+[data-t="image"] .imgwrap{position:relative;width:100%;aspect-ratio:var(--ar,3/2);overflow:hidden}
+[data-t="image"] img{width:100%;height:100%;display:block;object-fit:cover;
+  object-position:var(--ox,50%) var(--oy,50%);transform:scale(var(--zoom,1));transform-origin:var(--ox,50%) var(--oy,50%)}
 [data-t="image"][data-vector="1"] img{object-fit:contain}
+.blk[data-t="image"].cropping .imgwrap{outline:2px solid hsl(var(--ring));outline-offset:2px}
+.blk[data-t="image"].cropping img{cursor:grab}
+.blk[data-t="image"].cropping.grabbing img{cursor:grabbing}
 [data-t="image"] .upl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
   border:1px dashed var(--doc-rule);background:var(--doc-holder);color:var(--doc-faint);cursor:pointer;
   font-family:var(--doc-util);font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase}
@@ -1114,6 +1129,9 @@ const ICONS = {
   chart:'<path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12" y="7" width="3" height="10" rx="1"/><rect x="17" y="13" width="3" height="4" rx="1"/>',
   blurb:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.8"/><path d="M6.5 13h11"/><path d="M6.5 16h7"/>',
   frame:'<rect x="3" y="3" width="18" height="18" rx="2"/>',
+  crop:'<path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/>',
+  mergec:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M12 5v3"/><path d="M12 16v3"/><path d="m9 10 3 2-3 2"/><path d="m15 10-3 2 3 2"/>',
+  splitc:'<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M12 5v14"/><path d="m8 10-2 2 2 2"/><path d="m16 10 2 2-2 2"/>',
   paint:'<path d="M19 11h-8a2 2 0 0 1-2-2V4"/><rect x="3" y="2" width="6" height="6" rx="1"/><path d="M15 11v3a2 2 0 0 1-2 2H9"/><rect x="5" y="16" width="8" height="6" rx="1"/>',
   col1:'<rect x="5" y="4" width="14" height="16" rx="1"/>',
   col2:'<rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/>',
@@ -1415,8 +1433,9 @@ function newBlock(type){
     b.head=['Item','FY2026','FY2025','Change'];
     b.rows=[['Revenue','1,240,900','1,049,700','+18.2%'],['Operating profit','214,500','176,300','+21.7%'],['Profit after tax','158,200','131,900','+19.9%']];
     b.num=[false,true,true,true]; b.zebra=true; b.total=false; b.note='';
+    b.tcolw=null; b.cellbg={}; b.merges={};
   }
-  if(type==='image'){ b.imgId=null; b.w=0; b.h=0; b.scale=100; b.wrap='none'; b.caption='Caption'; }
+  if(type==='image'){ b.imgId=null; b.w=0; b.h=0; b.scale=100; b.ar=0; b.ox=50; b.oy=50; b.zoom=1; b.wrap='none'; b.caption='Caption'; }
   if(type==='chart'){ b.imgId=null; b.w=0; b.h=0; b.style='bar'; b.caption='Figure 1 — Chart title'; b.note=''; }
   if(type==='blurb'){
     b.tone = 'dark';
@@ -1714,6 +1733,8 @@ $('backBtn').onclick = async () => { await flushSave(true); showLibrary(); };
 let D = null;         // active document
 let sel = null;       // selected block id
 let selCell = null;
+let cropId = null;    // image block currently in crop mode
+let wheelCommitT = 0; // debounce for wheel-zoom history commits
 let zoom = 0.75;
 let pages = [];
 const desk = $('desk');
@@ -1789,6 +1810,88 @@ function colWidths(b){
   b.colw = w;
   return w;
 }
+/* ---------- table helpers (colour / merge / widths) ---------- */
+function normTable(b){
+  const cells = b.head.length, rows = b.rows.length;
+  if(Array.isArray(b.tcolw) && b.tcolw.length !== cells){
+    const src = b.tcolw.filter(x => x > 0);
+    const avg = src.length ? src.reduce((a,x) => a + x, 0) / src.length : 1;
+    const w = b.tcolw.slice(0, cells).map(x => x > 0 ? x : avg);
+    while(w.length < cells) w.push(avg);
+    b.tcolw = w;
+  }
+  const okRC = (r,c) => c >= 0 && c < cells && r >= -1 && r < rows;
+  if(b.merges && typeof b.merges === 'object'){
+    const m = {};
+    for(const k in b.merges){ const p = k.split(',').map(Number);
+      if(okRC(p[0],p[1])){ const s = Math.min(b.merges[k] | 0, cells - p[1]); if(s > 1) m[k] = s; } }
+    b.merges = m;
+  }
+  if(b.cellbg && typeof b.cellbg === 'object'){
+    const g = {};
+    for(const k in b.cellbg){ const p = k.split(',').map(Number); if(okRC(p[0],p[1]) && b.cellbg[k]) g[k] = b.cellbg[k]; }
+    b.cellbg = g;
+  }
+}
+function measureTableCols(tableEl, cells){
+  const w = new Array(cells).fill(1);
+  const z = zoom || 1;
+  const tr = tableEl && (tableEl.querySelector('thead tr') || tableEl.querySelector('tbody tr'));
+  if(tr){ let ci = 0;
+    Array.from(tr.children).forEach(cell => {
+      if(cell.classList && cell.classList.contains('tcolrz')) return;
+      const sp = cell.colSpan || 1;
+      const each = (cell.getBoundingClientRect().width / z) / sp;
+      for(let k = 0; k < sp; k++){ if(ci < cells) w[ci++] = each || 1; }
+    });
+  }
+  return w;
+}
+function mergeCellRight(b){
+  if(!selCell){ toast('Click a cell first'); return; }
+  const { r, c } = selCell, cells = b.head.length;
+  b.merges = b.merges || {};
+  const cur = b.merges[r + ',' + c] || 1;
+  const nextC = c + cur;                       // first column past the current span
+  if(nextC >= cells){ toast('No column to the right to merge'); return; }
+  b.merges[r + ',' + c] = cur + (b.merges[r + ',' + nextC] || 1);
+  delete b.merges[r + ',' + nextC];
+  commit(); toast('Cells merged');
+}
+function splitCell(b){
+  if(!selCell){ toast('Click a cell first'); return; }
+  const { r, c } = selCell;
+  if(b.merges && b.merges[r + ',' + c]){ delete b.merges[r + ',' + c]; commit(); toast('Merge removed'); }
+  else toast('That cell isn’t merged');
+}
+function openCellColor(b, anchor){
+  document.getElementById('cellpop')?.remove();
+  if(!selCell){ toast('Click a cell first'); return; }
+  const { r, c } = selCell, key = r + ',' + c;
+  const SW = [['Clear',''],['Grey','var(--doc-zebra)'],['Deep grey','var(--doc-total)'],['Accent','var(--doc-accent-vis)'],
+    ['Red','#FBE4E4'],['Amber','#FBEFD6'],['Green','#E4F3E7'],['Blue','#E2ECFA'],['Violet','#ECE5FA']];
+  const pop = document.createElement('div');
+  pop.id = 'cellpop'; pop.className = 'cellpop';
+  SW.forEach(([name, val]) => {
+    const s = document.createElement('button');
+    s.className = 'sw'; s.title = name; s.type = 'button';
+    s.style.background = val || 'transparent';
+    if(!val) s.textContent = '✕';
+    s.onclick = ev => {
+      ev.stopPropagation();
+      b.cellbg = b.cellbg || {};
+      if(val) b.cellbg[key] = val; else delete b.cellbg[key];
+      commit(); pop.remove();
+    };
+    pop.appendChild(s);
+  });
+  document.body.appendChild(pop);
+  const rct = anchor.getBoundingClientRect();
+  pop.style.left = Math.min(rct.left, innerWidth - 148) + 'px';
+  pop.style.top = (rct.bottom + 6) + 'px';
+  const close = ev => { if(!pop.contains(ev.target)){ pop.remove(); document.removeEventListener('mousedown', close, true); } };
+  setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+}
 /* placeholder artwork for a graph block before a real chart image is dropped in */
 function chartGlyph(style){
   if(style === 'line'){
@@ -1830,22 +1933,47 @@ function renderBlock(b, forMeasure){
       <span class="v" data-f="items.${i}.v" ${ce}>${esc(s.v)}</span>
       <span class="l" data-f="items.${i}.l" ${ce}>${esc(s.l)}</span></div>`).join('');
   } else if(b.type === 'table'){
-    const head = `<thead><tr>${b.head.map((h,c) => `<th class="${b.num[c]?'num':''}" data-f="head.${c}" ${ce}>${esc(h)}</th>`).join('')}</tr></thead>`;
+    normTable(b);
+    const cells = b.head.length;
+    const merges = b.merges || {}, cbg = b.cellbg || {};
+    const span = (r,c) => Math.max(1, Math.min(cells - c, merges[r + ',' + c] || 1));
+    const covered = r => { const s = new Set(); for(let c = 0; c < cells; c++){ const sp = span(r,c); for(let k = 1; k < sp; k++) s.add(c + k); } return s; };
+    const selc = (r,c) => (b.id === sel && selCell && selCell.r === r && selCell.c === c) ? ' selcell' : '';
+    const bgOf = (r,c) => cbg[r + ',' + c] ? ` style="background:${esc(cbg[r + ',' + c])}"` : '';
+    const rzh = (c,sp) => (!forMeasure && (c + sp) < cells) ? `<span class="tcolrz" data-c="${c + sp - 1}" contenteditable="false"></span>` : '';
+    const covH = covered(-1);
+    const head = `<thead><tr>${b.head.map((h,c) => {
+      if(covH.has(c)) return '';
+      const sp = span(-1,c);
+      return `<th class="${b.num[c]?'num':''}${selc(-1,c)}" data-f="head.${c}" data-r="-1" data-c="${c}"${sp>1?` colspan="${sp}"`:''}${bgOf(-1,c)} ${ce}>${esc(h)}${rzh(c,sp)}</th>`;
+    }).join('')}</tr></thead>`;
     const body = `<tbody>${b.rows.map((r,ri) => {
       const last = b.total && ri === b.rows.length-1;
-      return `<tr class="${last?'total':''}">${r.map((cell,ci) =>
-        `<td class="${b.num[ci]?'num':''}" data-f="rows.${ri}.${ci}" data-r="${ri}" data-c="${ci}" ${ce}>${esc(cell)}</td>`).join('')}</tr>`;
+      const cov = covered(ri);
+      return `<tr class="${last?'total':''}">${r.map((cell,ci) => {
+        if(cov.has(ci)) return '';
+        const sp = span(ri,ci);
+        return `<td class="${b.num[ci]?'num':''}${selc(ri,ci)}" data-f="rows.${ri}.${ci}" data-r="${ri}" data-c="${ci}"${sp>1?` colspan="${sp}"`:''}${bgOf(ri,ci)} ${ce}>${esc(cell)}</td>`;
+      }).join('')}</tr>`;
     }).join('')}</tbody>`;
+    let colgroup = '', fixed = '';
+    if(Array.isArray(b.tcolw) && b.tcolw.length === cells){
+      const tot = b.tcolw.reduce((a,x) => a + x, 0) || cells;
+      colgroup = `<colgroup>${b.tcolw.map(w => `<col style="width:${(w / tot * 100).toFixed(3)}%">`).join('')}</colgroup>`;
+      fixed = ' fixed';
+    }
     if(b.fontPt) el.style.setProperty('--tfs', b.fontPt + 'pt');
     el.innerHTML = (b.caption ? `<div class="tcap" data-f="caption" ${ce}>${esc(b.caption)}</div>` : '')
-      + `<table class="doc${b.zebra?' zebra':''}">${head}${body}</table>`
-      + (!forMeasure && b.fontPt && b.fontPt < 9.4 ? `<div class="tfit">Text fitted to ${b.fontPt}pt</div>` : '');
+      + `<table class="doc${b.zebra?' zebra':''}${fixed}">${colgroup}${head}${body}</table>`;
   } else if(b.type === 'image'){
     const bImg = imgSrc(b.imgId);
     el.dataset.wrap = b.wrap || 'none';
     if(b.vector) el.dataset.vector = '1';
     el.style.setProperty('--iw', (b.scale || 100) + '%');
-    el.style.setProperty('--ar', (b.w && b.h) ? (b.w + ' / ' + b.h) : '3 / 2');
+    el.style.setProperty('--ar', b.ar ? String(b.ar) : ((b.w && b.h) ? (b.w + ' / ' + b.h) : '3 / 2'));
+    el.style.setProperty('--ox', (b.ox ?? 50) + '%');
+    el.style.setProperty('--oy', (b.oy ?? 50) + '%');
+    el.style.setProperty('--zoom', b.zoom || 1);
     const inner = bImg
       ? `<img src="${bImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}>`
       : (forMeasure ? '' : `<button class="upl" type="button" contenteditable="false">${svg('upload')}<span>Upload an image or SVG</span></button>`);
@@ -2179,6 +2307,7 @@ function paintSelection(){
   const b = findBlock(sel);
   if(!el || !b) return;
   el.classList.add('sel');
+  if(cropId === sel && b.type === 'image') el.classList.add('cropping');
   const bar = blockBar(b);
   const host = barHost(el);
   if(!host) return;
@@ -2189,6 +2318,7 @@ function paintSelection(){
   host.appendChild(bar);
 }
 function select(id){
+  if(id !== cropId) cropId = null;   // leaving the cropped image exits crop mode
   sel = id;
   paintSelection();
   const t = $('tree');
@@ -2211,21 +2341,28 @@ function blockBar(b){
 
   const extra = [];
   if(b.type === 'table'){
+    const colorBtn = btn(svg('droplet'), 'Fill the selected cell with a colour', () => openCellColor(b, colorBtn));
     extra.push(
       btn(svg('rows') + '', 'Add a row', () => { b.rows.push(b.head.map(()=>'')); commit(); }),
       btn(svg('cols'), 'Add a column', () => { b.head.push('New'); b.num.push(false); b.rows.forEach(r=>r.push('')); commit(); }),
       btn('−R', 'Remove the last row', () => { if(b.rows.length>1){ b.rows.pop(); commit(); } }),
-      btn('−C', 'Remove the last column', () => { if(b.head.length>1){ b.head.pop(); b.num.pop(); b.rows.forEach(r=>r.pop()); commit(); } }),
+      btn('−C', 'Remove the last column', () => { if(b.head.length>1){ b.head.pop(); b.num.pop(); b.rows.forEach(r=>r.pop()); if(Array.isArray(b.tcolw)) b.tcolw.pop(); commit(); } }),
       btn(svg('hashsm'), 'Right-align the selected column as numbers', () => {
         const c = selCell ? selCell.c : b.head.length-1; b.num[c] = !b.num[c]; commit();
       }),
+      colorBtn,
+      btn(svg('mergec'), 'Merge the selected cell with the one on its right', () => mergeCellRight(b)),
+      btn(svg('splitc'), 'Split the selected merged cell', () => splitCell(b)),
+      btn('A−', 'Smaller text', () => { b.fontPt = Math.max(6, +(((b.fontPt || 9.4) - 0.5)).toFixed(1)); commit(); }),
+      btn('A+', 'Bigger text', () => { b.fontPt = Math.min(16, +(((b.fontPt || 9.4) + 0.5)).toFixed(1)); commit(); }),
       btn(svg('rows'), 'Zebra stripes', () => { b.zebra = !b.zebra; commit(); }),
       btn(svg('sigma'), 'Emphasise the last row as a total', () => { b.total = !b.total; commit(); }),
       btn(svg('shrink'), 'Fit the text to the column width', () => {
         b.fontPt = fitTableFont(b);
         commit();
         toast(b.fontPt >= 9.4 ? 'Table fits at full size' : `Text fitted to ${b.fontPt}pt`);
-      })
+      }),
+      btn(svg('reset'), 'Reset column widths to even', () => { b.tcolw = null; commit(); toast('Column widths reset'); })
     );
   }
   if(b.type === 'grid'){
@@ -2322,15 +2459,31 @@ function blockBar(b){
       commit();
       if(nudged) toast('Moved above the nearest paragraph so text wraps');
     };
+    const cropBtn = btn(svg('crop'), 'Crop — drag the image to reposition, scroll or ± to zoom', () => {
+      cropId = (cropId === b.id) ? null : b.id;
+      paintSelection();
+      toast(cropId ? 'Crop mode: drag to reposition, scroll or ± to zoom' : 'Crop applied');
+    });
+    if(cropId === b.id) cropBtn.dataset.on = '1';
     extra.push(
       btn(svg('wrapleft'), 'Wrap text on the right of the image', setWrap('left')),
       btn(svg('wrapfull'), 'Full width, no wrap', setWrap('none')),
       btn(svg('wrapright'), 'Wrap text on the left of the image', setWrap('right')),
       btn('−', 'Smaller', () => { b.scale = Math.max(20, (b.scale||100) - 5); commit(); }),
       btn('+', 'Bigger', () => { b.scale = Math.min(100, (b.scale||100) + 5); commit(); }),
+      cropBtn
+    );
+    if(cropId === b.id){
+      extra.push(
+        btn(svg('shrink'), 'Zoom out', () => { b.zoom = Math.max(1, +((b.zoom||1) - 0.1).toFixed(2)); commit(); }),
+        btn(svg('expand'), 'Zoom in', () => { b.zoom = Math.min(4, +((b.zoom||1) + 0.1).toFixed(2)); commit(); })
+      );
+    }
+    extra.push(
       btn(svg('upload'), 'Replace the image', () => pickImage(b)),
-      btn(svg('reset'), 'Reset to the default placement', () => {
-        b.wrap = 'none'; b.scale = 100; commit(); toast('Image reset to full width');
+      btn(svg('reset'), 'Reset placement, crop and zoom', () => {
+        b.wrap = 'none'; b.scale = 100; b.ar = 0; b.ox = 50; b.oy = 50; b.zoom = 1;
+        cropId = null; commit(); toast('Image reset to full width');
       })
     );
   }
@@ -2460,6 +2613,8 @@ desk.addEventListener('mousedown', e => {
   selCell = cell && cell.dataset.c !== undefined
     ? { r:Number(cell.dataset.r), c:Number(cell.dataset.c) }
     : (cell ? { r:-1, c:Array.from(cell.parentNode.children).indexOf(cell) } : null);
+  desk.querySelectorAll('.blk[data-t="table"] .selcell').forEach(x => x.classList.remove('selcell'));
+  if(cell) cell.classList.add('selcell');   // live highlight without a re-render
   if(!blk){ if(sel) select(null); return; }
   if(blk.dataset.id !== sel) select(blk.dataset.id);
 });
@@ -2983,6 +3138,7 @@ function showDropHints(t, x, y){
   void zoomK; void br;
 }
 let rsz = null;
+let pan = null;
 function columnPx(el){
   const body = el.closest('.pageBody');
   if(!body) return contentBox().w;
@@ -3018,13 +3174,39 @@ desk.addEventListener('pointerdown', e => {
               total:w.reduce((a,x) => a + x, 0), px:gEl.getBoundingClientRect().width, el:gEl, handle:colh };
     return;
   }
+  const tcolh = e.target.closest('.blk[data-t="table"] .tcolrz');
+  if(tcolh){
+    e.preventDefault(); e.stopPropagation();
+    const tblk = tcolh.closest('.blk[data-t="table"]');
+    const b = findBlock(tblk.dataset.id);
+    if(!b) return;
+    const cells = b.head.length;
+    const ci = Number(tcolh.dataset.c);
+    const tableEl = tblk.querySelector('table.doc');
+    if(!Array.isArray(b.tcolw) || b.tcolw.length !== cells){
+      b.tcolw = measureTableCols(tableEl, cells);   // seed weights from the current layout
+      // inject <colgroup> + fixed layout in place, so the gesture isn't interrupted by a re-render
+      tableEl.classList.add('fixed');
+      const tot = b.tcolw.reduce((a,x) => a + x, 0) || cells;
+      const cg = document.createElement('colgroup');
+      b.tcolw.forEach(wt => { const col = document.createElement('col'); col.style.width = (wt / tot * 100).toFixed(3) + '%'; cg.appendChild(col); });
+      tableEl.insertBefore(cg, tableEl.firstChild);
+    }
+    const w = b.tcolw;
+    tcolh.classList.add('dragging');
+    tcolz = { b, ci, x0:e.clientX, w:w.slice(), total:w.reduce((a,x) => a + x, 0),
+              px:tableEl.getBoundingClientRect().width, cols:tableEl.querySelectorAll('colgroup col'), el:tableEl, handle:tcolh };
+    return;
+  }
   const handle = e.target.closest('[data-t="image"] .rz');
   if(handle){
     e.preventDefault(); e.stopPropagation();
     const blk = handle.closest('.blk');
     const b = findBlock(blk.dataset.id);
     if(!b) return;
-    rsz = { b, el:blk, x0:e.clientX, from:(b.scale || 100), col:columnPx(blk) * (zoom || 1) };
+    const wrapEl = blk.querySelector('.imgwrap');
+    rsz = { b, el:blk, x0:e.clientX, y0:e.clientY, from:(b.scale || 100),
+            col:columnPx(blk) * (zoom || 1), h0:wrapEl.getBoundingClientRect().height };
     const lbl = document.createElement('div');
     lbl.className = 'rzlabel'; lbl.id = 'rzlabel';
     document.body.appendChild(lbl);
@@ -3036,19 +3218,37 @@ desk.addEventListener('pointerdown', e => {
   const b = findBlock(blk.dataset.id);
   if(!b) return;
   e.preventDefault();          // otherwise the native image drag takes over
+  if(cropId === b.id){         // crop mode: drag repositions the image within the box
+    const r = blk.querySelector('.imgwrap').getBoundingClientRect();
+    pan = { b, el:blk, x0:e.clientX, y0:e.clientY, ox0:(b.ox ?? 50), oy0:(b.oy ?? 50), w:r.width, h:r.height };
+    blk.classList.add('grabbing');
+    return;
+  }
   drag = { b, x0:e.clientX, y0:e.clientY, live:false, el:blk };
   select(b.id);
 });
 window.addEventListener('pointermove', e => {
+  if(pan){
+    pan.b.ox = Math.max(0, Math.min(100, pan.ox0 - ((e.clientX - pan.x0) / pan.w) * 100));
+    pan.b.oy = Math.max(0, Math.min(100, pan.oy0 - ((e.clientY - pan.y0) / pan.h) * 100));
+    pan.el.style.setProperty('--ox', pan.b.ox + '%');
+    pan.el.style.setProperty('--oy', pan.b.oy + '%');
+    return;
+  }
   if(rsz){
     const dir = rsz.b.wrap === 'right' ? -1 : 1;
     const pct = rsz.from + dir * ((e.clientX - rsz.x0) / rsz.col) * 100;
     const next = Math.max(15, Math.min(100, Math.round(pct)));
     rsz.b.scale = next;
     rsz.el.style.setProperty('--iw', next + '%');
+    // vertical drag → box height, kept as a width/height ratio (zoom-independent)
+    const boxW = rsz.col * next / 100;
+    const boxH = Math.max(24, rsz.h0 + (e.clientY - rsz.y0));
+    rsz.b.ar = boxW / boxH;
+    rsz.el.style.setProperty('--ar', String(rsz.b.ar));
     const lbl = document.getElementById('rzlabel');
     if(lbl){
-      lbl.textContent = next + '%';
+      lbl.textContent = next + '% · ' + Math.round(boxH / (zoom || 1)) + 'px';
       lbl.style.left = e.clientX + 'px';
       lbl.style.top = e.clientY + 'px';
     }
@@ -3066,6 +3266,12 @@ window.addEventListener('pointermove', e => {
   showDropHints(drag.target, e.clientX, e.clientY);
 });
 window.addEventListener('pointerup', () => {
+  if(pan){
+    const p = pan; pan = null;
+    p.el.classList.remove('grabbing');
+    commit();
+    return;
+  }
   if(rsz){
     const lbl = document.getElementById('rzlabel');
     if(lbl) lbl.remove();
@@ -3099,6 +3305,21 @@ window.addEventListener('pointerup', () => {
     : (nudged ? 'Moved above the nearest paragraph so text wraps' : 'Text now wraps around the image'));
 });
 
+/* ---------- crop zoom via mouse wheel ---------- */
+desk.addEventListener('wheel', e => {
+  if(!cropId) return;
+  const blk = e.target.closest('.blk[data-t="image"]');
+  if(!blk || blk.dataset.id !== cropId) return;
+  const b = findBlock(cropId);
+  if(!b) return;
+  e.preventDefault();
+  const step = e.deltaY < 0 ? 0.1 : -0.1;
+  b.zoom = Math.max(1, Math.min(4, +((b.zoom || 1) + step).toFixed(2)));
+  blk.style.setProperty('--zoom', b.zoom);
+  clearTimeout(wheelCommitT);
+  wheelCommitT = setTimeout(() => commit(), 300);
+}, { passive:false });
+
 /* ---------- column resize ---------- */
 let colrz = null;
 window.addEventListener('pointermove', e => {
@@ -3115,6 +3336,29 @@ window.addEventListener('pointermove', e => {
 window.addEventListener('pointerup', () => {
   if(!colrz) return;
   const c = colrz; colrz = null;
+  if(c.handle) c.handle.classList.remove('dragging');
+  commit();
+});
+
+/* ---------- table column resize ---------- */
+let tcolz = null;
+window.addEventListener('pointermove', e => {
+  if(!tcolz) return;
+  const c = tcolz;
+  const dFr = ((e.clientX - c.x0) / c.px) * c.total;
+  const min = c.total * 0.05;
+  const pair = c.w[c.ci] + c.w[c.ci + 1];
+  const a = Math.max(min, Math.min(pair - min, c.w[c.ci] + dFr));
+  c.b.tcolw[c.ci] = a;
+  c.b.tcolw[c.ci + 1] = pair - a;
+  if(c.cols[c.ci] && c.cols[c.ci + 1]){
+    c.cols[c.ci].style.width = (a / c.total * 100).toFixed(3) + '%';
+    c.cols[c.ci + 1].style.width = ((pair - a) / c.total * 100).toFixed(3) + '%';
+  }
+});
+window.addEventListener('pointerup', () => {
+  if(!tcolz) return;
+  const c = tcolz; tcolz = null;
   if(c.handle) c.handle.classList.remove('dragging');
   commit();
 });
