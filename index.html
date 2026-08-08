@@ -1701,7 +1701,10 @@ $('importIn').onchange = () => {
       const doc = migrate(JSON.parse(fr.result));
       doc.updated = Date.now();
       await saveDoc(doc); await touchIndex(doc, true);
-      openEditor(doc); toast('Report opened');
+      openEditor(doc);
+      /* Go live automatically: seed (or join) the room keyed to this file's id,
+         so anyone who opens the same file lands in the same collaboration. */
+      await collabEnable();
     }catch(err){ toast('That file is not a saved report'); }
   };
   fr.readAsText(f); $('importIn').value = '';
