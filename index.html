@@ -2643,7 +2643,7 @@ desk.addEventListener('input', e => {
     const key = meta.dataset.m;
     if(key === 'tocTitle') D.toc.title = meta.textContent;
     else D.meta[key] = meta.textContent;
-    drawStructure(); save();
+    drawStructure(); save(); histBoundary(e);
     return;
   }
   const host = e.target.closest('[data-f]');
@@ -2654,7 +2654,7 @@ desk.addEventListener('input', e => {
   if(host.dataset.f === 'html') b.html = cleanHtml(blk);
   else if(host.hasAttribute('data-rich')) setPath(b, host.dataset.f, sanitizeHtml(host.innerHTML) || '');
   else setPath(b, host.dataset.f, host.textContent);
-  scheduleRepaginate(); save();
+  scheduleRepaginate(); save(); histBoundary(e);
 });
 desk.addEventListener('keydown', e => {
   const cell = e.target.closest('td');
@@ -2716,7 +2716,12 @@ function scheduleRepaginate(){
     if(before !== after){ render(); } else { refreshToc(); drawStructure(); }
   }, 320);
 }
-function commit(){ render(); save(); }
+/* Structural edits (delete, move, add, format, table ops…) all funnel through
+   here. save() schedules the debounced typing snapshot, but a structural change
+   is a discrete action, so we also fold it into history right away — that keeps
+   it as its own undo step instead of getting swallowed by an adjacent typing
+   burst, and makes rapid clicks (delete, delete, delete) each undoable. */
+function commit(){ render(); save(); histCommit(); }
 
 /* ==========================================================================
    UNDO / REDO
@@ -2731,37 +2736,86 @@ function commit(){ render(); save(); }
    ========================================================================== */
 let histStack = [], histIdx = -1, histT = null, restoring = false;
 const HIST_MAX = 100;
-function histSnapshot(){ return JSON.stringify(docBody(D)); }
+/* Fields that change on their own — not real edits — must stay OUT of the
+   snapshot, or undo breaks: histRestore()→flushSave() bumps `updated`, so a
+   restored state would never compare equal to the snapshot it came from and
+   every undo would re-commit instead of stepping back. pageCount (set by
+   render) and thumb (regenerated) are derived the same way. All three are
+   rebuilt automatically after a restore. */
+const HIST_SKIP = { updated:1, pageCount:1, thumb:1 };
+function histSnapshot(){
+  const body = docBody(D), out = {};
+  for(const k in body) if(!HIST_SKIP[k]) out[k] = body[k];
+  return JSON.stringify(out);
+}
+/* Each step carries the caret alongside the body snapshot, so undo/redo puts
+   the cursor back where the edit happened instead of dropping focus. */
+function histEntry(){ return { body: histSnapshot(), caret: saveCaret() }; }
 function histReset(){
   clearTimeout(histT); histT = null;
-  histStack = D ? [histSnapshot()] : [];
+  histStack = D ? [histEntry()] : [];
   histIdx = histStack.length - 1;
   updateHistButtons();
 }
 function histCommit(){
-  clearTimeout(histT); histT = null;
+  clearTimeout(histT); histT = null; histBurstLen = 0;
   if(!D || restoring) return;
-  const snap = histSnapshot();
-  if(histStack[histIdx] === snap) return;      // nothing actually changed
+  const body = histSnapshot();
+  if(histStack[histIdx] && histStack[histIdx].body === body) return;  // nothing actually changed
   histStack = histStack.slice(0, histIdx + 1);  // drop any redo branch
-  histStack.push(snap);
+  histStack.push({ body, caret: saveCaret() });
   if(histStack.length > HIST_MAX) histStack.shift();
   histIdx = histStack.length - 1;
   updateHistButtons();
 }
+/* A typing burst normally coalesces into one step (committed 500ms after you
+   stop). But steady, pause-free typing would otherwise become a single giant
+   undo, so break the burst into steps at natural boundaries — a space, a
+   newline, sentence punctuation, or after a run of ~40 characters. That's what
+   makes a long paragraph undo/redo in several sensible chunks rather than all
+   at once. */
+let histBurstLen = 0;
 function histSchedule(){
   if(restoring || !D) return;
   clearTimeout(histT);
   histT = setTimeout(histCommit, 500);
 }
-function histRestore(snap){
+function histBoundary(e){
+  if(restoring || !D) return;
+  const it = (e && e.inputType) || '';
+  let brk = false;
+  if(it === 'insertParagraph' || it === 'insertLineBreak') brk = true;    // Enter
+  else if(it === 'insertFromPaste' || it === 'insertFromDrop'
+          || it === 'insertReplacementText') brk = true;                  // paste / drop / autocorrect: discrete
+  else if(it.indexOf('format') === 0) brk = true;                         // bold, italic, colour…: discrete
+  else if(it === 'insertText' && e.data){
+    if(/[\s.,;:!?)]/.test(e.data)) brk = true;                            // word / sentence boundary
+    else if(++histBurstLen >= 40) brk = true;                             // very long unbroken run
+  } else if(it.indexOf('delete') === 0){
+    if(++histBurstLen >= 40) brk = true;                                  // long delete run
+  }
+  /* anything else (IME composition, unknown types) coalesces via the idle
+     debounce so mid-composition keystrokes never each become a step */
+  if(brk) histCommit();
+}
+function histRestore(entry){
   const imgs = D ? D.images : {};
-  D = migrate(JSON.parse(snap));
+  const thumb = D ? D.thumb : null;   // snapshot omits it; carry it across the restore
+  /* Parse the snapshot straight back — do NOT re-run migrate() here. The body
+     is already a valid in-session document (migrate ran when the file opened),
+     and migrate() fills in defaults some freshly-created blocks lack (e.g. an
+     image block's `vector`). Re-migrating on restore would mutate the state so
+     it no longer equals its own snapshot, which makes histCommit() re-commit on
+     every undo — freezing undo one step from the end whenever an image (or any
+     block missing a migrate default) is present. */
+  D = JSON.parse(entry.body);
   D.images = imgs || {};
+  if(thumb != null) D.thumb = thumb;
   restoring = true;
   sel = null; selCell = null;
   $('nameField').value = D.name;
   applyTheme(); syncControls(); render();
+  restoreCaret(entry.caret);       // land the cursor back where the edit was
   flushSave(false);
   restoring = false;
   updateHistButtons();
