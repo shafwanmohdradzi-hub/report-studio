@@ -393,6 +393,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .node .pg{flex:0 0 auto;min-width:1rem;text-align:right;font-size:.6875rem;font-variant-numeric:tabular-nums;color:hsl(var(--muted-foreground))}
 .node .noToc{flex:0 0 auto;display:grid;place-items:center;color:hsl(var(--muted-foreground));opacity:.45}
 .node .noToc svg{width:.6875rem;height:.6875rem}
+/* a peer's colour dot, shown on a layer someone else is currently editing */
+.node .peerdot{flex:0 0 auto;width:.5rem;height:.5rem;border-radius:999px;box-shadow:0 0 0 2px hsl(var(--background))}
 .node .node-add{flex:0 0 auto;width:1.25rem;height:1.25rem;padding:0;display:grid;place-items:center;border:0;
   background:none;color:hsl(var(--muted-foreground));border-radius:.25rem;cursor:pointer;opacity:.7}
 .node .node-add:hover{background:hsl(var(--secondary));color:hsl(var(--foreground));opacity:1}
@@ -4527,6 +4529,7 @@ function drawStructure(){
     const back = host.querySelector(`[data-node="${keep.id}"] .node-input`);
     if(back){ back.focus(); try{ back.setSelectionRange(keep.start, keep.end); }catch(e){} }
   }
+  if(collab) applyTreeLocks();
 }
 
 
@@ -5146,6 +5149,11 @@ let collabShadow = emptyShadow();  // last state we pushed, so we only write dif
 function emptyShadow(){ return { root:{}, blocks:new Map() }; }
 const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
 function pickColor(name){ let h = 0; for(const ch of String(name)) h = (h*31 + ch.charCodeAt(0)) >>> 0; return USER_COLORS[h % USER_COLORS.length]; }
+/* a stable identity for this tab, so we can tell our own awareness state apart
+   from peers' regardless of how the provider keys getStates() (clientID vs
+   connectionId differ across Liveblocks builds). Without this, our own page
+   lock reads back as a peer lock and locks us out of our own page. */
+const MY_UID = 'u-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 function initial(name){ const s = String(name||'').trim(); return s ? s[0].toUpperCase() : '?'; }
 
 /* wait for the CDN module to hand us the libraries (or reject if it failed) */
@@ -5167,7 +5175,7 @@ function isRemembered(id){ return rememberedRooms().includes(id); }
 function ensureName(){
   if(myUser) return Promise.resolve(myUser);
   let saved = null; try{ saved = localStorage.getItem(COLLAB_NAME_KEY); }catch(e){}
-  if(saved){ myUser = { name:saved, color:pickColor(saved) }; return Promise.resolve(myUser); }
+  if(saved){ myUser = { uid:MY_UID, name:saved, color:pickColor(saved) }; return Promise.resolve(myUser); }
   return askName();
 }
 function askName(){
@@ -5183,7 +5191,7 @@ function askName(){
     const done = () => {
       const v = input.value.trim();
       if(!v){ input.focus(); return; }
-      myUser = { name:v, color:pickColor(v) };
+      myUser = { uid:MY_UID, name:v, color:pickColor(v) };
       try{ localStorage.setItem(COLLAB_NAME_KEY, v); }catch(e){}
       ov.remove(); resolve(myUser);
     };
@@ -5350,7 +5358,10 @@ function allStates(){
 }
 function peerStates(){
   const me = collab ? collab.awareness.clientID : null;
-  return allStates().filter(s => me == null || s.id !== me);
+  const myUid = myUser ? myUser.uid : null;
+  /* exclude self by our stable uid first (works whichever way the provider keys
+     getStates()); fall back to the awareness id when we have no uid yet. */
+  return allStates().filter(s => (s.user && s.user.uid) ? s.user.uid !== myUid : (me == null || s.id !== me));
 }
 /* Liveblocks' awareness has no change event, so poll it — but only act when the
    set of states actually changes, so a steady room costs nothing and never
@@ -5410,6 +5421,27 @@ function applyLocksToDom(){
       banner.textContent = `🔒 ${locker.name} is editing this page`;
       banner.style.background = locker.color;
     } else if(banner){ banner.remove(); }
+  });
+  applyTreeLocks();
+}
+/* mirror the page locks onto the layers panel: a small colour dot on any layer a
+   peer holds, so you can spot who's editing what at a glance. */
+function applyTreeLocks(){
+  const host = $('tree');
+  if(!host) return;
+  host.querySelectorAll('.node').forEach(row => {
+    let peer = null;
+    if(collab){
+      const sk = row.dataset.sheet;
+      if(sk) peer = lockedSheets.get(sk === 'cover' ? 'Cover' : sk === 'toc' ? 'Contents' : sk);
+      else if(row.dataset.node && row.dataset.node !== '__toc') peer = lockedBlocks.get(row.dataset.node);
+    }
+    let dot = row.querySelector(':scope > .peerdot');
+    if(peer){
+      if(!dot){ dot = document.createElement('span'); dot.className = 'peerdot'; row.insertBefore(dot, row.firstChild); }
+      dot.style.background = peer.color;
+      dot.title = `${peer.name} is editing this`;
+    } else if(dot){ dot.remove(); }
   });
 }
 let releaseT;
@@ -5520,6 +5552,29 @@ desk.addEventListener('focusin', async e => {
   claimLock(sheetLockFor(e.target));
 });
 desk.addEventListener('focusout', () => { if(collab) scheduleRelease(); });
+
+/* When the tab loses focus the browser keeps activeElement pointing at the block
+   you were editing, so scheduleRelease's "still editing" guard would hold your
+   page locked for everyone else while you're away on another tab. Release the
+   lock outright the moment we lose focus/visibility, and re-claim it if you come
+   back with the cursor still in a block. */
+function releaseNow(){
+  clearTimeout(releaseT);
+  if(myLock.sheet == null && !(myLock.blocks && myLock.blocks.length)) return;
+  myLock = { sheet:null, blocks:[] };
+  if(collab) pushPresence();
+}
+function reclaimIfEditing(){
+  if(!collab) return;
+  const a = document.activeElement;
+  if(a && desk.contains(a) && a.isContentEditable) claimLock(sheetLockFor(a));
+}
+window.addEventListener('blur', () => { if(collab) releaseNow(); });
+window.addEventListener('focus', reclaimIfEditing);
+document.addEventListener('visibilitychange', () => {
+  if(!collab) return;
+  if(document.hidden) releaseNow(); else reclaimIfEditing();
+});
 
 window.__collabEnable = collabEnable;   // used by the Share button
 
