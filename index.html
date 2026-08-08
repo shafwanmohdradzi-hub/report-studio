@@ -810,6 +810,7 @@ table.doc thead th{position:relative}
     </div>
     <button class="btn btn-ghost btn-icon btn-sm" id="fullBtn" aria-label="Full view"></button>
     <button class="btn btn-ghost btn-icon btn-sm" id="edTheme" aria-label="Toggle dark mode"></button>
+    <button class="btn btn-outline btn-sm" id="shareBtn" title="Share for live editing">Share</button>
     <button class="btn btn-outline btn-sm" id="downloadBtn"><span data-icon="download"></span> Save file</button>
     <button class="btn btn-default btn-sm" id="printBtn"><span data-icon="printer"></span> Export PDF</button>
   </header>
@@ -1724,8 +1725,17 @@ async function openReport(id){
     return;
   }
   openEditor(doc);
+  if(isRemembered(id) && (!collab || collab.roomId !== id)){
+    location.hash = 'room=' + id;
+    collabConnect(id, false).then(() => pushPresence()).catch(e => console.error(e));
+  }
 }
-$('backBtn').onclick = async () => { await flushSave(true); showLibrary(); };
+$('backBtn').onclick = async () => {
+  await flushSave(true);
+  collabLeave();
+  if(location.hash) history.replaceState(null, '', location.pathname + location.search);
+  showLibrary();
+};
 
 /* ==========================================================================
    EDITOR
@@ -1740,6 +1750,7 @@ let pages = [];
 const desk = $('desk');
 
 function openEditor(doc){
+  if(collab && collab.roomId !== doc.id) collabLeave();
   D = doc;
   sel = null;
   $('view-library').hidden = true;
@@ -2289,6 +2300,7 @@ function render(){
   void sheets;
   $('sheetBadge').textContent = sheets + (sheets === 1 ? ' sheet' : ' sheets');
   D.pageCount = pages.length;
+  if(typeof applyLocksToDom === 'function') applyLocksToDom();
 }
 
 /* ---------- selection + block toolbar ---------- */
@@ -5074,6 +5086,7 @@ let saveT;
 function save(){
   if(!D) return;
   histSchedule();
+  schedulePush();
   clearTimeout(saveT);
   $('saveState').textContent = 'Saving…';
   saveT = setTimeout(() => flushSave(false), 1000);
@@ -5082,6 +5095,7 @@ async function flushSave(force){
   if(!D) return;
   clearTimeout(saveT);
   D.updated = Date.now();
+  if(collab && !applyingRemote) pushLocal();
   const ok = await saveDoc(D);
   await touchIndex(D, force);
   if(force) await sweepImages(D);
@@ -5097,6 +5111,417 @@ $('downloadBtn').onclick = () => {
 };
 function doPrint(){ sel = null; paintSelection(); setTimeout(() => window.print(), 60); }
 $('printBtn').onclick = doPrint;
+$('shareBtn').onclick = () => collabEnable();
+
+/* ==========================================================================
+   COLLABORATION  —  Target A: block-level real-time (Yjs + Liveblocks)
+
+   The document body is mirrored into a Yjs doc:
+     root   (Y.Map)   name / meta / settings / toc / created  — doc-level fields
+     order  (Y.Array) ids of the top-level blocks, in order
+     blocks (Y.Map)   id -> a whole block, stored opaquely (grids carry their
+                      own nested cells inside their value). Two people editing
+                      DIFFERENT blocks touch different keys, so they merge; the
+                      page lock guarantees no two people edit the SAME block.
+     images (Y.Map)   imgId -> data URL
+
+   Page locking: focusing an editable claims every block on that sheet via
+   Liveblocks awareness. Peers render those blocks read-only with a banner and
+   a name. One editor per page means there is never an in-paragraph merge.
+   ========================================================================== */
+const LB_KEY = 'pk_dev_KxzAe_bID6wjadRPe93hNPORcX13H-nE6GuzfQf1p-FxrxIFVgwgVV4AI9_vRyrK';
+const COLLAB_NAME_KEY = 'studio:collabName';
+const COLLAB_ROOMS_KEY = 'studio:collabRooms';
+const Y_ORIGIN = 'local';
+const USER_COLORS = ['#E4572E','#3A86FF','#8338EC','#06A77D','#F4A259','#D7263D','#1B998B','#C05299'];
+
+let collab = null;                 // active session { Y, client, room, leave, ydoc, provider, awareness }
+let applyingRemote = false;        // guards the local->Y push while we apply a remote change
+let myUser = null;                 // { name, color }
+let lockedBlocks = new Map();      // blockId -> user  (held by peers, not us)
+let lockedSheets = new Map();      // 'Cover'|'Contents' -> user (peers)
+let myLock = { sheet:null, blocks:[] };
+let collabShadow = emptyShadow();  // last state we pushed, so we only write diffs
+
+function emptyShadow(){ return { root:{}, blocks:new Map() }; }
+const clone = v => (v == null ? v : JSON.parse(JSON.stringify(v)));
+function pickColor(name){ let h = 0; for(const ch of String(name)) h = (h*31 + ch.charCodeAt(0)) >>> 0; return USER_COLORS[h % USER_COLORS.length]; }
+function initial(name){ const s = String(name||'').trim(); return s ? s[0].toUpperCase() : '?'; }
+
+/* wait for the CDN module to hand us the libraries (or reject if it failed) */
+function libsReady(){
+  if(window.__collabLibs) return Promise.resolve(window.__collabLibs);
+  if(window.__collabLibsError) return Promise.reject(window.__collabLibsError);
+  return new Promise((resolve, reject) => {
+    window.addEventListener('collab-libs-ready', () => resolve(window.__collabLibs), { once:true });
+    window.addEventListener('collab-libs-error', () => reject(window.__collabLibsError), { once:true });
+  });
+}
+
+/* ---------- remembering which reports are shared, so they reconnect ---------- */
+function rememberedRooms(){ try{ return JSON.parse(localStorage.getItem(COLLAB_ROOMS_KEY) || '[]'); }catch(e){ return []; } }
+function rememberRoom(id){ const s = new Set(rememberedRooms()); s.add(id); try{ localStorage.setItem(COLLAB_ROOMS_KEY, JSON.stringify([...s])); }catch(e){} }
+function isRemembered(id){ return rememberedRooms().includes(id); }
+
+/* ---------- names ---------- */
+function ensureName(){
+  if(myUser) return Promise.resolve(myUser);
+  let saved = null; try{ saved = localStorage.getItem(COLLAB_NAME_KEY); }catch(e){}
+  if(saved){ myUser = { name:saved, color:pickColor(saved) }; return Promise.resolve(myUser); }
+  return askName();
+}
+function askName(){
+  return new Promise(resolve => {
+    const ov = document.createElement('div'); ov.className = 'namemodal';
+    ov.innerHTML = `<div class="namecard"><h3>Join to edit</h3>
+      <p>Enter your name so others can see who's editing each page.</p>
+      <input id="nameInput" placeholder="Your name" maxlength="40" autocomplete="name">
+      <div class="namebtns"><button class="btn btn-default btn-sm" id="nameGo">Start editing</button></div></div>`;
+    document.body.appendChild(ov);
+    const input = ov.querySelector('#nameInput');
+    setTimeout(() => input.focus(), 20);
+    const done = () => {
+      const v = input.value.trim();
+      if(!v){ input.focus(); return; }
+      myUser = { name:v, color:pickColor(v) };
+      try{ localStorage.setItem(COLLAB_NAME_KEY, v); }catch(e){}
+      ov.remove(); resolve(myUser);
+    };
+    ov.querySelector('#nameGo').onclick = done;
+    input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); done(); } });
+  });
+}
+
+/* ---------- Yjs shared types ---------- */
+function yRoot(){ return collab.ydoc.getMap('root'); }
+function yOrder(){ return collab.ydoc.getArray('order'); }
+function yBlocks(){ return collab.ydoc.getMap('blocks'); }
+function yImages(){ return collab.ydoc.getMap('images'); }
+
+function setJsonIfChanged(map, key, obj){
+  const j = JSON.stringify(obj);
+  if(collabShadow.root[key] === j) return;
+  map.set(key, clone(obj)); collabShadow.root[key] = j;
+}
+/* Reconcile the order array to `ids` with per-item ops, so two people inserting
+   blocks on different pages at the same time both survive (a wholesale replace
+   would be last-writer-wins). */
+function reconcileOrder(arr, ids){
+  const idset = new Set(ids);
+  for(let i = arr.length - 1; i >= 0; i--){ if(!idset.has(arr.get(i))) arr.delete(i, 1); }
+  let cur = arr.toArray();
+  for(let i = 0; i < ids.length; i++){
+    if(cur[i] === ids[i]) continue;
+    const at = cur.indexOf(ids[i]);
+    if(at !== -1){ arr.delete(at, 1); cur.splice(at, 1); }
+    arr.insert(i, [ids[i]]); cur.splice(i, 0, ids[i]);
+  }
+}
+
+/* local D -> Yjs, writing only what changed since the last push */
+function pushLocal(){
+  if(!collab || applyingRemote || !D) return;
+  const Y = collab.Y;
+  Y.transact(collab.ydoc, () => {
+    const root = yRoot();
+    setJsonIfChanged(root, 'name', D.name);
+    setJsonIfChanged(root, 'meta', D.meta);
+    setJsonIfChanged(root, 'settings', D.settings);
+    setJsonIfChanged(root, 'toc', D.toc);
+    setJsonIfChanged(root, 'created', D.created);
+
+    const blocks = yBlocks();
+    const ids = D.blocks.map(b => b.id);
+    const idset = new Set(ids);
+    D.blocks.forEach(b => {
+      const j = JSON.stringify(b);
+      if(collabShadow.blocks.get(b.id) !== j){ blocks.set(b.id, clone(b)); collabShadow.blocks.set(b.id, j); }
+    });
+    for(const k of [...blocks.keys()]) if(!idset.has(k)){ blocks.delete(k); collabShadow.blocks.delete(k); }
+
+    reconcileOrder(yOrder(), ids);
+
+    const imgs = yImages();
+    Object.entries(D.images || {}).forEach(([id, data]) => { if(data && !imgs.has(id)) imgs.set(id, data); });
+  }, Y_ORIGIN);
+}
+let pushT;
+function schedulePush(){ if(!collab) return; clearTimeout(pushT); pushT = setTimeout(pushLocal, 250); }
+
+/* Yjs -> local D, then re-render without losing the local caret */
+function refreshShadowFromD(){
+  collabShadow = emptyShadow();
+  ['name','meta','settings','toc','created'].forEach(k => { collabShadow.root[k] = JSON.stringify(D[k]); });
+  D.blocks.forEach(b => collabShadow.blocks.set(b.id, JSON.stringify(b)));
+}
+let applyT;
+function scheduleApply(){ clearTimeout(applyT); applyT = setTimeout(applyRemote, 80); }
+function applyRemote(){
+  if(!collab || !D) return;
+  if(yOrder().length === 0 && yRoot().size === 0) return;   // nothing seeded yet
+  /* flush our own not-yet-pushed edits into Yjs first, so rebuilding D from
+     Yjs below reads them back rather than reverting mid-keystroke text */
+  if(pushT){ clearTimeout(pushT); pushT = null; pushLocal(); }
+  applyingRemote = true;
+  try{
+    const root = yRoot();
+    if(root.get('name') != null) D.name = root.get('name');
+    if(root.get('meta'))     D.meta = clone(root.get('meta'));
+    if(root.get('settings')) D.settings = clone(root.get('settings'));
+    if(root.get('toc'))      D.toc = clone(root.get('toc'));
+    if(root.get('created'))  D.created = root.get('created');
+    yImages().forEach((data, id) => { if(!D.images[id]) D.images[id] = data; });
+
+    const blocks = yBlocks();
+    D.blocks = yOrder().toArray().map(id => blocks.has(id) ? clone(blocks.get(id)) : null).filter(Boolean);
+    D = migrate(D);                       // keep older-shape guards honest
+    if(sel && !findBlock(sel)) sel = null;
+    refreshShadowFromD();
+
+    const caret = saveCaret();
+    $('nameField').value = D.name;
+    applyTheme(); syncControls(); render();
+    restoreCaret(caret);
+    if(collab && !collab.baseInit){ collab.baseInit = true; histReset(); }
+  } finally { applyingRemote = false; }
+}
+
+/* ---------- caret save / restore across a full re-render ---------- */
+function saveCaret(){
+  const a = document.activeElement;
+  if(!a || !desk.contains(a) || !a.isContentEditable) return null;
+  const blk = a.closest('.blk');
+  const host = a.closest('[data-f],[data-m]') || a;
+  let offset = 0;
+  const s = getSelection();
+  if(s && s.rangeCount){
+    const r = s.getRangeAt(0), pre = r.cloneRange();
+    pre.selectNodeContents(a); pre.setEnd(r.endContainer, r.endOffset);
+    offset = pre.toString().length;
+  }
+  return { blkId: blk ? blk.dataset.id : null, f: host.dataset ? (host.dataset.f || null) : null,
+           m: host.dataset ? (host.dataset.m || null) : null, offset };
+}
+function restoreCaret(c){
+  if(!c) return;
+  requestAnimationFrame(() => {
+    let host = null;
+    if(c.m){ host = desk.querySelector(`[data-m="${c.m}"]`); }
+    else if(c.blkId){
+      const blk = desk.querySelector(`.blk[data-id="${c.blkId}"]`);
+      if(!blk) return;
+      host = c.f ? (blk.matches(`[data-f="${c.f}"]`) ? blk : blk.querySelector(`[data-f="${c.f}"]`))
+                 : (blk.matches('[contenteditable]') ? blk : blk.querySelector('[contenteditable]'));
+    }
+    if(!host || !host.isContentEditable) return;
+    host.focus();
+    placeCaret(host, c.offset);
+  });
+}
+function placeCaret(host, offset){
+  const s = getSelection(), range = document.createRange();
+  const walker = document.createTreeWalker(host, NodeFilter.SHOW_TEXT, null);
+  let remaining = offset, node = null, off = 0, last = null;
+  while(walker.nextNode()){
+    const t = walker.currentNode; last = t;
+    if(remaining <= t.length){ node = t; off = remaining; break; }
+    remaining -= t.length;
+  }
+  if(node){ range.setStart(node, off); }
+  else if(last){ range.setStart(last, last.length); }
+  else { range.selectNodeContents(host); range.collapse(false); s.removeAllRanges(); s.addRange(range); return; }
+  range.collapse(true); s.removeAllRanges(); s.addRange(range);
+}
+
+/* ---------- presence + page locks ---------- */
+/* Liveblocks' awareness setLocalStateField REPLACES local state, and its
+   getStates() returns other peers only (not self). So we always set the whole
+   state in one call, and add the local user back in for the presence bar. */
+function pushPresence(){
+  if(!collab) return;
+  collab.awareness.setLocalState({ user: myUser || null, lock: myLock });
+  updatePresenceUI();
+}
+function allStates(){
+  if(!collab) return [];
+  const out = [];
+  try{ collab.awareness.getStates().forEach((st, id) => { if(st) out.push({ id, ...st }); }); }catch(e){}
+  return out;
+}
+function peerStates(){
+  const me = collab ? collab.awareness.clientID : null;
+  return allStates().filter(s => me == null || s.id !== me);
+}
+/* Liveblocks' awareness has no change event, so poll it — but only act when the
+   set of states actually changes, so a steady room costs nothing and never
+   disturbs the caret. */
+let lastAwSig = '', awPollT = null;
+function awarenessSig(){ try{ return JSON.stringify([...collab.awareness.getStates()]); }catch(e){ return ''; } }
+function startAwPoll(){ stopAwPoll(); lastAwSig = ''; awPollT = setInterval(() => { if(!collab) return; const s = awarenessSig(); if(s !== lastAwSig){ lastAwSig = s; recomputeLocks(); } }, 500); }
+function stopAwPoll(){ if(awPollT){ clearInterval(awPollT); awPollT = null; } }
+function recomputeLocks(){
+  lockedBlocks = new Map(); lockedSheets = new Map();
+  if(!collab) return;
+  peerStates().forEach(st => {
+    if(!st.user || !st.lock) return;
+    (st.lock.blocks || []).forEach(bid => lockedBlocks.set(bid, st.user));
+    if(st.lock.sheet) lockedSheets.set(st.lock.sheet, st.user);
+  });
+  applyLocksToDom();
+  updatePresenceUI();
+}
+/* which sheet a target sits on, and the ids we should lock for it */
+function sheetLockFor(target){
+  const row = target.closest('.sheetRow');
+  if(!row) return { sheet:null, blocks:[] };
+  const blks = [...row.querySelectorAll('.blk')].map(b => b.dataset.id);
+  if(blks.length) return { sheet:null, blocks:blks };
+  const label = row.querySelector('.folio');
+  const name = label ? (label.textContent || '').trim().split('\n')[0] : '';
+  return { sheet: name || 'Cover', blocks:[] };
+}
+function setCE(node, on){ const want = on ? 'true' : 'false'; if(node.getAttribute('contenteditable') !== want) node.setAttribute('contenteditable', want); }
+function setEditable(el, on){
+  const hosts = el.matches('[contenteditable]') ? [el, ...el.querySelectorAll('[contenteditable]')]
+                                                 : [...el.querySelectorAll('[contenteditable]')];
+  hosts.forEach(h => { if(h.classList.contains('tcolrz') || h.classList.contains('tcolresize')) return; setCE(h, on); });
+}
+function applyLocksToDom(){
+  if(!collab){ desk.querySelectorAll('.lockbanner').forEach(b => b.remove()); return; }
+  desk.querySelectorAll('.blk').forEach(el => {
+    const peer = lockedBlocks.get(el.dataset.id);
+    el.classList.toggle('peer-locked', !!peer);
+    if(peer) el.style.setProperty('--lockc', peer.color); else el.style.removeProperty('--lockc');
+    setEditable(el, !peer);
+  });
+  desk.querySelectorAll('.sheetRow').forEach(row => {
+    const page = row.querySelector('.page') || row.querySelector('.page, .cover, .tocPage') || row.lastElementChild;
+    const blks = [...row.querySelectorAll('.blk')];
+    let locker = blks.map(b => lockedBlocks.get(b.dataset.id)).find(Boolean);
+    if(!locker){
+      const label = row.querySelector('.folio');
+      const name = label ? (label.textContent || '').trim().split('\n')[0] : '';
+      locker = lockedSheets.get(name);
+      row.querySelectorAll('[data-m]').forEach(n => setCE(n, !locker));
+    }
+    let banner = row.querySelector('.lockbanner');
+    if(locker){
+      if(!banner){ banner = document.createElement('div'); banner.className = 'lockbanner'; (page || row).appendChild(banner); }
+      banner.textContent = `🔒 ${locker.name} is editing this page`;
+      banner.style.background = locker.color;
+    } else if(banner){ banner.remove(); }
+  });
+}
+let releaseT;
+function claimLock(lock){
+  clearTimeout(releaseT);
+  myLock = lock; pushPresence();
+}
+function scheduleRelease(){
+  clearTimeout(releaseT);
+  releaseT = setTimeout(() => {
+    if(desk.contains(document.activeElement) && document.activeElement.isContentEditable) return;
+    myLock = { sheet:null, blocks:[] }; pushPresence();
+  }, 400);
+}
+function updatePresenceUI(){
+  let bar = $('presenceBar');
+  if(!collab){ if(bar) bar.remove(); const sb = $('shareBtn'); if(sb) sb.classList.remove('is-live'); return; }
+  if(!bar){
+    bar = document.createElement('div'); bar.id = 'presenceBar'; bar.className = 'presencebar';
+    const grow = document.querySelector('.ed-top .grow');
+    if(grow) grow.parentNode.insertBefore(bar, grow);
+  }
+  const states = allStates().filter(s => s.user);   // getStates() includes self
+  const editing = states.filter(s => s.lock && ((s.lock.blocks && s.lock.blocks.length) || s.lock.sheet)).map(s => s.user.name);
+  bar.innerHTML = states.map(s => `<span class="pavatar" title="${esc(s.user.name)}" style="background:${s.user.color}">${esc(initial(s.user.name))}</span>`).join('')
+    + (editing.length ? `<span class="pediting">${esc([...new Set(editing)].join(', '))} editing…</span>` : '');
+  const sb = $('shareBtn'); if(sb) sb.classList.add('is-live');
+}
+
+/* ---------- connect / enable / join ---------- */
+async function collabConnect(roomId, seed){
+  const { Y, createClient, LiveblocksYjsProvider } = await libsReady();
+  const client = createClient({ publicApiKey: LB_KEY });
+  const { room, leave } = client.enterRoom('report-' + roomId, { initialPresence:{} });
+  const ydoc = new Y.Doc();
+  const provider = new LiveblocksYjsProvider(room, ydoc);
+  collab = { Y, client, room, leave, ydoc, provider, awareness: provider.awareness, roomId };
+
+  ydoc.on('update', (u, origin) => { if(origin !== Y_ORIGIN) scheduleApply(); });
+  if(typeof provider.awareness.on === 'function'){
+    try{ provider.awareness.on('change', recomputeLocks); provider.awareness.on('update', recomputeLocks); }catch(e){}
+  }
+  let didSync = false;
+  const markSynced = () => { if(didSync) return; didSync = true; onSynced(seed); };
+  provider.on('sync', s => { if(s !== false) markSynced(); });
+  provider.on('synced', markSynced);
+
+  collab.awareness.setLocalState({ user: myUser || null, lock: myLock });
+  startAwPoll();
+  updatePresenceUI();
+}
+function onSynced(seed){
+  const hasData = yOrder().length > 0 || yRoot().size > 0;
+  if(seed && !hasData){ collabShadow = emptyShadow(); pushLocal(); }
+  else { applyRemote(); }
+}
+function shareLink(id){ return location.origin + location.pathname + '#room=' + id; }
+async function collabEnable(){
+  if(collab){ showShareLink(); return; }
+  try{
+    await ensureName();
+    await collabConnect(D.id, true);
+    rememberRoom(D.id);
+    pushPresence();
+    location.hash = 'room=' + D.id;
+    showShareLink();
+  }catch(err){ console.error(err); toast('Could not start collaboration — check your connection'); }
+}
+function showShareLink(){
+  const link = shareLink(D.id);
+  if(navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Share link copied to clipboard'), () => toast('Share link: ' + link));
+  else toast('Share link: ' + link);
+}
+async function collabJoin(roomId){
+  try{
+    await ensureName();
+    let doc = await loadDoc(roomId);
+    if(!doc){ doc = blankDoc(); doc.id = roomId; doc.blocks = []; }
+    openEditor(doc);
+    rememberRoom(roomId);
+    await collabConnect(roomId, false);
+    pushPresence();
+  }catch(err){ console.error(err); toast('Could not open the shared report'); showLibrary(); }
+}
+function collabLeave(){
+  if(!collab) return;
+  stopAwPoll();
+  clearTimeout(pushT); clearTimeout(applyT); clearTimeout(releaseT);
+  try{ collab.awareness.setLocalState(null); }catch(e){}
+  try{ if(collab.provider.destroy) collab.provider.destroy(); }catch(e){}
+  try{ if(collab.leave) collab.leave(); }catch(e){}
+  collab = null;
+  lockedBlocks = new Map(); lockedSheets = new Map();
+  myLock = { sheet:null, blocks:[] };
+  collabShadow = emptyShadow();
+  applyLocksToDom(); updatePresenceUI();
+}
+
+/* editing gate: name first, refuse a page another person holds, else claim it */
+desk.addEventListener('focusin', async e => {
+  if(!collab) return;
+  const host = e.target.closest('[data-f],[data-m]');
+  if(!host || !host.isContentEditable) return;
+  const blk = e.target.closest('.blk');
+  const bid = blk ? blk.dataset.id : null;
+  if(bid && lockedBlocks.has(bid)){ e.target.blur(); toast(`${lockedBlocks.get(bid).name} is editing this page`); return; }
+  if(!myUser){ const t = e.target; t.blur(); await ensureName(); pushPresence(); t.focus(); return; }
+  claimLock(sheetLockFor(e.target));
+});
+desk.addEventListener('focusout', () => { if(collab) scheduleRelease(); });
+
+window.__collabEnable = collabEnable;   // used by the Share button
 
 /* ==========================================================================
    BOOT
@@ -5113,8 +5538,68 @@ $('printBtn').onclick = doPrint;
   fullView = savedFull === '1';
   applyFullView();
   await loadIndex();
+  const roomMatch = location.hash.match(/room=([\w-]+)/);
+  if(roomMatch){ collabJoin(roomMatch[1]); return; }
   showLibrary();
 })();
+</script>
+
+<!-- ==========================================================================
+     COLLABORATION assets — styles + the ESM libraries (Yjs + Liveblocks).
+     The importmap makes @liveblocks/yjs and our own Yjs import resolve to the
+     SAME yjs module, so there is a single CRDT instance. Loaded from a CDN so
+     the app keeps its no-build, single-file shape. If the CDN is blocked the
+     rest of the app is unaffected — collaboration simply stays unavailable.
+     ========================================================================== -->
+<style id="collab-css">
+  .presencebar{display:flex;align-items:center;gap:.35rem;margin:0 .5rem;min-width:0}
+  .pavatar{width:1.6rem;height:1.6rem;border-radius:999px;display:inline-flex;align-items:center;
+    justify-content:center;color:#fff;font-size:.7rem;font-weight:700;flex:0 0 auto;
+    box-shadow:0 0 0 2px var(--bg,#fff);letter-spacing:0}
+  .pediting{font-size:.72rem;color:var(--muted-fg,#888);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;max-width:14rem}
+  .blk.peer-locked{position:relative;opacity:.85;cursor:not-allowed}
+  .blk.peer-locked::after{content:"";position:absolute;inset:-2px;border-radius:4px;pointer-events:none;
+    outline:2px dashed var(--lockc,#3A86FF);outline-offset:2px;background:color-mix(in srgb,var(--lockc,#3A86FF) 6%,transparent)}
+  .lockbanner{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:6;
+    color:#fff;font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);white-space:nowrap;pointer-events:none}
+  .page{position:relative}
+  .namemodal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+    background:rgba(15,18,22,.55);backdrop-filter:blur(2px)}
+  .namecard{background:var(--card,#fff);color:var(--fg,#111);border-radius:12px;padding:1.5rem;
+    width:min(92vw,22rem);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .namecard h3{margin:0 0 .35rem;font-size:1.05rem}
+  .namecard p{margin:0 0 1rem;font-size:.85rem;color:var(--muted-fg,#777)}
+  .namecard input{width:100%;box-sizing:border-box;padding:.6rem .7rem;font-size:.95rem;
+    border:1px solid var(--border,#ccc);border-radius:8px;background:var(--bg,#fff);color:inherit}
+  .namebtns{display:flex;justify-content:flex-end;margin-top:1rem}
+  #shareBtn.is-live{color:#fff;background:var(--accent,#0B5D57);border-color:transparent}
+</style>
+
+<script type="importmap">
+{ "imports": { "yjs": "https://esm.sh/yjs@13" } }
+</script>
+<script type="module">
+  (async () => {
+    try{
+      const [Y, lbClient, lbYjs] = await Promise.all([
+        import('https://esm.sh/yjs@13'),
+        import('https://esm.sh/@liveblocks/client@2'),
+        import('https://esm.sh/@liveblocks/yjs@2?external=yjs')
+      ]);
+      window.__collabLibs = {
+        Y,
+        createClient: lbClient.createClient,
+        LiveblocksYjsProvider: lbYjs.LiveblocksYjsProvider || lbYjs.default
+      };
+      window.dispatchEvent(new Event('collab-libs-ready'));
+    }catch(err){
+      console.error('Collaboration libraries failed to load', err);
+      window.__collabLibsError = err;
+      window.dispatchEvent(new Event('collab-libs-error'));
+    }
+  })();
 </script>
 </body>
 </html>
