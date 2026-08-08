@@ -1701,10 +1701,11 @@ $('importIn').onchange = () => {
       const doc = migrate(JSON.parse(fr.result));
       doc.updated = Date.now();
       await saveDoc(doc); await touchIndex(doc, true);
+      /* Open privately. We deliberately do NOT auto-join a collab room here:
+         the room is keyed to the file's id, and an old file may already have a
+         stale/empty room on the server that would overwrite the content we just
+         loaded. Use the Share button to go live when you actually want to. */
       openEditor(doc);
-      /* Go live automatically: seed (or join) the room keyed to this file's id,
-         so anyone who opens the same file lands in the same collaboration. */
-      await collabEnable();
     }catch(err){ toast('That file is not a saved report'); }
   };
   fr.readAsText(f); $('importIn').value = '';
@@ -5274,6 +5275,7 @@ function applyRemote(){
      Yjs below reads them back rather than reverting mid-keystroke text */
   if(pushT){ clearTimeout(pushT); pushT = null; pushLocal(); }
   applyingRemote = true;
+  let seedFromLocal = false;
   try{
     const root = yRoot();
     if(root.get('name') != null) D.name = root.get('name');
@@ -5284,7 +5286,15 @@ function applyRemote(){
     yImages().forEach((data, id) => { if(!D.images[id]) D.images[id] = data; });
 
     const blocks = yBlocks();
-    D.blocks = yOrder().toArray().map(id => blocks.has(id) ? clone(blocks.get(id)) : null).filter(Boolean);
+    const remoteIds = yOrder().toArray();
+    /* Never let an empty/stale room blank out a document that still has content.
+       If the room has no blocks but ours does, keep ours and seed the room from
+       it after this pass (pushLocal is a no-op while applyingRemote is true). */
+    if(remoteIds.length === 0 && D.blocks.length > 0){
+      seedFromLocal = true;
+    } else {
+      D.blocks = remoteIds.map(id => blocks.has(id) ? clone(blocks.get(id)) : null).filter(Boolean);
+    }
     D = migrate(D);                       // keep older-shape guards honest
     if(sel && !findBlock(sel)) sel = null;
     refreshShadowFromD();
@@ -5295,6 +5305,7 @@ function applyRemote(){
     restoreCaret(caret);
     if(collab && !collab.baseInit){ collab.baseInit = true; histReset(); }
   } finally { applyingRemote = false; }
+  if(seedFromLocal){ collabShadow = emptyShadow(); pushLocal(); }
 }
 
 /* ---------- caret save / restore across a full re-render ---------- */
@@ -5497,8 +5508,12 @@ async function collabConnect(roomId, seed){
   updatePresenceUI();
 }
 function onSynced(seed){
-  const hasData = yOrder().length > 0 || yRoot().size > 0;
-  if(seed && !hasData){ collabShadow = emptyShadow(); pushLocal(); }
+  /* "Has data" must mean actual content blocks. A room that only holds leftover
+     root metadata (an interrupted seed, or one written by an older version of
+     the app) is effectively empty — treating it as populated would overwrite the
+     document we just opened with nothing. */
+  const hasBlocks = yOrder().length > 0;
+  if(seed && !hasBlocks){ collabShadow = emptyShadow(); pushLocal(); }
   else { applyRemote(); }
 }
 function shareLink(id){ return location.origin + location.pathname + '#room=' + id; }
