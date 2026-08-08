@@ -812,7 +812,8 @@ table.doc thead th{position:relative}
     </div>
     <button class="btn btn-ghost btn-icon btn-sm" id="fullBtn" aria-label="Full view"></button>
     <button class="btn btn-ghost btn-icon btn-sm" id="edTheme" aria-label="Toggle dark mode"></button>
-    <button class="btn btn-outline btn-sm" id="shareBtn" title="Share for live editing">Share</button>
+    <!-- Sharing hidden for now — app runs offline / local-first. Flip SHARING_ENABLED and remove `hidden` to restore. -->
+    <button class="btn btn-outline btn-sm" id="shareBtn" title="Share for live editing" hidden>Share</button>
     <button class="btn btn-outline btn-sm" id="downloadBtn"><span data-icon="download"></span> Save file</button>
     <button class="btn btn-default btn-sm" id="printBtn"><span data-icon="printer"></span> Export PDF</button>
   </header>
@@ -1731,7 +1732,7 @@ async function openReport(id){
     return;
   }
   openEditor(doc);
-  if(isRemembered(id) && (!collab || collab.roomId !== id)){
+  if(SHARING_ENABLED && isRemembered(id) && (!collab || collab.roomId !== id)){
     location.hash = 'room=' + id;
     collabConnect(id, false).then(() => pushPresence()).catch(e => console.error(e));
   }
@@ -5136,6 +5137,11 @@ $('shareBtn').onclick = () => collabEnable();
    Liveblocks awareness. Peers render those blocks read-only with a banner and
    a name. One editor per page means there is never an in-paragraph merge.
    ========================================================================== */
+/* Master switch for the live-sharing feature. While false the app is fully
+   offline / local-first: the Share button is hidden, files never auto-join a
+   collab room, and #room= links are ignored. Set to true to bring it back. */
+const SHARING_ENABLED = false;
+window.__SHARING_ENABLED = SHARING_ENABLED;   // read by the CDN loader at the bottom of the page
 const LB_KEY = 'pk_dev_KxzAe_bID6wjadRPe93hNPORcX13H-nE6GuzfQf1p-FxrxIFVgwgVV4AI9_vRyrK';
 const COLLAB_NAME_KEY = 'studio:collabName';
 const COLLAB_ROOMS_KEY = 'studio:collabRooms';
@@ -5519,6 +5525,7 @@ function onSynced(seed){
 }
 function shareLink(id){ return location.origin + location.pathname + '#room=' + id; }
 async function collabEnable(){
+  if(!SHARING_ENABLED) return;
   if(collab){ showShareLink(); return; }
   try{
     await ensureName();
@@ -5613,7 +5620,7 @@ window.__collabEnable = collabEnable;   // used by the Share button
   applyFullView();
   await loadIndex();
   const roomMatch = location.hash.match(/room=([\w-]+)/);
-  if(roomMatch){ collabJoin(roomMatch[1]); return; }
+  if(SHARING_ENABLED && roomMatch){ collabJoin(roomMatch[1]); return; }
   showLibrary();
 })();
 </script>
@@ -5656,6 +5663,8 @@ window.__collabEnable = collabEnable;   // used by the Share button
 </script>
 <script type="module">
   (async () => {
+    // Sharing is off — stay fully offline and skip fetching the collab libraries.
+    if(!window.__SHARING_ENABLED) return;
     try{
       const [Y, lbClient, lbYjs] = await Promise.all([
         import('https://esm.sh/yjs@13'),
