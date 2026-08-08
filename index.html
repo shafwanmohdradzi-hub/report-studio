@@ -5278,21 +5278,22 @@ function applyRemote(){
   let seedFromLocal = false;
   try{
     const root = yRoot();
-    if(root.get('name') != null) D.name = root.get('name');
-    if(root.get('meta'))     D.meta = clone(root.get('meta'));
-    if(root.get('settings')) D.settings = clone(root.get('settings'));
-    if(root.get('toc'))      D.toc = clone(root.get('toc'));
-    if(root.get('created'))  D.created = root.get('created');
-    yImages().forEach((data, id) => { if(!D.images[id]) D.images[id] = data; });
-
     const blocks = yBlocks();
     const remoteIds = yOrder().toArray();
     /* Never let an empty/stale room blank out a document that still has content.
-       If the room has no blocks but ours does, keep ours and seed the room from
-       it after this pass (pushLocal is a no-op while applyingRemote is true). */
+       If the room has no blocks but ours does, keep ours (blocks AND theme/meta)
+       and seed the room from it after this pass (pushLocal is a no-op while
+       applyingRemote is true). Otherwise the stale room would clobber the just-
+       opened file's settings/theme. */
     if(remoteIds.length === 0 && D.blocks.length > 0){
       seedFromLocal = true;
     } else {
+      if(root.get('name') != null) D.name = root.get('name');
+      if(root.get('meta'))     D.meta = clone(root.get('meta'));
+      if(root.get('settings')) D.settings = clone(root.get('settings'));
+      if(root.get('toc'))      D.toc = clone(root.get('toc'));
+      if(root.get('created'))  D.created = root.get('created');
+      yImages().forEach((data, id) => { if(!D.images[id]) D.images[id] = data; });
       D.blocks = remoteIds.map(id => blocks.has(id) ? clone(blocks.get(id)) : null).filter(Boolean);
     }
     D = migrate(D);                       // keep older-shape guards honest
