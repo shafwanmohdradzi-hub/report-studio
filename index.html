@@ -4190,7 +4190,34 @@ desk.addEventListener('contextmenu', e => {
    in the sidebar's add menu is available here, plus Section, so the document
    can be built without the panel open at all.
    ========================================================================== */
-const PAGE_ADD_MENU = [['#', 'Structure'], ['h1', 'Topic', 'h1']].concat(ADD_MENU);
+/* Presets — one menu pick drops in a small, pre-composed group of blocks
+   (a heading plus the pieces that usually follow it) so common report
+   sections can be built in a single click. Each is expanded into ordinary,
+   fully editable blocks by insertPreset(); nothing here needs its own
+   renderBlock/CSS. Keyed order is the order shown in the menu. */
+const PRESETS = {
+  opener:    { label:'Section opener', icon:'h1', blocks:[
+    ['h1',   { newPage:false, eyebrow:'Section', text:'Section title' }],
+    ['body', { html:'<p>Open the section with a short paragraph that frames what follows.</p>' }] ] },
+  kpi:       { label:'KPI row', icon:'hash', blocks:[
+    ['h2',    { text:'Results at a glance' }],
+    ['stats', {}],
+    ['body',  { html:'<p>Comment on the figures above — what moved this year, and why.</p>' }] ] },
+  feature:   { label:'Image feature', icon:'image', blocks:[
+    ['h2',    { text:'Feature title' }],
+    ['image', {}],
+    ['body',  { html:'<p>Explain what the image shows and why it belongs in this section.</p>' }] ] },
+  tablenote: { label:'Table + note', icon:'table', blocks:[
+    ['h3',    { text:'Table title' }],
+    ['table', {}],
+    ['body',  { html:'<p><em>Source: add the source or a short note about the figures above.</em></p>' }] ] },
+  chapter:   { label:'New chapter', icon:'filenew', blocks:[
+    ['h1',   { newPage:true, eyebrow:'Section', text:'Chapter title' }],
+    ['body', { html:'<p>Begin the chapter here.</p>' }] ] }
+};
+const PRESET_MENU = [['#', 'Presets']].concat(
+  Object.entries(PRESETS).map(([k, p]) => ['preset:' + k, p.label, p.icon]));
+const PAGE_ADD_MENU = [['#', 'Structure'], ['h1', 'Topic', 'h1']].concat(ADD_MENU, PRESET_MENU);
 let insHoverId = null;
 function clearInsertBar(){
   desk.querySelectorAll('.insbar').forEach(el => el.remove());
@@ -4239,6 +4266,7 @@ desk.addEventListener('mouseleave', clearInsertBar);
 function insertBlockAt(index, type, list){
   list = list || D.blocks;
   const at = Math.max(0, Math.min(index, list.length));
+  if(type && type.slice(0, 7) === 'preset:'){ insertPreset(at, type.slice(7), list); return; }
   /* "New Page" is a page break plus a fresh text block, so a real, editable
      empty page actually appears with the caret on it. A lone marker at the end
      of the document flushes an already-pushed page and nothing new shows. */
@@ -4266,6 +4294,24 @@ function insertBlockAt(index, type, list){
     return;
   }
   if(type === 'image') pickImage(b); else focusBlock(b.id);
+}
+/* expand a preset into ordinary blocks, splice them in as one run, and land
+   the caret on the opening block so the section reads top-down as you type */
+function insertPreset(at, key, list){
+  const p = PRESETS[key];
+  if(!p) return;
+  const made = p.blocks.map(([t, props]) => Object.assign(newBlock(t), props || {}));
+  list.splice(at, 0, ...made);
+  const first = made[0];
+  sel = first.id;
+  commit();
+  const el = desk.querySelector(`.blk[data-id="${first.id}"]`);
+  if(el) el.scrollIntoView({ block:'nearest' });
+  if(/^h[1-3]$/.test(first.type)){
+    const inp = $('tree').querySelector(`[data-node="${first.id}"] .node-input`);
+    if(inp){ inp.focus(); inp.select(); return; }
+  }
+  focusBlock(first.id);
 }
 function addSection(){
   const b = newBlock('h1');
