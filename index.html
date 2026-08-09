@@ -6111,9 +6111,17 @@ function cloudSubscribe(){
 function cloudUnsubscribe(){ if(cloudChan){ try{ cloudSb.removeChannel(cloudChan); }catch(e){} cloudChan = null; } }
 
 /* ---------- auth ---------- */
+/* Where the magic-link email should send people back to. When the app is
+   opened locally (file://, localhost, 127.0.0.1) the current origin isn't
+   reachable from an email, so fall back to the deployed URL. */
+const APP_URL = 'https://report-studio-green.vercel.app/';
+function cloudRedirectTo(){
+  const local = location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+  return local ? APP_URL : location.origin + location.pathname;
+}
 async function cloudSignIn(email){
   if(!cloudReady) return false;
-  const { error } = await cloudSb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+  const { error } = await cloudSb.auth.signInWithOtp({ email, options:{ emailRedirectTo: cloudRedirectTo() } });
   if(error){ toast('Could not send the link: ' + error.message); return false; }
   return true;
 }
