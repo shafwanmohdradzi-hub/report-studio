@@ -1195,6 +1195,7 @@ const ICONS = {
   'chevron-down':'<path d="m6 9 6 6 6-6"/>',
   layers:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>',
   breakpage:'<path d="M12 3v6"/><path d="M12 15v6"/><path d="M3 12h18"/><path d="m9 6 3-3 3 3"/>',
+  filenew:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6"/><path d="M9 15h6"/>',
   flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22V4"/>'
 };
 function svg(name, cls){
@@ -1910,7 +1911,7 @@ function paginate(){
 
   for(let i = 0; i < D.blocks.length; i++){
     const b = D.blocks[i];
-    if(b.type === 'pagebreak'){ flush(); continue; }
+    if(b.type === 'pagebreak' || b.type === 'newpage'){ flush(); continue; }
     if(b.type === 'h1' && b.newPage && pg.length) flush();
     let el = renderBlock(b, true);
     probe.appendChild(el);
@@ -3948,10 +3949,10 @@ bandUpload('footIn','footPick','footClear','footer','Footer image');
    STRUCTURE — a tree derived from the flat block list
    ========================================================================== */
 const BLOCK_LABEL = { body:'Body text', table:'Table', chart:'Graph', blurb:'Blurb', stats:'Key figures', quote:'Pull quote',
-  image:'Image', divider:'Divider', spacer:'Spacer', pagebreak:'Page break',
+  image:'Image', divider:'Divider', spacer:'Spacer', pagebreak:'Page break', newpage:'New Page',
   stat:'Statistic', grid:'Columns' };
 const BLOCK_ICON = { body:'pilcrow', table:'table', chart:'chart', blurb:'blurb', stats:'hash', quote:'quote',
-  image:'image', divider:'minus', spacer:'updown', pagebreak:'breakpage',
+  image:'image', divider:'minus', spacer:'updown', pagebreak:'breakpage', newpage:'filenew',
   stat:'stat', grid:'col3' };
 const ADD_MENU = [
   ['#','Text'],
@@ -3960,6 +3961,7 @@ const ADD_MENU = [
   ['stat','Statistic','stat'], ['stats','Key figures','hash'], ['table','Table','table'], ['chart','Graph','chart'],
   ['#','Layout'],
   ['grid2','2 columns','col2'], ['grid3','3 columns','col3'], ['grid4','4 columns','col4'], ['grid5','5 columns','col5'],
+  ['newpage','New Page','filenew'],
   ['#','Media'],
   ['image','Image','image'], ['divider','Divider','minus'], ['spacer','Spacer','updown'], ['pagebreak','Page break','breakpage']
 ];
@@ -3968,7 +3970,7 @@ const ADD_MENU = [
    breaks are kept out. Headings inside a column render but aren't listed in
    the contents or the structure tree. */
 const CELL_ADD_MENU = ADD_MENU.filter(([v]) =>
-  v === '#' ? true : !/^(h1|grid[2-5]|pagebreak)$/.test(v)
+  v === '#' ? true : !/^(h1|grid[2-5]|pagebreak|newpage)$/.test(v)
 ).filter((item, i, arr) => !(item[0] === '#' && (!arr[i+1] || arr[i+1][0] === '#')));
 const collapsed = new Set();
 
@@ -4236,7 +4238,7 @@ desk.addEventListener('mouseleave', clearInsertBar);
 
 function insertBlockAt(index, type, list){
   list = list || D.blocks;
-  const b = type === 'pagebreak' ? { id:uid(), type:'pagebreak' } : newBlock(type);
+  const b = (type === 'pagebreak' || type === 'newpage') ? { id:uid(), type } : newBlock(type);
   list.splice(Math.max(0, Math.min(index, list.length)), 0, b);
   sel = b.id;
   commit();
@@ -5844,7 +5846,7 @@ function paintCollabBtn(){
   if(!can) return;
   /* Shared reports are always live — no "Leave session". This is a status pill;
      it only acts as a Reconnect when the live link has dropped. */
-  if(collab){ b.textContent = '● Live'; b.classList.add('is-live'); b.title = 'This report is live — everyone with it edits together'; b.disabled = false; }
+  if(collab){ b.innerHTML = '<span class="livedot"></span>Live'; b.classList.add('is-live'); b.title = 'This report is live — everyone with it edits together'; b.disabled = false; }
   else if(!navigator.onLine){ b.textContent = '● Offline'; b.classList.remove('is-live'); b.title = 'Reconnect to the internet to keep editing'; b.disabled = true; }
   else { b.textContent = 'Reconnect'; b.classList.remove('is-live'); b.title = 'Reconnect to the live session'; b.disabled = false; }
 }
@@ -6219,13 +6221,22 @@ function genPassword(){
   return s;
 }
 /* A share link carries the code + secret in the URL fragment (never sent to a
-   server). Opening it auto-pulls the report and starts a live session. */
-function shareToken(code, password){ return encodeURIComponent(btoa(unescape(encodeURIComponent(code + ':' + password)))); }
+   server). Opening it auto-pulls the report and starts a live session. The code
+   and password are already URL-safe (letters/digits, plus a dash in the code),
+   so we join them with a '~' separator and skip base64/percent-encoding — that
+   layer only bloated the link without adding anything. */
+function shareToken(code, password){ return code + '~' + password; }
 function parseShareToken(tok){
-  try{ const s = decodeURIComponent(escape(atob(decodeURIComponent(tok)))); const i = s.indexOf(':');
-    return i < 0 ? null : { code:s.slice(0,i), password:s.slice(i+1) }; }catch(e){ return null; }
+  try{
+    tok = decodeURIComponent(tok);
+    let i = tok.indexOf('~');
+    if(i >= 0) return { code:tok.slice(0,i), password:tok.slice(i+1) };
+    /* legacy links: code + ':' + password, base64-encoded */
+    const s = decodeURIComponent(escape(atob(tok))); i = s.indexOf(':');
+    return i < 0 ? null : { code:s.slice(0,i), password:s.slice(i+1) };
+  }catch(e){ return null; }
 }
-function shareLinkFor(code, password){ return location.origin + location.pathname + '#share=' + shareToken(code, password); }
+function shareLinkFor(code, password){ return location.origin + location.pathname + '#s=' + shareToken(code, password); }
 
 /* someone opened a share link: pull the report (no account needed) and drop
    straight into a live session so "click link -> editing together" just works. */
@@ -6422,9 +6433,9 @@ function shareReceiveDialog(prefillCode){
   await loadIndex();
   const cb = $('cloudBtn'); if(cb) cb.onclick = cloudMenu;
   const pb = $('publishBtn'); if(pb){ pb.hidden = !CLOUD.enabled; pb.onclick = () => sharePublishDialog(D); }
-  const shareMatch = location.hash.match(/[#&]share=([^&]+)/);
+  const shareMatch = location.hash.match(/[#&]s(?:hare)?=([^&]+)/);
   cloudInit();
-  /* A #share= link auto-pulls the report and opens a live session. (The old
+  /* A #s= link auto-pulls the report and opens a live session. (The old
      #room= link-join is gone; people arrive via a share link now.) */
   if(shareMatch){ openSharedLink(shareMatch[1]); return; }
   showLibrary();
@@ -6476,6 +6487,11 @@ function shareReceiveDialog(prefillCode){
     border:1px solid #f59e0b66;border-radius:4px;padding:.08rem .4rem;cursor:pointer}
   .rupd:hover{background:#f59e0b33}
   #shareBtn.is-live{color:#fff;background:var(--accent,#0B5D57);border-color:transparent}
+  /* live status dot — bright green so it reads as "on air" against the teal pill */
+  .livedot{display:inline-block;width:.5rem;height:.5rem;margin-right:.45rem;border-radius:50%;
+    background:#4ade80;vertical-align:middle;box-shadow:0 0 0 2px #4ade8055;animation:livepulse 2s ease-in-out infinite}
+  @keyframes livepulse{0%,100%{box-shadow:0 0 0 0 #4ade8066}50%{box-shadow:0 0 0 4px #4ade8000}}
+  @media (prefers-reduced-motion:reduce){ .livedot{animation:none} }
   .lib-top-actions{display:flex;align-items:center;gap:.5rem}
   .cloudbtn::before{content:"";display:inline-block;width:.5rem;height:.5rem;border-radius:999px;
     margin-right:.15rem;vertical-align:middle;background:hsl(var(--muted-foreground,220 9% 60%))}
