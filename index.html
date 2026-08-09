@@ -4238,8 +4238,23 @@ desk.addEventListener('mouseleave', clearInsertBar);
 
 function insertBlockAt(index, type, list){
   list = list || D.blocks;
-  const b = (type === 'pagebreak' || type === 'newpage') ? { id:uid(), type } : newBlock(type);
-  list.splice(Math.max(0, Math.min(index, list.length)), 0, b);
+  const at = Math.max(0, Math.min(index, list.length));
+  /* "New Page" is a page break plus a fresh text block, so a real, editable
+     empty page actually appears with the caret on it. A lone marker at the end
+     of the document flushes an already-pushed page and nothing new shows. */
+  if(type === 'newpage'){
+    const brk = { id:uid(), type:'newpage' };
+    const body = newBlock('body');
+    list.splice(at, 0, brk, body);
+    sel = body.id;
+    commit();
+    const el = desk.querySelector(`.blk[data-id="${body.id}"]`);
+    if(el) el.scrollIntoView({ block:'nearest' });
+    focusBlock(body.id);
+    return;
+  }
+  const b = (type === 'pagebreak') ? { id:uid(), type } : newBlock(type);
+  list.splice(at, 0, b);
   sel = b.id;
   commit();
   const el = desk.querySelector(`.blk[data-id="${b.id}"]`);
