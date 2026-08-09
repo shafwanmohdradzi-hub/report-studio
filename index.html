@@ -417,6 +417,16 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);background:hsl(var(--popover));
   color:hsl(var(--popover-foreground));box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
 .menu[data-open]{display:block}
+.expgrp{position:relative;display:inline-flex}
+.expgrp .caret{margin-left:.1rem;opacity:.7}
+.expmenu{position:absolute;top:calc(100% + .3rem);right:0;z-index:70;min-width:12.5rem;padding:.25rem;display:none;
+  border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);background:hsl(var(--popover));
+  color:hsl(var(--popover-foreground));box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
+.expmenu[data-open]{display:block}
+.expmenu button{display:flex;width:100%;align-items:center;gap:.5rem;padding:.42rem .5rem;border:0;background:none;
+  color:inherit;font:inherit;border-radius:calc(var(--radius) - 4px);cursor:pointer;text-align:left}
+.expmenu button:hover{background:hsl(var(--accent))}
+.expmenu button svg{width:.9rem;height:.9rem;color:hsl(var(--muted-foreground))}
 .menu .mlabel{padding:.375rem .5rem .25rem;font-size:.6875rem;font-weight:600;color:hsl(var(--muted-foreground))}
 .menu button{display:flex;width:100%;align-items:center;gap:.5rem;padding:.375rem .5rem;border:0;background:none;
   color:inherit;font:inherit;font-size:.8125rem;text-align:left;border-radius:calc(var(--radius) - 4px);cursor:pointer}
@@ -457,6 +467,28 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 #view-editor[data-full]{grid-template-columns:1fr}
 #view-editor[data-full] .ed-side{display:none}
 #view-editor[data-full] .desk{padding-left:1rem;padding-right:1rem}
+/* Preview mode — everything but the report itself gets out of the way */
+#view-editor.preview{grid-template-columns:1fr;grid-template-rows:1fr}
+#view-editor.preview .ed-top,
+#view-editor.preview .ed-side,
+#view-editor.preview .blkbar,
+#view-editor.preview .fmtbar,
+#view-editor.preview .insbar,
+#view-editor.preview .authordot,
+#view-editor.preview .overflag,
+#view-editor.preview .peer-banner,
+#view-editor.preview .lockbanner{display:none!important}
+#view-editor.preview .blk{outline:none!important}
+#view-editor.preview .deskInner{pointer-events:none}
+#previewExit{display:none}
+#view-editor.preview #previewExit{display:inline-flex;position:fixed;top:1rem;right:1rem;z-index:1000;
+  opacity:.22;transition:opacity .15s;box-shadow:0 4px 14px -4px rgb(0 0 0/.4)}
+#view-editor.preview #previewExit:hover{opacity:1}
+/* Offline lock for shared reports — view-only until reconnected */
+#view-editor.offline-lock .deskInner{pointer-events:none;opacity:.55}
+.offlinebanner{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:1200;
+  max-width:min(92vw,34rem);background:#7a2e2e;color:#fff;padding:.6rem .9rem;border-radius:8px;
+  font-size:.8rem;line-height:1.35;text-align:center;box-shadow:0 10px 30px rgb(0 0 0/.35)}
 
 /* insert affordance at the bottom edge of a block. Absolutely positioned so
    it can never affect measurement or where pages break. */
@@ -515,6 +547,13 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   .cover [data-m]:focus,.tocTitle:focus{outline:none;box-shadow:0 0 0 1px hsl(var(--ring))}
 }
 .blk{margin:0 0 4.5mm;position:relative}
+.blk>.authordot{position:absolute;left:-3.6mm;top:1mm;width:2.2mm;height:2.2mm;border-radius:50%;
+  box-shadow:0 0 0 1px hsl(var(--background));pointer-events:auto;z-index:3;cursor:default}
+.blk>.authordot::after{content:attr(data-name);position:absolute;left:50%;bottom:150%;transform:translateX(-50%) translateY(4px);
+  white-space:nowrap;background:hsl(var(--popover));color:hsl(var(--popover-foreground));border:1px solid hsl(var(--border));
+  border-radius:6px;padding:.2rem .45rem;font-size:.7rem;font-weight:500;line-height:1.2;
+  box-shadow:0 6px 18px -6px rgb(0 0 0/.35);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s;z-index:30}
+.blk>.authordot:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
 .blk:last-child{margin-bottom:0}
 [data-t="h1"]{font-family:var(--doc-display);font-weight:var(--doc-display-weight);font-size:30pt;line-height:1.06;
   letter-spacing:var(--doc-display-tracking);margin:0 0 6mm;color:var(--doc-head)}
@@ -779,7 +818,10 @@ table.doc thead th{position:relative}
 <section class="view" id="view-library">
   <header class="lib-top">
     <div class="wordmark"><span class="mk"><svg class="metlogo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M76.2711 28.3223C77.6234 26.9699 79.7183 27.0496 80.5845 28.4815C81.5213 30.0193 82.2282 31.6808 82.732 33.4219C83.0149 34.4119 82.6878 35.5696 81.8658 36.3916L55.3756 62.8819C53.7757 64.4816 51.7868 65.5864 49.6744 66.0371L47.4742 66.5059C45.3706 66.9655 43.364 68.0703 41.773 69.6612L21.4342 90C20.568 86.659 20.1885 84.4049 22.9019 81.6914L76.2711 28.3223ZM82.0084 39.7344C82.8923 38.8506 84.254 39.3636 84.1656 40.5303C83.6176 47.6719 80.2142 55.1935 74.151 61.2569C69.5282 66.3215 56.4818 74.0645 47.1568 79.253C45.2476 80.3136 43.6919 78.0508 45.2564 76.4864L82.0084 39.7344ZM69.8189 17.6104C70.6586 16.7708 71.8962 16.5934 72.7447 17.1768C74.5125 18.3789 76.1647 20.121 77.0133 22.2246C77.3313 23.0377 77.0579 24.0362 76.3599 24.7344L47.8277 53.2666C46.2279 54.8664 44.239 55.9711 42.1265 56.4219L39.9254 56.8907C37.8218 57.3503 35.8151 58.455 34.2242 60.0459L16.6265 77.6446C15.7603 74.3035 16.1757 71.2536 18.8892 68.5401L69.8189 17.6104ZM57.7271 12.5381C59.3181 10.9471 61.5984 10.3281 63.4722 11.0352C64.6478 11.486 65.7788 12.0345 66.8482 12.6797C68.2624 13.5282 68.3332 15.5961 67.0074 16.9219L40.9156 43.0147C39.4218 44.5084 37.3885 45.3036 35.4439 45.1621C33.4022 45.0119 31.2546 45.8516 29.6724 47.4336L15.3795 61.7266C14.5133 58.3855 15.6357 54.6286 18.3492 51.9151L22.981 47.2832L57.7271 12.5381ZM53.5474 10.001C54.8022 9.98368 55.2881 11.4772 54.3336 12.4317L22.1959 44.5694C21.2767 45.4886 19.9148 44.6579 20.4273 43.4912L24.7056 33.7686C24.9443 33.1764 25.2099 32.5748 25.5015 31.9649L25.5279 31.9033C27.994 26.6796 31.962 21.1372 35.692 17.4073C41.6759 11.4233 47.0508 10.0629 53.5474 10.001Z"/></svg></span> Report Studio<span class="ver">v1</span></div>
-    <button class="btn btn-ghost btn-icon btn-sm" id="libTheme" aria-label="Toggle dark mode"></button>
+    <div class="lib-top-actions">
+      <button class="btn btn-outline btn-sm cloudbtn" id="cloudBtn" hidden>Sign in to sync</button>
+      <button class="btn btn-ghost btn-icon btn-sm" id="libTheme" aria-label="Toggle dark mode"></button>
+    </div>
   </header>
   <div class="lib-body">
     <div id="storageNotice"></div>
@@ -789,7 +831,7 @@ table.doc thead th{position:relative}
     </div>
     <input type="file" id="importIn" accept="application/json" hidden>
     <div class="lib-head"><h2>Your reports</h2><span class="muted" style="font-size:.8125rem" id="libCount"></span></div>
-    <p class="muted" style="font-size:.8125rem;margin:-.375rem 0 .875rem">Saved in this browser. To hand a report to someone else, open it and use Save file.</p>
+    <p class="muted" style="font-size:.8125rem;margin:-.375rem 0 .875rem">Saved in this browser. Sign in to sync across devices, or open a report and use <b style="font-weight:500">Share</b> to collaborate live.</p>
     <div id="libList"></div>
   </div>
 </section>
@@ -801,6 +843,7 @@ table.doc thead th{position:relative}
     <button class="btn btn-ghost btn-icon btn-sm" id="panelBtn" style="display:none" aria-label="Show panel"><span data-icon="panel"></span></button>
     <input class="namefield" id="nameField" aria-label="Report name">
     <span class="badge badge-secondary" id="sheetBadge">—</span>
+    <span class="rbadge" id="ownerTag" hidden></span>
     <span class="muted" id="saveState" style="font-size:.75rem"></span>
     <div class="grow"></div>
     <button class="btn btn-ghost btn-icon btn-sm" id="undoBtn" aria-label="Undo" title="Undo (⌘Z)" disabled><span data-icon="undo"></span></button>
@@ -810,12 +853,18 @@ table.doc thead th{position:relative}
       <output id="zVal">75%</output>
       <button id="zIn" aria-label="Zoom in"><span data-icon="plus"></span></button>
     </div>
+    <button class="btn btn-ghost btn-icon btn-sm" id="previewBtn" aria-label="Preview" title="Preview — hide all controls"><span data-icon="frame"></span></button>
     <button class="btn btn-ghost btn-icon btn-sm" id="fullBtn" aria-label="Full view"></button>
     <button class="btn btn-ghost btn-icon btn-sm" id="edTheme" aria-label="Toggle dark mode"></button>
-    <!-- Sharing hidden for now — app runs offline / local-first. Flip SHARING_ENABLED and remove `hidden` to restore. -->
-    <button class="btn btn-outline btn-sm" id="shareBtn" title="Share for live editing" hidden>Share</button>
-    <button class="btn btn-outline btn-sm" id="downloadBtn"><span data-icon="download"></span> Save file</button>
-    <button class="btn btn-default btn-sm" id="printBtn"><span data-icon="printer"></span> Export PDF</button>
+    <button class="btn btn-outline btn-sm" id="shareBtn" title="Edit live with everyone who has this report" hidden>Collaborate</button>
+    <button class="btn btn-outline btn-sm" id="publishBtn" title="Share this report with a link" hidden><span data-icon="link"></span> Share</button>
+    <div class="expgrp">
+      <button class="btn btn-default btn-sm" id="exportBtn" aria-haspopup="true" aria-expanded="false"><span data-icon="download"></span> Save / Export <span class="caret" data-icon="down"></span></button>
+      <div class="expmenu" id="exportMenu">
+        <button type="button" id="miSave"><span data-icon="download"></span> Save file (.json)</button>
+        <button type="button" id="miPdf"><span data-icon="printer"></span> Export PDF</button>
+      </div>
+    </div>
   </header>
 
   <aside class="ed-side" id="edSide">
@@ -985,6 +1034,7 @@ table.doc thead th{position:relative}
   </aside>
 
   <main class="desk" id="desk"><div class="deskInner" id="deskInner"></div></main>
+  <button class="btn btn-default btn-sm" id="previewExit" aria-label="Exit preview">Exit preview</button>
 </section>
 
 <!-- ======================= DIALOGS ======================= -->
@@ -1350,14 +1400,15 @@ async function saveIndex(){
 
 function indexEntry(doc){
   return { id:doc.id, name:doc.name, company:doc.meta.company, year:doc.meta.year,
-           updated:doc.updated, pages:doc.pageCount || 1, accent:doc.settings.accent, thumb:doc.thumb || null };
+           updated:doc.updated, pages:doc.pageCount || 1, accent:doc.settings.accent, thumb:doc.thumb || null,
+           share:doc.shareOrigin || null, shareCode:doc.shareCode || null, sharedVersion:doc.sharedVersion || 0 };
 }
 /* the index is cheap but not free — only rewrite it when the summary moves */
 async function touchIndex(doc, force){
   const e = indexEntry(doc);
   const i = INDEX.findIndex(x => x.id === doc.id);
   const prev = i === -1 ? null : INDEX[i];
-  const moved = !prev || ['name','company','year','pages','thumb','accent'].some(k => prev[k] !== e[k]);
+  const moved = !prev || ['name','company','year','pages','thumb','accent','share','shareCode','sharedVersion'].some(k => prev[k] !== e[k]);
   if(i === -1) INDEX.unshift(e); else INDEX[i] = e;
   INDEX.sort((a,b) => (b.updated||0) - (a.updated||0));
   if(force || moved || Date.now() - lastIndexAt > 30000){
@@ -1586,6 +1637,7 @@ function reportMissing(entry){
   $('confirmBtn').textContent = 'Remove entry';
   confirmAction = async () => {
     await dropDoc(entry.id);
+    cloudDelete(entry.id);
     INDEX = INDEX.filter(x => x.id !== entry.id);
     await saveIndex(); drawLibrary(); toast('Entry removed');
   };
@@ -1613,11 +1665,12 @@ function drawLibrary(){
   $('libCount').textContent = INDEX.length ? INDEX.length + (INDEX.length===1?' report':' reports') : '';
   const addRow = (action, icon, label) =>
     `<button class="add-row" type="button" data-action="${action}" aria-label="${label}"><span class="ic">${svg(icon)}</span><span class="lbl">${label}</span></button>`;
+  const getRow = CLOUD.enabled ? addRow('get','download','Get a shared report') : '';
   const actions = `
     <div class="slot slot-action">
       <div class="stage">
         <div class="book book-add">
-          <div class="cover">${addRow('new','plus','New report')}${addRow('open','upload','Open a file')}</div>
+          <div class="cover">${addRow('new','plus','New report')}${addRow('open','upload','Open a file')}${getRow}</div>
           <div class="spine"></div>
         </div>
       </div>
@@ -1634,6 +1687,7 @@ function drawLibrary(){
     <div class="slot" role="button" tabindex="0" data-open-id="${e.id}"
          aria-label="${esc(e.name)} — ${esc(e.company || 'No company set')}, ${esc(e.year||'')}, ${e.pages||1} ${e.pages===1?'page':'pages'}">
       <div class="acts">
+        ${CLOUD.enabled ? `<button class="btn btn-ghost btn-icon btn-sm" data-share="${e.id}" aria-label="Share ${esc(e.name)}">${svg('link')}</button>` : ''}
         <button class="btn btn-ghost btn-icon btn-sm" data-dup="${e.id}" aria-label="Duplicate ${esc(e.name)}">${svg('copy')}</button>
         <button class="btn btn-ghost btn-icon btn-sm" data-del="${e.id}" aria-label="Delete ${esc(e.name)}">${svg('trash')}</button>
       </div>
@@ -1645,34 +1699,85 @@ function drawLibrary(){
       </div>
       <div class="plank"></div>
       <div class="cap">
-        <span class="nm">${esc(e.name)}</span>
+        <span class="nm">${esc(e.name)}${e.share === 'received' ? '<span class="rbadge is-shared">Shared</span>' : e.share === 'owner' ? '<span class="rbadge is-owned">Published</span>' : ''}</span>
         <span class="sub">${esc(e.year||'')} · ${e.pages||1} ${e.pages===1?'page':'pages'} · edited ${relTime(e.updated)}</span>
+        ${e.share === 'received' ? `<span class="rstatus" data-status-id="${e.id}">Checking…</span>` : ''}
       </div>
     </div>`;}).join('')}${actions}</div>`;
+  refreshSharedStatuses();
 
   host.querySelectorAll('[data-action]').forEach(el => {
-    el.onclick = () => el.dataset.action === 'new' ? openNewDialog() : $('importIn').click();
+    el.onclick = () => {
+      const a = el.dataset.action;
+      if(a === 'new') openNewDialog();
+      else if(a === 'get') shareReceiveDialog();
+      else $('importIn').click();
+    };
   });
   host.querySelectorAll('[data-open-id]').forEach(el => {
-    el.onclick = e => { if(e.target.closest('[data-dup],[data-del]')) return; openReport(el.dataset.openId); };
+    el.onclick = e => { if(e.target.closest('[data-dup],[data-del],[data-share]')) return; openReport(el.dataset.openId); };
     el.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openReport(el.dataset.openId); } };
+  });
+  host.querySelectorAll('[data-share]').forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    const src = await loadDoc(b.dataset.share); if(!src) return;
+    sharePublishDialog(src);
   });
   host.querySelectorAll('[data-dup]').forEach(b => b.onclick = async e => {
     e.stopPropagation();
     const src = await loadDoc(b.dataset.dup); if(!src) return;
     const copy = JSON.parse(JSON.stringify(src));
     copy.id = uid(); copy.name = src.name + ' (copy)'; copy.updated = Date.now();
-    await saveDoc(copy); await touchIndex(copy, true); drawLibrary(); toast('Report duplicated');
+    await saveDoc(copy); await touchIndex(copy, true); cloudPush(copy); drawLibrary(); toast('Report duplicated');
   });
   host.querySelectorAll('[data-del]').forEach(b => b.onclick = e => {
     e.stopPropagation();
     const entry = INDEX.find(x => x.id === b.dataset.del);
     confirmDelete(entry ? entry.name : 'This report', async () => {
       await dropDoc(b.dataset.del);
+      cloudDelete(b.dataset.del);
       INDEX = INDEX.filter(x => x.id !== b.dataset.del);
       await saveIndex(); drawLibrary(); toast('Report deleted');
     });
   });
+}
+/* For each pulled report, ask the cloud how its published version compares to the
+   copy we hold, and label the card: Up to date / Update available / No longer shared. */
+async function refreshSharedStatuses(){
+  const host = $('libList');
+  const shared = INDEX.filter(e => e.share === 'received' && e.shareCode);
+  if(!shared.length) return;
+  if(!CLOUD.enabled){ shared.forEach(e => { const el = host.querySelector(`[data-status-id="${e.id}"]`); if(el){ el.textContent = 'Shared'; el.className = 'rstatus'; } }); return; }
+  for(const e of shared){
+    const el = host.querySelector(`[data-status-id="${e.id}"]`);
+    if(!el) continue;
+    let ver;
+    try{ ver = await cloudSharedVersion(e.shareCode); }catch(err){ ver = undefined; }
+    if(!document.body.contains(el)) continue;          // library was redrawn meanwhile
+    if(ver === undefined){ el.textContent = 'Shared'; el.className = 'rstatus'; }
+    else if(ver === null){ el.textContent = 'No longer shared'; el.className = 'rstatus is-gone'; }
+    else if(ver > (e.sharedVersion || 0)){
+      el.className = 'rstatus is-update';
+      el.innerHTML = `<button type="button" class="rupd" data-upd="${esc(e.shareCode)}">Update available</button>`;
+      const btn = el.querySelector('[data-upd]');
+      btn.onclick = ev => { ev.stopPropagation(); updateSharedReport(btn.dataset.upd); };
+    }
+    else { el.textContent = '✓ Up to date'; el.className = 'rstatus is-ok'; }
+  }
+}
+/* Pull the owner's latest version of a shared report. Uses the secret we stored
+   when it was first pulled, so it's a one-click update; only if that's missing
+   (older copies) do we ask for the code + password. */
+async function updateSharedReport(code){
+  const id = shareMapGet()[code];
+  let pass = null;
+  if(id){ try{ const d = await loadDoc(id); if(d) pass = d.sharePass; }catch(e){} }
+  if(!pass){ shareReceiveDialog(code); return; }
+  try{
+    const doc = await cloudReceiveShare(code, pass);
+    if(!doc){ toast('Could not fetch the update (it may have been unpublished)'); drawLibrary(); return; }
+    toast('Updated to the latest version'); drawLibrary();
+  }catch(e){ console.error('update', e); toast('Could not fetch the update'); }
 }
 function openNewDialog(){
   $('nName').value = '';
@@ -1692,6 +1797,7 @@ $('createBtn').onclick = async () => {
   else if(start === 'skeleton') seedSkeleton(doc);
   closeDialog();
   await saveDoc(doc); await touchIndex(doc, true);
+  cloudPush(doc);
   openEditor(doc);
 };
 $('importIn').onchange = () => {
@@ -1702,6 +1808,7 @@ $('importIn').onchange = () => {
       const doc = migrate(JSON.parse(fr.result));
       doc.updated = Date.now();
       await saveDoc(doc); await touchIndex(doc, true);
+      cloudPush(doc);
       /* Open privately. We deliberately do NOT auto-join a collab room here:
          the room is keyed to the file's id, and an old file may already have a
          stale/empty room on the server that would overwrite the content we just
@@ -1717,6 +1824,7 @@ $('edTheme').onclick = () => { uiDark = !uiDark; applyUi(); };
 function showLibrary(){
   $('view-editor').hidden = true;
   $('view-library').hidden = false;
+  sharedOfflineGuard();   // clear any offline banner/lock left over from the editor
   drawLibrary();
 }
 async function openReport(id){
@@ -1731,11 +1839,9 @@ async function openReport(id){
     if(err) console.error('openReport', err);
     return;
   }
+  if(doc.shareCode && !navigator.onLine){ warnSharedOffline(); return; }   // shared reports are online-only
   openEditor(doc);
-  if(SHARING_ENABLED && isRemembered(id) && (!collab || collab.roomId !== id)){
-    location.hash = 'room=' + id;
-    collabConnect(id, false).then(() => pushPresence()).catch(e => console.error(e));
-  }
+  maybeAutoCollab(doc);   // a shared report jumps straight into its live session
 }
 $('backBtn').onclick = async () => {
   await flushSave(true);
@@ -1757,7 +1863,7 @@ let pages = [];
 const desk = $('desk');
 
 function openEditor(doc){
-  if(collab && collab.roomId !== doc.id) collabLeave();
+  if(collab && collab.docId !== doc.id) collabLeave();
   D = doc;
   sel = null;
   $('view-library').hidden = true;
@@ -1770,6 +1876,9 @@ function openEditor(doc){
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
   $('saveState').textContent = '';
   histReset();
+  paintCollabBtn();
+  sharedOfflineGuard();
+  if(previewMode){ previewMode = false; applyPreview(); }
 }
 
 /* ---------- pagination ---------- */
@@ -2308,6 +2417,24 @@ function render(){
   $('sheetBadge').textContent = sheets + (sheets === 1 ? ' sheet' : ' sheets');
   D.pageCount = pages.length;
   if(typeof applyLocksToDom === 'function') applyLocksToDom();
+  paintAuthorDots();
+}
+/* A coloured dot in each block's margin showing who last added/changed it during
+   collaboration (from the block's `by` stamp), so changes are easy to review. */
+function paintAuthorDots(){
+  if(!desk || !D) return;
+  const byId = new Map((D.blocks || []).map(b => [b.id, b.by]));
+  desk.querySelectorAll('.blk[data-id]').forEach(el => {
+    const by = byId.get(el.dataset.id);
+    let dot = el.querySelector(':scope > .authordot');
+    if(by && by.c){
+      if(!dot){ dot = document.createElement('span'); dot.className = 'authordot'; el.appendChild(dot); }
+      dot.style.background = by.c;
+      const label = 'Edited by ' + (by.n || 'someone');
+      dot.setAttribute('data-name', label);   // styled hover tooltip
+      dot.title = label;                        // native fallback
+    } else if(dot){ dot.remove(); }
+  });
 }
 
 /* ---------- selection + block toolbar ---------- */
@@ -5135,9 +5262,30 @@ function applyFullView(){
   sSet('studio:full', fullView ? '1' : '0');
 }
 $('fullBtn').onclick = () => { fullView = !fullView; applyFullView(); };
+
+/* Preview mode: hide every editing control so you see the report as it reads.
+   The content stays scrollable but not editable; an Exit button waits in the
+   corner (faint until you hover it). */
+let previewMode = false;
+function applyPreview(){
+  const v = $('view-editor');
+  v.classList.toggle('preview', previewMode);
+  const btn = $('previewBtn');
+  if(btn){ btn.classList.toggle('is-live', previewMode);
+    btn.title = previewMode ? 'Exit preview' : 'Preview — hide all controls';
+    btn.setAttribute('aria-label', btn.title); }
+  if(previewMode){
+    sel = null; selCell = null;
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    if(typeof paintSelection === 'function') paintSelection();
+  }
+}
+$('previewBtn').onclick = () => { previewMode = !previewMode; applyPreview(); };
+$('previewExit').onclick = () => { previewMode = false; applyPreview(); };
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
   if(openDlg || menu.hasAttribute('data-open')) return;   // those handle it themselves
+  if(previewMode){ previewMode = false; applyPreview(); return; }
   if(fullView){ fullView = false; applyFullView(); }
 });
 $('panelBtn').onclick = () => $('edSide').toggleAttribute('data-open');
@@ -5161,19 +5309,32 @@ async function flushSave(force){
   const ok = await saveDoc(D);
   await touchIndex(D, force);
   if(force) await sweepImages(D);
+  cloudPush(D);   // mirror to the cloud (queues if signed out / offline)
   $('saveState').textContent = ok ? 'Saved' : "Couldn't save — use Save file";
 }
-$('downloadBtn').onclick = () => {
+function saveToFile(){
+  $('exportMenu').removeAttribute('data-open');
   const blob = new Blob([JSON.stringify(D, null, 2)], { type:'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = D.name.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-').toLowerCase() + '.json';
   a.click(); URL.revokeObjectURL(a.href);
   toast('Saved to your downloads');
+}
+function doPrint(){ $('exportMenu').removeAttribute('data-open'); sel = null; paintSelection(); setTimeout(() => window.print(), 60); }
+/* one Save / Export button with a dropdown for the two actions */
+$('exportBtn').onclick = e => {
+  e.stopPropagation();
+  const m = $('exportMenu'); const open = m.hasAttribute('data-open');
+  m.toggleAttribute('data-open', !open);
+  $('exportBtn').setAttribute('aria-expanded', String(!open));
 };
-function doPrint(){ sel = null; paintSelection(); setTimeout(() => window.print(), 60); }
-$('printBtn').onclick = doPrint;
-$('shareBtn').onclick = () => collabEnable();
+document.addEventListener('click', () => { const m = $('exportMenu'); if(m && m.hasAttribute('data-open')){ m.removeAttribute('data-open'); $('exportBtn').setAttribute('aria-expanded','false'); } });
+$('miSave').onclick = saveToFile;
+$('miPdf').onclick = doPrint;
+/* No "leave" — shared reports stay live. Clicking only reconnects if the live
+   link dropped (e.g. after a brief network blip). */
+$('shareBtn').onclick = () => { if(!collab && navigator.onLine && D && D.shareCode) collabEnable(); };
 
 /* ==========================================================================
    COLLABORATION  —  Target A: block-level real-time (Yjs + Liveblocks)
@@ -5191,10 +5352,13 @@ $('shareBtn').onclick = () => collabEnable();
    Liveblocks awareness. Peers render those blocks read-only with a banner and
    a name. One editor per page means there is never an in-paragraph merge.
    ========================================================================== */
-/* Master switch for the live-sharing feature. While false the app is fully
-   offline / local-first: the Share button is hidden, files never auto-join a
-   collab room, and #room= links are ignored. Set to true to bring it back. */
-const SHARING_ENABLED = false;
+/* Master switch for the live-sharing feature. When true, a report that has been
+   published/pulled (it carries a shareCode) shows a Collaborate button that
+   joins a live room keyed to that shareCode — so everyone who pulled the report
+   co-edits the same document. Collaboration is always explicit: reports never
+   auto-join a room on open and #room= links are ignored, which is what kept the
+   old stale-room blanking bug from coming back. */
+const SHARING_ENABLED = true;
 window.__SHARING_ENABLED = SHARING_ENABLED;   // read by the CDN loader at the bottom of the page
 const LB_KEY = 'pk_dev_KxzAe_bID6wjadRPe93hNPORcX13H-nE6GuzfQf1p-FxrxIFVgwgVV4AI9_vRyrK';
 const COLLAB_NAME_KEY = 'studio:collabName';
@@ -5239,7 +5403,7 @@ function isRemembered(id){ return rememberedRooms().includes(id); }
 function ensureName(){
   if(myUser) return Promise.resolve(myUser);
   let saved = null; try{ saved = localStorage.getItem(COLLAB_NAME_KEY); }catch(e){}
-  if(saved){ myUser = { uid:MY_UID, name:saved, color:pickColor(saved) }; return Promise.resolve(myUser); }
+  if(saved){ myUser = { uid:MY_UID, name:saved, color:pickColor(MY_UID) }; return Promise.resolve(myUser); }
   return askName();
 }
 function askName(){
@@ -5255,7 +5419,7 @@ function askName(){
     const done = () => {
       const v = input.value.trim();
       if(!v){ input.focus(); return; }
-      myUser = { uid:MY_UID, name:v, color:pickColor(v) };
+      myUser = { uid:MY_UID, name:v, color:pickColor(MY_UID) };
       try{ localStorage.setItem(COLLAB_NAME_KEY, v); }catch(e){}
       ov.remove(); resolve(myUser);
     };
@@ -5301,21 +5465,41 @@ function pushLocal(){
     setJsonIfChanged(root, 'settings', D.settings);
     setJsonIfChanged(root, 'toc', D.toc);
     setJsonIfChanged(root, 'created', D.created);
+    setJsonIfChanged(root, 'updated', D.updated);   // so a reconnecting editor can tell whose copy is newer
 
     const blocks = yBlocks();
     const ids = D.blocks.map(b => b.id);
     const idset = new Set(ids);
     D.blocks.forEach(b => {
+      const j0 = JSON.stringify(b);
+      if(collabShadow.blocks.get(b.id) === j0) return;
+      /* stamp the author of a genuine edit (not the initial seed) so the margin
+         dot shows who added/changed each block; `by` rides along in the block. */
+      if(myUser && collab.baseInit) b.by = { n: myUser.name, c: myUser.color };
       const j = JSON.stringify(b);
-      if(collabShadow.blocks.get(b.id) !== j){ blocks.set(b.id, clone(b)); collabShadow.blocks.set(b.id, j); }
+      blocks.set(b.id, clone(b)); collabShadow.blocks.set(b.id, j);
     });
     for(const k of [...blocks.keys()]) if(!idset.has(k)){ blocks.delete(k); collabShadow.blocks.delete(k); }
 
     reconcileOrder(yOrder(), ids);
-
-    const imgs = yImages();
-    Object.entries(D.images || {}).forEach(([id, data]) => { if(data && !imgs.has(id)) imgs.set(id, data); });
   }, Y_ORIGIN);
+  pushImages();
+}
+/* Images sync as their own per-image messages (not bundled with the structural
+   update), each capped so a single large image can never blow past the websocket
+   message limit and drop the whole document update — which is what silently broke
+   sync. Everyone collaborating pulled the report first, so they already have its
+   images locally; only images small enough to send are mirrored live, and any
+   over the cap simply aren't live-synced (a peer re-pull picks them up). */
+const IMG_SYNC_MAX = 500000;   // ~500 KB of base64 per image, well under the ws limit
+function pushImages(){
+  if(!collab || !D) return;
+  const imgs = yImages();
+  Object.entries(D.images || {}).forEach(([id, data]) => {
+    if(!data || imgs.has(id)) return;
+    if(data.length > IMG_SYNC_MAX){ console.info('[collab] image too large to live-sync, kept local only', id, data.length); return; }
+    collab.Y.transact(collab.ydoc, () => { imgs.set(id, data); }, Y_ORIGIN);
+  });
 }
 let pushT;
 function schedulePush(){ if(!collab) return; clearTimeout(pushT); pushT = setTimeout(pushLocal, 250); }
@@ -5330,6 +5514,7 @@ let applyT;
 function scheduleApply(){ clearTimeout(applyT); applyT = setTimeout(applyRemote, 80); }
 function applyRemote(){
   if(!collab || !D) return;
+  if(!collab.seeded) return;                                // hold off until the seed-vs-adopt decision is made
   if(yOrder().length === 0 && yRoot().size === 0) return;   // nothing seeded yet
   /* flush our own not-yet-pushed edits into Yjs first, so rebuilding D from
      Yjs below reads them back rather than reverting mid-keystroke text */
@@ -5448,6 +5633,7 @@ function stopAwPoll(){ if(awPollT){ clearInterval(awPollT); awPollT = null; } }
 function recomputeLocks(){
   lockedBlocks = new Map(); lockedSheets = new Map();
   if(!collab) return;
+  reconcileColors();
   peerStates().forEach(st => {
     if(!st.user || !st.lock) return;
     (st.lock.blocks || []).forEach(bid => lockedBlocks.set(bid, st.user));
@@ -5455,6 +5641,18 @@ function recomputeLocks(){
   });
   applyLocksToDom();
   updatePresenceUI();
+}
+/* Give everyone a distinct colour: if my colour clashes with a peer and I lose
+   the (deterministic) uid tiebreak, move to a free colour from the palette. Both
+   sides use the same rule, so it converges without them swapping forever. */
+function reconcileColors(){
+  if(!collab || !myUser) return;
+  const peers = peerStates().filter(s => s.user && s.user.uid && s.user.color);
+  const clash = peers.some(s => s.user.color === myUser.color && s.user.uid < myUser.uid);
+  if(!clash) return;
+  const taken = new Set(peers.map(s => s.user.color));
+  const free = USER_COLORS.find(c => !taken.has(c));
+  if(free && free !== myUser.color){ myUser.color = free; pushPresence(); }
 }
 /* which sheet a target sits on, and the ids we should lock for it */
 function sheetLockFor(target){
@@ -5546,70 +5744,137 @@ function updatePresenceUI(){
   const sb = $('shareBtn'); if(sb) sb.classList.add('is-live');
 }
 
-/* ---------- connect / enable / join ---------- */
-async function collabConnect(roomId, seed){
+/* ---------- connect / enable ---------- */
+/* roomKey is the share code (shared by everyone who pulled the report); docId is
+   the local file we're editing (per-device). Keeping them separate is what lets
+   different people's local copies meet in one live room. */
+async function collabConnect(roomKey, docId){
   const { Y, createClient, LiveblocksYjsProvider } = await libsReady();
-  const client = createClient({ publicApiKey: LB_KEY });
-  const { room, leave } = client.enterRoom('report-' + roomId, { initialPresence:{} });
+  /* Reports carry base64 images, so a seed/update can exceed the websocket
+     message limit; "split" chunks large messages instead of dropping them
+     (which showed up as "Message is too large for websockets, not sending"). */
+  const client = createClient({ publicApiKey: LB_KEY, largeMessageStrategy: 'split' });
+  console.info('[collab] joining room', 'report-' + roomKey);
+  const { room, leave } = client.enterRoom('report-' + roomKey, { initialPresence:{} });
   const ydoc = new Y.Doc();
   const provider = new LiveblocksYjsProvider(room, ydoc);
-  collab = { Y, client, room, leave, ydoc, provider, awareness: provider.awareness, roomId };
+  collab = { Y, client, room, leave, ydoc, provider, awareness: provider.awareness, roomKey, docId };
 
   ydoc.on('update', (u, origin) => { if(origin !== Y_ORIGIN) scheduleApply(); });
   if(typeof provider.awareness.on === 'function'){
     try{ provider.awareness.on('change', recomputeLocks); provider.awareness.on('update', recomputeLocks); }catch(e){}
   }
-  let didSync = false;
-  const markSynced = () => { if(didSync) return; didSync = true; onSynced(seed); };
-  provider.on('sync', s => { if(s !== false) markSynced(); });
-  provider.on('synced', markSynced);
+  /* Decide seed-vs-adopt exactly once. Prefer the provider's sync event (means
+     the room's initial state has arrived), but ALWAYS fall back to a timeout so
+     we never hang if that event doesn't fire in this provider build — otherwise
+     `seeded` would stay false and no remote edit would ever apply. */
+  collab.decided = false;
+  const decide = () => {
+    if(!collab || collab.decided) return;
+    collab.decided = true;
+    clearTimeout(collab.decideFallback);
+    setTimeout(runSeedDecision, 400);          // brief settle so peer presence is visible
+  };
+  provider.on('sync', s => { if(s !== false) decide(); });
+  provider.on('synced', decide);
+  collab.decideFallback = setTimeout(decide, 2500);
 
   collab.awareness.setLocalState({ user: myUser || null, lock: myLock });
   startAwPoll();
   updatePresenceUI();
 }
-function onSynced(seed){
-  /* "Has data" must mean actual content blocks. A room that only holds leftover
-     root metadata (an interrupted seed, or one written by an older version of
-     the app) is effectively empty — treating it as populated would overwrite the
-     document we just opened with nothing. */
-  const hasBlocks = yOrder().length > 0;
-  if(seed && !hasBlocks){ collabShadow = emptyShadow(); pushLocal(); }
-  else { applyRemote(); }
+/* Seed vs adopt, decided by ROOM CONTENT (reliable) rather than presence (racy):
+   - Room already has blocks -> ADOPT the live shared state. This is the case for
+     everyone who joins after the first person, so they see the live document.
+   - Room is empty -> SEED it from my local copy. If two people who pulled the
+     same report seed at once, their block ids match, so Yjs merges them cleanly.
+   Setting `seeded` first opens the gate that lets subsequent remote updates apply. */
+function reseedRoom(){
+  if(!collab) return;
+  collab.Y.transact(collab.ydoc, () => {
+    const b = yBlocks(); [...b.keys()].forEach(k => b.delete(k));
+    const o = yOrder(); if(o.length) o.delete(0, o.length);
+    const r = yRoot(); [...r.keys()].forEach(k => r.delete(k));
+  }, Y_ORIGIN);
+  collabShadow = emptyShadow();
+  pushLocal();
 }
-function shareLink(id){ return location.origin + location.pathname + '#room=' + id; }
+function runSeedDecision(){
+  if(!collab) return;
+  collab.seeded = true;
+  const hasBlocks = yOrder().length > 0;
+  const alone = peerStates().length === 0;
+  const roomUpdated = Number(yRoot().get('updated')) || 0;
+  /* empty room -> seed. Alone in a room that's older than my local copy -> it's a
+     stale leftover and nobody's editing, so my newer copy wins. Otherwise adopt. */
+  let branch;
+  if(!hasBlocks){ branch = 'seed-empty'; collabShadow = emptyShadow(); pushLocal(); }
+  else if(alone && (D.updated || 0) > roomUpdated){ branch = 'reseed-newer-local'; reseedRoom(); }
+  else { branch = 'adopt'; applyRemote(); }
+  console.info('[collab] seed decision', { hasBlocks, alone, roomUpdated, localUpdated: D.updated, branch });
+  if(collab && !collab.baseInit){ collab.baseInit = true; histReset(); }
+}
+/* auto-start a live session for any report that is shared (has a shareCode) */
+function maybeAutoCollab(doc){
+  if(SHARING_ENABLED && CLOUD.enabled && doc && doc.shareCode && !collab) collabEnable();
+}
 async function collabEnable(){
   if(!SHARING_ENABLED) return;
-  if(collab){ showShareLink(); return; }
+  if(!D || !D.shareCode){ toast('Share or pull this report first, then collaborate'); return; }
+  if(collab){ toast('You are already in the live session'); return; }
   try{
     await ensureName();
-    await collabConnect(D.id, true);
-    rememberRoom(D.id);
+    await collabConnect(D.shareCode, D.id);
     pushPresence();
-    location.hash = 'room=' + D.id;
-    showShareLink();
-  }catch(err){ console.error(err); toast('Could not start collaboration — check your connection'); }
+    paintCollabBtn();
+    toast('Live session on — anyone who pulled this report can join from Collaborate');
+  }catch(err){ console.error(err); toast('Could not start collaboration — check your connection'); paintCollabBtn(); }
 }
-function showShareLink(){
-  const link = shareLink(D.id);
-  if(navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Share link copied to clipboard'), () => toast('Share link: ' + link));
-  else toast('Share link: ' + link);
+function paintCollabBtn(){
+  const tag = $('ownerTag');
+  if(tag){
+    const role = D && D.shareOrigin;
+    tag.hidden = !role;
+    if(role === 'owner'){ tag.textContent = 'Owner'; tag.className = 'rbadge is-owned'; }
+    else if(role === 'received'){ tag.textContent = 'Shared'; tag.className = 'rbadge is-shared'; }
+  }
+  const b = $('shareBtn'); if(!b) return;
+  const can = SHARING_ENABLED && CLOUD.enabled && D && !!D.shareCode;
+  b.hidden = !can;
+  if(!can) return;
+  /* Shared reports are always live — no "Leave session". This is a status pill;
+     it only acts as a Reconnect when the live link has dropped. */
+  if(collab){ b.textContent = '● Live'; b.classList.add('is-live'); b.title = 'This report is live — everyone with it edits together'; b.disabled = false; }
+  else if(!navigator.onLine){ b.textContent = '● Offline'; b.classList.remove('is-live'); b.title = 'Reconnect to the internet to keep editing'; b.disabled = true; }
+  else { b.textContent = 'Reconnect'; b.classList.remove('is-live'); b.title = 'Reconnect to the live session'; b.disabled = false; }
 }
-async function collabJoin(roomId){
-  try{
-    await ensureName();
-    let doc = await loadDoc(roomId);
-    if(!doc){ doc = blankDoc(); doc.id = roomId; doc.blocks = []; }
-    openEditor(doc);
-    rememberRoom(roomId);
-    await collabConnect(roomId, false);
-    pushPresence();
-  }catch(err){ console.error(err); toast('Could not open the shared report'); showLibrary(); }
+/* Shared reports are online-only, so everyone stays on one version. Opening one
+   offline is refused with a warning; going offline mid-session locks editing
+   until you reconnect (the cloud keeps everyone's changes in the meantime). */
+function warnSharedOffline(){
+  const ov = cloudModal(`<h3>You're offline</h3>
+    <p>This is a shared report. To keep everyone on the same version it can only be opened while you're online. Reconnect and try again.</p>
+    <div class="namebtns"><button class="btn btn-default btn-sm" id="offOk">OK</button></div>`);
+  ov.querySelector('#offOk').onclick = () => ov.remove();
 }
+function sharedOfflineGuard(){
+  const editorOpen = !$('view-editor').hidden;
+  const lock = !!(editorOpen && D && D.shareCode && !navigator.onLine);
+  const v = $('view-editor'); if(v) v.classList.toggle('offline-lock', lock);
+  let banner = $('offlineBanner');
+  if(lock){
+    if(!banner){ banner = document.createElement('div'); banner.id = 'offlineBanner'; banner.className = 'offlinebanner'; document.body.appendChild(banner); }
+    banner.textContent = "Offline — this shared report is view-only until you reconnect. Changes are saved in the cloud, so you'll see everyone's edits when you're back.";
+    banner.hidden = false;
+  } else if(banner){ banner.hidden = true; }
+  paintCollabBtn();
+}
+window.addEventListener('offline', sharedOfflineGuard);
+window.addEventListener('online', () => { sharedOfflineGuard(); if(!$('view-editor').hidden && D && D.shareCode && !collab) maybeAutoCollab(D); });
 function collabLeave(){
   if(!collab) return;
   stopAwPoll();
-  clearTimeout(pushT); clearTimeout(applyT); clearTimeout(releaseT);
+  clearTimeout(pushT); clearTimeout(applyT); clearTimeout(releaseT); clearTimeout(collab.decideFallback);
   try{ collab.awareness.setLocalState(null); }catch(e){}
   try{ if(collab.provider.destroy) collab.provider.destroy(); }catch(e){}
   try{ if(collab.leave) collab.leave(); }catch(e){}
@@ -5617,7 +5882,7 @@ function collabLeave(){
   lockedBlocks = new Map(); lockedSheets = new Map();
   myLock = { sheet:null, blocks:[] };
   collabShadow = emptyShadow();
-  applyLocksToDom(); updatePresenceUI();
+  applyLocksToDom(); updatePresenceUI(); paintCollabBtn();
 }
 
 /* editing gate: name first, refuse a page another person holds, else claim it */
@@ -5659,6 +5924,480 @@ document.addEventListener('visibilitychange', () => {
 window.__collabEnable = collabEnable;   // used by the Share button
 
 /* ==========================================================================
+   CLOUD SYNC  —  every report backed up to your account and synced to any
+   device you sign in on (Supabase: Postgres + email magic-link auth).
+
+   Source of truth stays LOCAL: IndexedDB is the working copy, the cloud is a
+   mirror. On sign-in we reconcile both ways by each report's `updated` stamp
+   (last write wins); a Realtime subscription pulls changes made on your other
+   devices while this tab is open. Signed out or offline, the app is exactly
+   the local-first app it was — pending changes queue and flush on reconnect.
+
+   To enable: create a free project at supabase.com, run the SQL in the README,
+   then paste your Project URL + anon public key below. Both are safe in client
+   code — Row-Level Security keeps each account's rows private.
+   ========================================================================== */
+const CLOUD = {
+  url:     'https://ybsyqgynhjcpgdwjsaji.supabase.co',   // Supabase → Project Settings → API → Project URL
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlic3lxZ3luaGpjcGdkd2pzYWppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMDkwODUsImV4cCI6MjEwMDg4NTA4NX0.SlBUMGh4COnRV-bTqLQoC5m02FuwdTxYDnAs7AOhw0Q'   // Supabase → Project Settings → API → anon public key
+};
+CLOUD.enabled = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(CLOUD.url) && CLOUD.anonKey.length > 40;
+window.__CLOUD = CLOUD;   // read by the SDK loader at the bottom of the page
+
+let cloudSb = null;        // supabase client (once the SDK module hands it over)
+let cloudUser = null;      // { id, email } when signed in
+let cloudReady = false;    // SDK loaded and client created
+let cloudChan = null;      // realtime channel
+let cloudPullT = null;     // debounce for realtime-triggered pulls
+const cloudImgSent = new Set();   // 'docId:imgId' already uploaded, so we don't resend base64
+const CLOUD_DIRTY = 'studio:cloudDirty';     // local ids saved but not yet uploaded
+const CLOUD_DEL   = 'studio:cloudDeleted';   // local ids deleted but not yet removed in the cloud
+
+const cloudGet = key => { try{ return JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){ return []; } };
+const cloudSet = (key, arr) => { try{ localStorage.setItem(key, JSON.stringify([...new Set(arr)])); }catch(e){} };
+function cloudMarkDirty(id){ if(!id) return; const s = cloudGet(CLOUD_DIRTY); if(!s.includes(id)){ s.push(id); cloudSet(CLOUD_DIRTY, s); } }
+function cloudClearDirty(id){ cloudSet(CLOUD_DIRTY, cloudGet(CLOUD_DIRTY).filter(x => x !== id)); }
+function cloudMarkDeleted(id){ if(!id) return; const s = cloudGet(CLOUD_DEL); if(!s.includes(id)){ s.push(id); cloudSet(CLOUD_DEL, s); } cloudClearDirty(id); }
+function cloudClearDeleted(id){ cloudSet(CLOUD_DEL, cloudGet(CLOUD_DEL).filter(x => x !== id)); }
+
+/* wait for the CDN module to create the supabase client (or reject if it failed) */
+function sbReady(){
+  if(window.__sb) return Promise.resolve(window.__sb);
+  if(window.__sbError) return Promise.reject(window.__sbError);
+  return new Promise((resolve, reject) => {
+    window.addEventListener('sb-ready', () => resolve(window.__sb), { once:true });
+    window.addEventListener('sb-error', () => reject(window.__sbError), { once:true });
+  });
+}
+
+async function cloudInit(){
+  if(!CLOUD.enabled){ cloudPaint(); return; }
+  try{ cloudSb = await sbReady(); }catch(e){ console.error('Cloud sync unavailable', e); cloudPaint(); return; }
+  cloudReady = true;
+  cloudSb.auth.onAuthStateChange((_evt, session) => {
+    const had = !!cloudUser;
+    cloudUser = session ? { id:session.user.id, email:session.user.email } : null;
+    cloudPaint();
+    if(cloudUser && !had){ cloudSubscribe(); cloudSync(); }
+    if(!cloudUser && had){ cloudUnsubscribe(); }
+  });
+  const { data } = await cloudSb.auth.getSession();
+  if(data && data.session){
+    cloudUser = { id:data.session.user.id, email:data.session.user.email };
+    cloudSubscribe(); cloudSync();
+  }
+  cloudPaint();
+  /* strip the magic-link token out of the address bar once it's been consumed */
+  if(/access_token=|error_code=/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+  window.addEventListener('online', () => { if(cloudUser) cloudSync(); });
+}
+
+/* full two-way reconcile: flush our deletes, pull the cloud, push our edits */
+async function cloudSync(){
+  if(!cloudReady || !cloudUser) return;
+  cloudPaint('Syncing…');
+  try{
+    await cloudFlushDeletes();
+    await cloudPull();
+    await cloudFlush();
+    cloudPaint();
+  }catch(e){ console.error('cloudSync', e); cloudPaint('Sync error'); }
+}
+
+/* bring down anything newer in the cloud (and honour remote deletes) */
+async function cloudPull(){
+  if(!cloudReady || !cloudUser) return;
+  const { data:rows, error } = await cloudSb.from('reports')
+    .select('id,name,thumb,updated,deleted').eq('user_id', cloudUser.id);
+  if(error) throw error;
+  const dirty = new Set(cloudGet(CLOUD_DIRTY));
+  const del = new Set(cloudGet(CLOUD_DEL));
+  let changed = false;
+  for(const r of rows){
+    if(D && D.id === r.id) continue;         // never yank the report open in the editor from under you
+    const local = INDEX.find(x => x.id === r.id);
+    if(r.deleted){
+      if(local && !dirty.has(r.id)){ await dropDoc(r.id); INDEX = INDEX.filter(x => x.id !== r.id); changed = true; }
+      continue;
+    }
+    if(del.has(r.id)) continue;              // we deleted it locally — our delete wins, it'll push up
+    const localUpdated = local ? (local.updated || 0) : -1;
+    if(!local || (r.updated || 0) > localUpdated){
+      const full = await cloudFetchDoc(r.id);
+      if(full){ await saveDoc(full); await touchIndex(full, true); changed = true; }
+    }
+  }
+  if(changed && !D){ await saveIndex(); drawLibrary(); }
+}
+
+/* pull one full report (body + images) out of the cloud into a doc object */
+async function cloudFetchDoc(id){
+  const { data:row, error } = await cloudSb.from('reports')
+    .select('body,updated').eq('user_id', cloudUser.id).eq('id', id).maybeSingle();
+  if(error || !row) return null;
+  const doc = migrate(row.body);
+  doc.id = id;
+  if(row.updated) doc.updated = row.updated;
+  const { data:imgs } = await cloudSb.from('report_images')
+    .select('img_id,data').eq('user_id', cloudUser.id).eq('doc_id', id);
+  doc.images = doc.images || {};
+  (imgs || []).forEach(im => { doc.images[im.img_id] = im.data; cloudImgSent.add(id + ':' + im.img_id); });
+  return doc;
+}
+
+/* upsert one report (and any not-yet-uploaded images). Queues if offline. */
+async function cloudPush(doc){
+  if(!CLOUD.enabled || !doc) return;
+  cloudMarkDirty(doc.id);
+  if(!cloudReady || !cloudUser || !navigator.onLine){ cloudPaint(); return; }
+  cloudPaint('Syncing…');
+  try{
+    const { error } = await cloudSb.from('reports').upsert({
+      user_id: cloudUser.id, id: doc.id, name: doc.name || 'Untitled report',
+      body: docBody(doc), thumb: doc.thumb || null, updated: doc.updated || Date.now(), deleted: false
+    }, { onConflict:'user_id,id' });
+    if(error) throw error;
+    const rows = usedImageIds(doc)
+      .filter(imgId => !cloudImgSent.has(doc.id + ':' + imgId) && (doc.images || {})[imgId])
+      .map(imgId => ({ user_id:cloudUser.id, doc_id:doc.id, img_id:imgId, data:doc.images[imgId] }));
+    if(rows.length){
+      const { error:ie } = await cloudSb.from('report_images').upsert(rows, { onConflict:'user_id,doc_id,img_id' });
+      if(ie) throw ie;
+      rows.forEach(r => cloudImgSent.add(r.doc_id + ':' + r.img_id));
+    }
+    cloudClearDirty(doc.id);
+    cloudPaint();
+  }catch(e){ console.error('cloudPush', e); cloudPaint('Offline — will sync'); }
+}
+
+/* upload everything still queued as dirty */
+async function cloudFlush(){
+  if(!cloudReady || !cloudUser || !navigator.onLine) return;
+  for(const id of cloudGet(CLOUD_DIRTY)){
+    const doc = await loadDoc(id);
+    if(doc) await cloudPush(doc); else cloudClearDirty(id);
+  }
+}
+
+/* mark queued deletes as deleted in the cloud (soft-delete so the tombstone
+   propagates to other devices instead of the row silently reappearing) */
+async function cloudFlushDeletes(){
+  if(!cloudReady || !cloudUser || !navigator.onLine) return;
+  for(const id of cloudGet(CLOUD_DEL)){
+    try{
+      const { error } = await cloudSb.from('reports')
+        .update({ deleted:true, updated:Date.now() }).eq('user_id', cloudUser.id).eq('id', id);
+      if(error) throw error;
+      await cloudSb.from('report_images').delete().eq('user_id', cloudUser.id).eq('doc_id', id);
+      cloudClearDeleted(id);
+    }catch(e){ console.error('cloudDelete', e); }
+  }
+}
+function cloudDelete(id){
+  if(!CLOUD.enabled) return;
+  cloudMarkDeleted(id);
+  cloudImgSent.forEach(k => { if(k.startsWith(id + ':')) cloudImgSent.delete(k); });
+  if(cloudReady && cloudUser && navigator.onLine) cloudFlushDeletes();
+}
+
+/* Realtime: when another device changes a report, pull the change here */
+function cloudSubscribe(){
+  if(!cloudSb || !cloudUser || cloudChan) return;
+  cloudChan = cloudSb.channel('reports-' + cloudUser.id)
+    .on('postgres_changes', { event:'*', schema:'public', table:'reports', filter:'user_id=eq.' + cloudUser.id },
+        () => { clearTimeout(cloudPullT); cloudPullT = setTimeout(() => cloudPull().then(cloudPaint).catch(e => console.error(e)), 500); })
+    .subscribe();
+}
+function cloudUnsubscribe(){ if(cloudChan){ try{ cloudSb.removeChannel(cloudChan); }catch(e){} cloudChan = null; } }
+
+/* ---------- auth ---------- */
+async function cloudSignIn(email){
+  if(!cloudReady) return false;
+  const { error } = await cloudSb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+  if(error){ toast('Could not send the link: ' + error.message); return false; }
+  return true;
+}
+async function cloudSignOut(){ if(cloudReady) try{ await cloudSb.auth.signOut(); }catch(e){} cloudUser = null; cloudUnsubscribe(); cloudPaint(); }
+
+/* ---------- UI ---------- */
+function cloudPaint(msg){
+  const el = $('cloudBtn'); if(!el) return;
+  if(!CLOUD.enabled){ el.hidden = true; return; }
+  el.hidden = false;
+  if(cloudUser){
+    el.textContent = msg || 'Synced';
+    el.title = 'Signed in as ' + cloudUser.email + ' — click to manage sync';
+    el.classList.add('is-synced');
+  }else{
+    el.textContent = 'Sign in to sync';
+    el.title = 'Back up your reports and sync them across devices';
+    el.classList.remove('is-synced');
+  }
+}
+function cloudModal(inner){
+  const ov = document.createElement('div'); ov.className = 'namemodal';
+  ov.innerHTML = `<div class="namecard">${inner}</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown', e => { if(e.target === ov) ov.remove(); });
+  return ov;
+}
+function cloudMenu(){
+  if(!CLOUD.enabled) return;
+  if(cloudUser){
+    const ov = cloudModal(`<h3>Cloud sync</h3>
+      <p>Signed in as <b>${esc(cloudUser.email)}</b>. Your library backs up here and follows you to every device you sign in on.</p>
+      <div class="namebtns" style="gap:.5rem">
+        <button class="btn btn-outline btn-sm" id="cloudSyncNow">Sync now</button>
+        <button class="btn btn-default btn-sm" id="cloudOut">Sign out</button></div>`);
+    ov.querySelector('#cloudSyncNow').onclick = () => { ov.remove(); cloudSync(); };
+    ov.querySelector('#cloudOut').onclick = () => { ov.remove(); cloudSignOut(); };
+  }else{
+    const ov = cloudModal(`<h3>Sign in to sync</h3>
+      <p>Enter your email and we'll send a one-time sign-in link. Your whole library then backs up and follows you to any device.</p>
+      <input id="cloudEmail" type="email" placeholder="you@example.com" autocomplete="email">
+      <div class="namebtns"><button class="btn btn-default btn-sm" id="cloudGo">Send link</button></div>`);
+    const input = ov.querySelector('#cloudEmail');
+    setTimeout(() => input.focus(), 20);
+    const go = async () => {
+      const v = input.value.trim();
+      if(!v){ input.focus(); return; }
+      const btn = ov.querySelector('#cloudGo'); btn.disabled = true; btn.textContent = 'Sending…';
+      const ok = await cloudSignIn(v);
+      if(ok){
+        ov.querySelector('.namecard').innerHTML =
+          `<h3>Check your inbox</h3><p>We sent a sign-in link to <b>${esc(v)}</b>. Open it on this device to finish signing in.</p>
+           <div class="namebtns"><button class="btn btn-default btn-sm" id="cloudClose">Done</button></div>`;
+        ov.querySelector('#cloudClose').onclick = () => ov.remove();
+      }else{ btn.disabled = false; btn.textContent = 'Send link'; }
+    };
+    ov.querySelector('#cloudGo').onclick = go;
+    input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); go(); } });
+  }
+}
+
+/* ==========================================================================
+   SHARED REPORTS  —  publish one report behind a password so anyone who has
+   the code + password can pull a copy into their own library (and re-pull the
+   latest later). Distinct from personal cloud sync (which is private to you)
+   and from live collab (Liveblocks). Reads go through SECURITY DEFINER RPCs so
+   the password is checked in the database, never in the client, and the table
+   is never directly readable by anyone but its owner. See README for the SQL.
+   ========================================================================== */
+const SHARE_MAP = 'studio:shareMap';   // { [shareCode]: localDocId } so a re-pull updates in place
+function shareMapGet(){ try{ return JSON.parse(localStorage.getItem(SHARE_MAP) || '{}'); }catch(e){ return {}; } }
+function shareMapSet(code, id){ const m = shareMapGet(); m[code] = id; try{ localStorage.setItem(SHARE_MAP, JSON.stringify(m)); }catch(e){} }
+function shareMapDel(code){ const m = shareMapGet(); delete m[code]; try{ localStorage.setItem(SHARE_MAP, JSON.stringify(m)); }catch(e){} }
+
+/* make sure the Supabase client exists — awaits the CDN module if it's still
+   loading, so a quick click doesn't lose the race against boot. */
+async function cloudEnsure(){
+  if(cloudSb) return cloudSb;
+  if(!CLOUD.enabled) return null;
+  try{ cloudSb = await sbReady(); cloudReady = true; return cloudSb; }
+  catch(e){ console.error('cloud SDK load failed', e); return null; }
+}
+
+/* human-friendly code: no O/0/I/1/L to avoid read-aloud mistakes */
+function genShareCode(){
+  const a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = ''; for(let i = 0; i < 8; i++) s += a[Math.floor(Math.random() * a.length)];
+  return s.slice(0, 4) + '-' + s.slice(4);
+}
+/* auto-generated secret for link sharing — the link IS the capability, so make
+   it long enough that the code+secret can't be guessed. */
+function genPassword(){
+  const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  let s = ''; for(let i = 0; i < 18; i++) s += a[Math.floor(Math.random() * a.length)];
+  return s;
+}
+/* A share link carries the code + secret in the URL fragment (never sent to a
+   server). Opening it auto-pulls the report and starts a live session. */
+function shareToken(code, password){ return encodeURIComponent(btoa(unescape(encodeURIComponent(code + ':' + password)))); }
+function parseShareToken(tok){
+  try{ const s = decodeURIComponent(escape(atob(decodeURIComponent(tok)))); const i = s.indexOf(':');
+    return i < 0 ? null : { code:s.slice(0,i), password:s.slice(i+1) }; }catch(e){ return null; }
+}
+function shareLinkFor(code, password){ return location.origin + location.pathname + '#share=' + shareToken(code, password); }
+
+/* someone opened a share link: pull the report (no account needed) and drop
+   straight into a live session so "click link -> editing together" just works. */
+async function openSharedLink(tok){
+  history.replaceState(null, '', location.pathname + location.search);   // don't leave the secret in the address bar
+  const p = parseShareToken(tok);
+  showLibrary();
+  if(!p){ toast('That share link is invalid'); return; }
+  if(!navigator.onLine){ warnSharedOffline(); return; }   // shared reports need a connection
+  toast('Opening shared report…');
+  try{
+    const doc = await cloudReceiveShare(p.code, p.password);
+    if(!doc){ toast('This shared report is no longer available'); return; }
+    openEditor(doc);
+    collabEnable();                       // auto-join the live room for this report
+  }catch(e){ console.error('openSharedLink', e); toast('Could not open the shared link'); }
+}
+
+/* owner-only: publish (or update) this report under a password, return its code */
+async function cloudPublishShare(doc, password){
+  const sb = await cloudEnsure();
+  if(!sb || !cloudUser) throw new Error('sign-in required');
+  const images = {};
+  usedImageIds(doc).forEach(id => { const d = (doc.images || {})[id]; if(d) images[id] = d; });
+  const body = docBody(doc);
+  /* local-only bookkeeping must not travel to recipients */
+  delete body.sharePass; delete body.shareOrigin; delete body.sharedVersion;
+  let code = doc.shareCode || null;
+  for(let attempt = 0; attempt < 4; attempt++){
+    if(!code) code = genShareCode();
+    const { data, error } = await cloudSb.rpc('publish_shared_report', {
+      p_code: code, p_name: doc.name || 'Untitled report', p_body: body,
+      p_images: images, p_password: password || '', p_updated: doc.updated || Date.now()
+    });
+    if(error) throw error;
+    if(data){ return data; }   // RPC returns the code it wrote; null => code taken by someone else
+    code = null;               // collision with a code we don't own — try a fresh one
+  }
+  throw new Error('Could not allocate a share code');
+}
+
+/* anyone: current published version stamp for a code (no password — a timestamp,
+   not content), used to show "update available" without pulling. null if gone. */
+async function cloudSharedVersion(code){
+  const sb = await cloudEnsure();
+  if(!sb) return undefined;                 // can't tell (offline / not loaded)
+  const { data, error } = await sb.rpc('shared_report_version', { p_code: code });
+  if(error){ console.error('version check', error); return undefined; }
+  return data == null ? null : Number(data);   // null = removed/unpublished; number = current version
+}
+
+/* owner-only: stop sharing (existing copies people already pulled stay on their devices) */
+async function cloudUnpublishShare(code){
+  if(!cloudReady || !cloudUser) throw new Error('sign-in required');
+  const { error } = await cloudSb.from('shared_reports').delete().eq('code', code);
+  if(error) throw error;
+}
+
+/* anyone (no account needed): fetch a shared report by code + password */
+async function cloudReceiveShare(code, password){
+  const sb = await cloudEnsure();
+  if(!sb) throw new Error('cloud unavailable');
+  const { data, error } = await sb.rpc('get_shared_report', { p_code: code, p_password: password });
+  if(error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if(!row) return null;                              // wrong code or password
+  const doc = migrate(row.body);
+  const map = shareMapGet();
+  const known = map[code];
+  doc.id = (known && INDEX.find(x => x.id === known)) ? known : uid();   // re-pull updates in place
+  doc.shareCode = code;
+  doc.shareOrigin = 'received';          // pulled from someone else
+  doc.sharedVersion = row.updated || 0;  // the published version we now hold, for update checks
+  doc.sharePass = password;              // keep the secret locally (same as the link) so we can pull updates unattended
+  doc.updated = Date.now();
+  doc.images = doc.images || {};
+  Object.assign(doc.images, row.images || {});
+  shareMapSet(code, doc.id);
+  await saveDoc(doc); await touchIndex(doc, true); cloudPush(doc);
+  return doc;
+}
+
+/* ---------- share UI ---------- */
+function shareLinkRow(link){
+  return `<div class="sharecode"><code id="shareLinkVal">${esc(link)}</code>
+    <button class="btn btn-default btn-sm" id="shareCopy">Copy link</button></div>`;
+}
+function shareResult(ov, live, code, already){
+  const link = shareLinkFor(code, live.sharePass);
+  ov.querySelector('.namecard').innerHTML =
+    `<h3>Report ${already ? 'updated' : 'shared'}</h3>
+     <p>Send anyone this link. Opening it adds the report to their library and drops them straight into a live editing session with you — no code or password to type.</p>
+     ${shareLinkRow(link)}
+     <div class="namebtns"><button class="btn btn-default btn-sm" id="shareDone">Done</button></div>`;
+  ov.querySelector('#shareDone').onclick = () => ov.remove();
+  ov.querySelector('#shareCopy').onclick = () => {
+    if(navigator.clipboard) navigator.clipboard.writeText(link).then(() => toast('Link copied'), () => {});
+  };
+}
+async function sharePublishDialog(doc){
+  if(!CLOUD.enabled || !doc) return;
+  if(!cloudUser){
+    const ov = cloudModal(`<h3>Sign in to share</h3>
+      <p>Sharing ties the report to your account, so people open it from you. Sign in first, then share.</p>
+      <div class="namebtns"><button class="btn btn-default btn-sm" id="shareSignin">Sign in</button></div>`);
+    ov.querySelector('#shareSignin').onclick = () => { ov.remove(); cloudMenu(); };
+    return;
+  }
+  await flushSave(true);                              // capture the latest edits before publishing
+  const live = (D && D.id === doc.id) ? D : (await loadDoc(doc.id)) || doc;
+  const already = !!live.shareCode;
+  if(already){
+    /* already shared — just show the existing link again (and offer to stop) */
+    const ov = cloudModal(`<h3>Shared</h3>
+      <p>“${esc(live.name || 'this report')}” is shared with a link. Push changes to update it for anyone who opens the link.</p>
+      ${shareLinkRow(shareLinkFor(live.shareCode, live.sharePass || ''))}
+      <div class="namebtns" style="gap:.5rem">
+        <button class="btn btn-ghost btn-sm" id="shareStop">Stop sharing</button>
+        <button class="btn btn-outline btn-sm" id="sharePush">Push changes</button>
+        <button class="btn btn-default btn-sm" id="shareDone">Done</button>
+      </div>`);
+    ov.querySelector('#shareCopy').onclick = () => { const l = shareLinkFor(live.shareCode, live.sharePass||''); if(navigator.clipboard) navigator.clipboard.writeText(l).then(() => toast('Link copied'), () => {}); };
+    ov.querySelector('#shareDone').onclick = () => ov.remove();
+    ov.querySelector('#sharePush').onclick = () => { ov.remove(); doPublish(live, true); };
+    ov.querySelector('#shareStop').onclick = async e => {
+      e.target.disabled = true;
+      try{
+        await cloudUnpublishShare(live.shareCode);
+        shareMapDel(live.shareCode);
+        delete live.shareCode; delete live.shareOrigin; delete live.sharePass; delete live.sharedVersion;
+        if(D && D.id === live.id){ delete D.shareCode; delete D.shareOrigin; delete D.sharePass; delete D.sharedVersion; paintCollabBtn(); }
+        await saveDoc(live); await touchIndex(live, true); ov.remove();
+        toast('Stopped sharing — existing copies are unaffected');
+      }catch(err){ console.error('unpublish', err); toast('Could not stop sharing'); e.target.disabled = false; }
+    };
+    return;
+  }
+  /* first-time share: confirm, then generate a link automatically */
+  const ov = cloudModal(`<h3>Share &amp; get a link</h3>
+    <p>This puts “${esc(live.name || 'this report')}” in the cloud and creates a link. Anyone with the link can open it and edit live with you — no password to set or share.</p>
+    <div class="namebtns"><button class="btn btn-default btn-sm" id="sharePub">Create share link</button></div>`);
+  ov.querySelector('#sharePub').onclick = () => { ov.remove(); doPublish(live, false); };
+}
+async function doPublish(live, already){
+  const ov = cloudModal(`<h3>${already ? 'Pushing changes…' : 'Creating link…'}</h3><p>One moment.</p>`);
+  try{
+    const pw = live.sharePass || genPassword();        // stable secret, reused on re-publish so the link stays valid
+    const code = await cloudPublishShare(live, pw);
+    live.shareCode = code; live.shareOrigin = 'owner'; live.sharePass = pw; live.sharedVersion = live.updated || 0;
+    if(D && D.id === live.id){ D.shareCode = code; D.shareOrigin = 'owner'; D.sharePass = pw; D.sharedVersion = live.sharedVersion; paintCollabBtn(); }
+    await saveDoc(live); await touchIndex(live, true); shareMapSet(code, live.id);
+    shareResult(ov, live, code, already);
+    if(D && D.id === live.id) maybeAutoCollab(D);   // a shared report is live immediately
+  }catch(e){ console.error('publish', e); ov.remove(); toast('Could not publish: ' + (e.message || e)); }
+}
+function shareReceiveDialog(prefillCode){
+  if(!CLOUD.enabled) return;
+  const ov = cloudModal(`<h3>${prefillCode ? 'Update shared report' : 'Get a shared report'}</h3>
+    <p>Enter the code and password someone shared with you. A copy is added to your library; you can re-enter them anytime to pull their latest version.</p>
+    <input id="shareCodeIn" type="text" autocomplete="off" placeholder="Code (e.g. ABCD-2345)" style="text-transform:uppercase" value="${esc(prefillCode || '')}">
+    <input id="sharePassIn" type="text" autocomplete="off" placeholder="Password">
+    <div class="namebtns"><button class="btn btn-default btn-sm" id="shareGet">${prefillCode ? 'Pull latest' : 'Get report'}</button></div>`);
+  const codeIn = ov.querySelector('#shareCodeIn'), passIn = ov.querySelector('#sharePassIn');
+  setTimeout(() => (prefillCode ? passIn : codeIn).focus(), 20);
+  const get = async () => {
+    const code = codeIn.value.trim().toUpperCase(), pw = passIn.value;
+    if(!code || !pw){ (code ? passIn : codeIn).focus(); return; }
+    if(!navigator.onLine){ toast("You're offline — connect to open a shared report"); return; }
+    const btn = ov.querySelector('#shareGet'); btn.disabled = true; btn.textContent = 'Fetching…';
+    try{
+      const doc = await cloudReceiveShare(code, pw);
+      if(!doc){ toast('No shared report matches that code and password'); btn.disabled = false; btn.textContent = 'Get report'; return; }
+      ov.remove(); toast('Report added to your library'); openEditor(doc); maybeAutoCollab(doc);
+    }catch(e){ console.error('receive', e); toast('Could not fetch: ' + (e.message || e)); btn.disabled = false; btn.textContent = 'Get report'; }
+  };
+  ov.querySelector('#shareGet').onclick = get;
+  [codeIn, passIn].forEach(el => el.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); get(); } }));
+}
+
+/* ==========================================================================
    BOOT
    ========================================================================== */
 (async function init(){
@@ -5673,8 +6412,13 @@ window.__collabEnable = collabEnable;   // used by the Share button
   fullView = savedFull === '1';
   applyFullView();
   await loadIndex();
-  const roomMatch = location.hash.match(/room=([\w-]+)/);
-  if(SHARING_ENABLED && roomMatch){ collabJoin(roomMatch[1]); return; }
+  const cb = $('cloudBtn'); if(cb) cb.onclick = cloudMenu;
+  const pb = $('publishBtn'); if(pb){ pb.hidden = !CLOUD.enabled; pb.onclick = () => sharePublishDialog(D); }
+  const shareMatch = location.hash.match(/[#&]share=([^&]+)/);
+  cloudInit();
+  /* A #share= link auto-pulls the report and opens a live session. (The old
+     #room= link-join is gone; people arrive via a share link now.) */
+  if(shareMatch){ openSharedLink(shareMatch[1]); return; }
   showLibrary();
 })();
 </script>
@@ -5702,14 +6446,32 @@ window.__collabEnable = collabEnable;   // used by the Share button
   .page{position:relative}
   .namemodal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
     background:rgba(15,18,22,.55);backdrop-filter:blur(2px)}
-  .namecard{background:var(--card,#fff);color:var(--fg,#111);border-radius:12px;padding:1.5rem;
+  .namecard{background:hsl(var(--card));color:hsl(var(--card-foreground));border:1px solid hsl(var(--border));border-radius:12px;padding:1.5rem;
     width:min(92vw,22rem);box-shadow:0 20px 60px rgba(0,0,0,.35)}
   .namecard h3{margin:0 0 .35rem;font-size:1.05rem}
-  .namecard p{margin:0 0 1rem;font-size:.85rem;color:var(--muted-fg,#777)}
+  .namecard p{margin:0 0 1rem;font-size:.85rem;color:hsl(var(--muted-foreground))}
   .namecard input{width:100%;box-sizing:border-box;padding:.6rem .7rem;font-size:.95rem;
-    border:1px solid var(--border,#ccc);border-radius:8px;background:var(--bg,#fff);color:inherit}
+    border:1px solid hsl(var(--border));border-radius:8px;background:hsl(var(--background));color:inherit}
   .namebtns{display:flex;justify-content:flex-end;margin-top:1rem}
+  .namecard .sharecode{display:flex;align-items:center;gap:.5rem;margin-top:.25rem}
+  .namecard .sharecode code{flex:1;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.35rem;
+    letter-spacing:.12em;font-weight:600;padding:.55rem .7rem;border-radius:8px;
+    background:hsl(var(--muted,220 14% 96%));border:1px solid var(--border,#ccc);text-align:center}
+  .rbadge{display:inline-block;margin-left:.4rem;font-size:.625rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:.04em;padding:.05rem .32rem;border-radius:4px;vertical-align:middle;border:1px solid;line-height:1.5}
+  .rbadge.is-shared{color:#2563eb;border-color:#2563eb66;background:#2563eb14}
+  .rbadge.is-owned{color:#0B7F76;border-color:#0B7F7666;background:#0B7F7614}
+  .rstatus{display:block;font-size:.6875rem;margin-top:.2rem;color:hsl(var(--muted-foreground,220 9% 55%))}
+  .rstatus.is-ok{color:#0B7F76}
+  .rstatus.is-gone{color:#d14343}
+  .rupd{font:inherit;font-size:.6875rem;font-weight:600;color:#b45309;background:#f59e0b1f;
+    border:1px solid #f59e0b66;border-radius:4px;padding:.08rem .4rem;cursor:pointer}
+  .rupd:hover{background:#f59e0b33}
   #shareBtn.is-live{color:#fff;background:var(--accent,#0B5D57);border-color:transparent}
+  .lib-top-actions{display:flex;align-items:center;gap:.5rem}
+  .cloudbtn::before{content:"";display:inline-block;width:.5rem;height:.5rem;border-radius:999px;
+    margin-right:.15rem;vertical-align:middle;background:hsl(var(--muted-foreground,220 9% 60%))}
+  .cloudbtn.is-synced::before{background:#06A77D}
 </style>
 
 <script type="importmap">
@@ -5735,6 +6497,30 @@ window.__collabEnable = collabEnable;   // used by the Share button
       console.error('Collaboration libraries failed to load', err);
       window.__collabLibsError = err;
       window.dispatchEvent(new Event('collab-libs-error'));
+    }
+  })();
+</script>
+
+<!-- ==========================================================================
+     CLOUD SYNC assets — the Supabase JS SDK, loaded from a CDN so the app keeps
+     its no-build, single-file shape. Skipped entirely unless url + anon key are
+     configured (window.__CLOUD.enabled). If the CDN is blocked the rest of the
+     app is unaffected — cloud sync simply stays unavailable and it runs local.
+     ========================================================================== -->
+<script type="module">
+  (async () => {
+    const cfg = window.__CLOUD;
+    if(!cfg || !cfg.enabled) return;
+    try{
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      window.__sb = createClient(cfg.url, cfg.anonKey, {
+        auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
+      });
+      window.dispatchEvent(new Event('sb-ready'));
+    }catch(err){
+      console.error('Cloud sync library failed to load', err);
+      window.__sbError = err;
+      window.dispatchEvent(new Event('sb-error'));
     }
   })();
 </script>
