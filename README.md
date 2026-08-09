@@ -115,10 +115,9 @@ collaboration.
 
 **Configuration.** Live collaboration is enabled (`SHARING_ENABLED = true` in
 `index.html`) and uses [Liveblocks](https://liveblocks.io). The Liveblocks
-*public* key embedded in `index.html` (`LB_KEY`) is currently a **development
-key** — fine for testing, but it has low limits and isn't meant for production
-traffic. For real use, create a free Liveblocks account and paste your own public
-key into `LB_KEY`. Two things to know:
+*public* key embedded in `index.html` (`LB_KEY`) is a **production** key
+(`pk_prod_…`). To use a different Liveblocks project, replace `LB_KEY` with that
+project's public key from the dashboard's **API keys** tab. Two things to know:
 
 - The public key is committed to the repo and visible to anyone who loads the
   app. That is normal for a public key, but it means *anyone with the key and a
