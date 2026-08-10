@@ -340,7 +340,12 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .sw{width:1.75rem;height:1.75rem;border-radius:999px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgb(0 0 0/.2)}
 .sw[aria-pressed="true"]{border-color:hsl(var(--foreground))}
 .sw:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
-.colorfield{width:100%;height:2.25rem;padding:.1875rem;border:1px solid hsl(var(--input));border-radius:calc(var(--radius) - 2px);background:hsl(var(--background))}
+/* colour picker rendered as a round well */
+.colorfield{width:2.25rem;height:2.25rem;padding:0;border:1px solid hsl(var(--input));border-radius:999px;
+  background:hsl(var(--background));overflow:hidden;cursor:pointer;-webkit-appearance:none;appearance:none}
+.colorfield::-webkit-color-swatch-wrapper{padding:0}
+.colorfield::-webkit-color-swatch{border:0;border-radius:999px}
+.colorfield::-moz-color-swatch{border:0;border-radius:999px}
 .outline-list{display:grid;gap:.125rem}
 .oitem{display:flex;gap:.625rem;align-items:baseline;width:100%;text-align:left;padding:.375rem .5rem;border:0;background:none;
   color:inherit;font:inherit;font-size:.8125rem;border-radius:calc(var(--radius) - 2px);cursor:pointer}
@@ -471,11 +476,14 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 #view-editor.preview{grid-template-columns:1fr;grid-template-rows:1fr}
 #view-editor.preview .ed-top,
 #view-editor.preview .ed-side,
+#view-editor.preview .editrail,
 #view-editor.preview .blkbar,
 #view-editor.preview .fmtbar,
 #view-editor.preview .insbar,
 #view-editor.preview .authordot,
 #view-editor.preview .overflag,
+#view-editor.preview .pagegear,
+#view-editor.preview .pagepanel,
 #view-editor.preview .peer-banner,
 #view-editor.preview .lockbanner{display:none!important}
 #view-editor.preview .blk{outline:none!important}
@@ -566,6 +574,10 @@ code,.blk code{font-family:var(--doc-util),ui-monospace,monospace;font-size:.9em
   letter-spacing:var(--doc-display-tracking);margin:0 0 3mm;color:var(--doc-head)}
 [data-t="h3"]{font-family:var(--doc-display);font-weight:var(--doc-sub-weight);font-size:11.5pt;line-height:1.28;
   letter-spacing:var(--doc-display-tracking);margin:0 0 2.2mm;color:var(--doc-head)}
+[data-t="h4"]{font-family:var(--doc-display);font-weight:var(--doc-sub-weight);font-size:10pt;line-height:1.3;
+  letter-spacing:var(--doc-display-tracking);margin:0 0 1.8mm;color:var(--doc-head)}
+[data-t="h5"]{font-family:var(--doc-display);font-weight:var(--doc-sub-weight);font-size:9pt;line-height:1.32;
+  letter-spacing:var(--doc-display-tracking);margin:0 0 1.5mm;color:var(--doc-head)}
 /* Label — a small eyebrow/tag whose size is set per-block via --label-size */
 [data-t="label"]{margin:0 0 2.6mm;line-height:1.35}
 [data-t="label"] .labeltext{font-family:var(--doc-util);font-weight:500;font-size:var(--label-size,9pt);
@@ -647,7 +659,7 @@ table.doc thead th{position:relative}
 .blk[data-t="table"] .selcell{outline:2px solid hsl(var(--ring));outline-offset:-2px}
 .cellpop{position:fixed;z-index:70;display:grid;grid-template-columns:repeat(5,20px);gap:5px;padding:8px;
   background:hsl(var(--popover));border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
-.cellpop .sw{width:20px;height:20px;border-radius:5px;border:1px solid hsl(var(--border));cursor:pointer;font-size:10px;color:hsl(var(--muted-foreground));padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
+.cellpop .sw{width:22px;height:22px;border-radius:999px;border:1px solid hsl(var(--border));cursor:pointer;font-size:10px;color:hsl(var(--muted-foreground));padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
 .cellpop .sw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
 @media print{ .tfit{display:none!important} .tcolrz{display:none!important} .blk[data-t="table"] .selcell{outline:none!important} }
 /* wrapped images float, so text beside them reflows automatically */
@@ -765,20 +777,56 @@ table.doc thead th{position:relative}
 .blk[contenteditable="true"]:focus{outline:none}
 .blk.sel{box-shadow:0 0 0 1px hsl(var(--ring)), 0 0 0 4px hsl(var(--ring)/.12)}
 .blk:hover:not(.sel){box-shadow:0 0 0 1px hsl(var(--ring)/.3)}
-.blkbar{position:absolute;top:-2.125rem;right:0;z-index:6;display:flex;align-items:center;gap:.125rem;
-  border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);background:hsl(var(--popover));
-  color:hsl(var(--popover-foreground));box-shadow:0 4px 14px -4px rgb(0 0 0/.3);padding:.1875rem}
-.blkbar button{width:1.625rem;height:1.5rem;border:0;background:none;color:inherit;border-radius:calc(var(--radius) - 4px);
-  cursor:pointer;display:grid;place-items:center;font:inherit;font-size:.6875rem;font-weight:500}
-.blkbar button:hover{background:hsl(var(--accent))}
-.blkbar button[data-on]{background:hsl(var(--accent));color:hsl(var(--foreground));font-weight:600}
-.blkbar button svg{width:.8125rem;height:.8125rem}
-.blkbar .tag{padding:0 .375rem;font-size:.6875rem;font-weight:500;color:hsl(var(--muted-foreground))}
-.blkbar .div{width:1px;height:1rem;background:hsl(var(--border));margin:0 .125rem}
-.fmtbar{position:fixed;z-index:40;display:none;align-items:center;gap:.0625rem;
+/* The block/table editor uses the same dark rail styling as the formatting
+   toolbar, so the two docked editors read as one system. */
+.blkbar{position:absolute;top:-2.125rem;right:0;z-index:6;display:flex;align-items:center;gap:.0625rem;
   --fg:#e7e7ea;--fg-dim:#a1a1aa;--hov:rgba(255,255,255,.12);--on:rgba(255,255,255,.2);
   border:0;border-radius:.75rem;background:#26262b;color:var(--fg);
   box-shadow:0 10px 30px -8px rgb(0 0 0/.5),0 0 0 1px rgb(0 0 0/.4);padding:.25rem}
+.blkbar button{width:1.75rem;height:1.5rem;border:0;background:none;color:var(--fg);border-radius:.5rem;
+  cursor:pointer;display:grid;place-items:center;font:inherit;font-size:.6875rem;font-weight:500;transition:background-color .1s}
+.blkbar button:hover{background:var(--hov)}
+.blkbar button[data-on]{background:var(--on);color:#fff;font-weight:600}
+.blkbar button svg{width:.8125rem;height:.8125rem}
+.blkbar .tag{padding:0 .375rem;font-size:.6875rem;font-weight:500;color:var(--fg-dim)}
+.blkbar .div{width:1px;height:1rem;background:rgba(255,255,255,.14);margin:0 .125rem}
+/* collapsible group (e.g. the H1–H5 style switcher) mirrors the format bar */
+.blkbar .grp{position:relative;display:flex}
+.blkbar .grptrig{min-width:1.75rem;gap:.1875rem}
+.blkbar .pop{position:absolute;display:none;flex-direction:column;z-index:2;padding:.25rem;gap:.0625rem;min-width:8.5rem;
+  border-radius:.625rem;background:#33333a;box-shadow:0 12px 30px -8px rgb(0 0 0/.6),0 0 0 1px rgb(0 0 0/.4);
+  top:0;left:calc(100% + .375rem)}
+.blkbar .grp[data-open] > .pop{display:flex}
+.blkbar .pop button{width:100%;height:1.75rem;display:flex;align-items:center;gap:.5rem;justify-content:flex-start;
+  padding:0 .5rem;font-size:.75rem}
+.blkbar .pop button b{width:1.5rem;flex:0 0 auto;font-weight:700}
+.blkbar .pop button span{color:var(--fg-dim)}
+.blkbar .pop button[data-on] span{color:#fff}
+/* Docked variant: a vertical rail in the page's left margin, so the block /
+   table editor sits beside the page instead of floating over it. */
+.blkbar.docked{flex-direction:column;align-items:stretch;gap:.125rem;max-height:calc(100% - 8px)}
+.blkbar.docked .tag{display:none}
+.blkbar.docked button{width:1.875rem}
+.blkbar.docked .div{width:auto;height:1px;margin:.25rem .25rem}
+.blkbar.docked .grptrig{width:100%}
+/* Label size: preset dropdown + custom number field, in place of ± buttons */
+.blkbar select.blk-size,.blkbar input.blk-sizenum{height:1.5rem;border:1px solid rgba(255,255,255,.18);
+  border-radius:.5rem;background:rgba(255,255,255,.06);color:var(--fg);font:inherit;
+  font-size:.6875rem;padding:0 .25rem;cursor:pointer}
+.blkbar select.blk-size option{color:#18181b;background:#fff}
+.blkbar select.blk-size{min-width:3.75rem}
+.blkbar input.blk-sizenum{width:3.25rem;text-align:center;-moz-appearance:textfield}
+.blkbar input.blk-sizenum::-webkit-outer-spin-button,.blkbar input.blk-sizenum::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.blkbar.docked select.blk-size,.blkbar.docked input.blk-sizenum{width:100%;min-width:0}
+/* The formatting toolbar docks beside the page rather than floating over the
+   text. Small screens: a horizontal strip along the bottom (wraps if long).
+   Wide screens: a vertical rail beside the page (placed in JS, dockEditRail). */
+.fmtbar{position:fixed;z-index:40;display:none;align-items:center;gap:.0625rem;
+  --fg:#e7e7ea;--fg-dim:#a1a1aa;--hov:rgba(255,255,255,.12);--on:rgba(255,255,255,.2);
+  border:0;border-radius:.75rem;background:#26262b;color:var(--fg);
+  box-shadow:0 10px 30px -8px rgb(0 0 0/.5),0 0 0 1px rgb(0 0 0/.4);padding:.25rem;
+  left:50%;bottom:1rem;transform:translateX(-50%);
+  flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 2rem)}
 .fmtbar[data-open]{display:flex}
 .fmtbar button{height:1.875rem;min-width:1.875rem;padding:0 .5rem;border:0;background:none;color:var(--fg);
   border-radius:.5rem;cursor:pointer;font:inherit;font-size:.8125rem;display:inline-flex;align-items:center;justify-content:center;gap:.25rem;transition:background-color .1s}
@@ -792,6 +840,57 @@ table.doc thead th{position:relative}
 .fmtbar .cdot i{display:block;width:.875rem;height:.875rem;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.35)}
 .fmtbar.for-body .body-only{display:inline-flex}
 .fmtbar .body-only{display:none}
+/* Collapsible groups (colour, alignment): a trigger button plus a popover
+   that only appears on click, so the rail stays tidy. */
+.fmtbar .grp{position:relative;display:flex}
+.fmtbar .grp.body-only{display:none}
+.fmtbar.for-body .grp.body-only{display:flex}
+.fmtbar .grptrig{flex:1 1 auto}
+.fmtbar .grptrig[data-grp="color"] i{background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)}
+.fmtbar .grptrig[data-on]{background:var(--on)}
+.fmtbar .pop{position:absolute;display:none;z-index:1;padding:.25rem;gap:.0625rem;
+  border-radius:.625rem;background:#33333a;box-shadow:0 12px 30px -8px rgb(0 0 0/.6),0 0 0 1px rgb(0 0 0/.4);
+  bottom:calc(100% + .375rem);left:50%;transform:translateX(-50%)}
+.fmtbar .grp[data-open] > .pop{display:flex}
+.fmtbar #colorPop{flex-wrap:wrap;width:6.75rem;justify-content:center}
+/* Wide screens: dock the toolbar beside the page as a vertical rail. */
+@media screen and (min-width:1100px){
+  .fmtbar{left:auto;bottom:auto;right:1.25rem;top:50%;transform:translateY(-50%);
+    flex-direction:column;align-items:stretch;justify-content:flex-start;
+    flex-wrap:nowrap;max-width:none;gap:.125rem}
+  .fmtbar .div{width:auto;height:1px;margin:.25rem .25rem}
+  .fmtbar.for-body .body-only{display:flex}
+  /* rail sits beside the page, so groups open sideways toward it */
+  .fmtbar .pop{bottom:auto;left:auto;right:calc(100% + .5rem);top:50%;transform:translateY(-50%)}
+}
+/* ==========================================================================
+   UNIFIED EDITOR RAIL — one docked pill on the right holding the block
+   controls (#blkSlot) above the rich-text formatting controls (#fmtbar).
+   The two sections are transparent; the rail itself is the pill.
+   ========================================================================== */
+.editrail{position:fixed;z-index:40;display:none;flex-direction:column;align-items:stretch;gap:.1875rem;
+  --fg:#e7e7ea;--fg-dim:#a1a1aa;--hov:rgba(255,255,255,.12);--on:rgba(255,255,255,.2);
+  border-radius:.75rem;background:#26262b;color:var(--fg);padding:.25rem;
+  box-shadow:0 10px 30px -8px rgb(0 0 0/.5),0 0 0 1px rgb(0 0 0/.4);
+  right:1.25rem;top:50%;transform:translateY(-50%);max-width:calc(100vw - 2rem)}
+.editrail[data-open]{display:flex}
+#blkSlot{display:flex;flex-direction:column;align-items:stretch;gap:.125rem}
+#blkSlot:empty{display:none}
+/* sections are transparent and always stack vertically inside the rail */
+.editrail .blkbar,.editrail .fmtbar{position:static;background:none;box-shadow:none;border:0;border-radius:0;
+  padding:0;margin:0;left:auto;right:auto;top:auto;bottom:auto;transform:none;max-width:none;max-height:none;
+  flex-direction:column;align-items:stretch;gap:.125rem}
+.editrail .fmtbar{display:none}
+.editrail .fmtbar[data-open]{display:flex}
+.editrail .blkbar .tag{display:none}
+.editrail .blkbar button{width:auto}
+.editrail .blkbar .grptrig{width:100%}
+.editrail .blkbar select.blk-size,.editrail .blkbar input.blk-sizenum{width:100%;min-width:0}
+.editrail .blkbar .div,.editrail .fmtbar .div{width:auto;height:1px;margin:.25rem .25rem;background:rgba(255,255,255,.14)}
+/* hairline between the two sections when both are showing */
+#blkSlot:not(:empty) + .fmtbar[data-open]{border-top:1px solid rgba(255,255,255,.14);margin-top:.125rem;padding-top:.25rem}
+/* popovers open toward the page (to the left of the right-docked rail) */
+.editrail .blkbar .pop{left:auto;right:calc(100% + .375rem)}
 #measure{position:fixed;left:-99999px;top:0;visibility:hidden}
 
 /* ==========================================================================
@@ -800,7 +899,7 @@ table.doc thead th{position:relative}
 @page{size:A4;margin:0}
 @media print{
   #view-library{display:none!important}
-  .ed-top,.ed-side,.blkbar,.fmtbar,.folio,.overflag,.toast,.coverEmpty,#measure,.dialog,.dialog-overlay{display:none!important}
+  .ed-top,.ed-side,.editrail,.blkbar,.fmtbar,.pagegear,.pagepanel,.folio,.overflag,.toast,.coverEmpty,#measure,.dialog,.dialog-overlay{display:none!important}
   html,body{height:auto;background:var(--paper);margin:0!important;padding:0!important;overflow:visible!important}
   #view-editor{display:block;height:auto}
   .desk{overflow:visible;padding:0;background:var(--paper)}
@@ -815,6 +914,73 @@ table.doc thead th{position:relative}
 .themebar{padding:.75rem;margin:0 0 1rem;border:1px solid hsl(var(--border));border-radius:var(--radius);background:hsl(var(--muted)/.4)}
 .themebtns{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
 .themebtns .btn{flex:1 1 auto}
+/* Design → Palette: five reusable, named text colours. Hex is the primary
+   field so the picker always reads in hex; the well opens the native picker. */
+.palrow{display:flex;align-items:center;gap:.375rem;margin-bottom:.375rem}
+.palwell{position:relative;flex:0 0 auto;width:1.75rem;height:1.75rem;border-radius:999px;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgb(0 0 0/.2);cursor:pointer}
+.palwell span{display:block;width:100%;height:100%}
+.palwell input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.palhex{flex:0 0 6rem;text-transform:uppercase;font-family:ui-monospace,monospace}
+.palname{flex:1 1 auto;min-width:0}
+.palname[readonly]{cursor:pointer;font-family:ui-monospace,monospace;font-size:.75rem}
+.palname[readonly]:hover{border-color:hsl(var(--ring))}
+/* Tailwind colour library popover */
+.twlib{position:fixed;z-index:80;background:hsl(var(--popover));color:hsl(var(--popover-foreground));
+  border:1px solid hsl(var(--border));border-radius:var(--radius);box-shadow:0 12px 34px -8px rgb(0 0 0/.45);padding:.5rem}
+.twlib-scroll{max-height:20rem;overflow:auto;display:flex;flex-direction:column;gap:.1875rem;padding-right:.125rem}
+.twrow{display:flex;align-items:center;gap:.375rem}
+.twfam{flex:0 0 3.5rem;text-align:right;font-size:.625rem;color:hsl(var(--muted-foreground));font-family:ui-monospace,monospace}
+.twshades{display:flex;gap:.125rem}
+.twsw{width:1.125rem;height:1.125rem;border:0;border-radius:999px;cursor:pointer;padding:0;box-shadow:inset 0 0 0 1px rgb(0 0 0/.15)}
+.twsw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
+.twsw.on{outline:2px solid hsl(var(--foreground));outline-offset:1px}
+/* Per-page hover gear + docked page settings */
+.pagegear{position:absolute;top:.75rem;right:.75rem;z-index:7;width:1.875rem;height:1.875rem;
+  display:grid;place-items:center;border:1px solid hsl(var(--border));border-radius:.5rem;
+  background:hsl(var(--background)/.92);color:hsl(var(--foreground));cursor:pointer;
+  opacity:0;transform:translateY(-2px);transition:opacity .12s,transform .12s;
+  box-shadow:0 4px 12px -4px rgb(0 0 0/.35);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.page:hover > .pagegear,.pagegear.on{opacity:1;transform:none}
+/* a page carrying its own dark paper override gets the dark sheet shadow */
+.page.paper-dark{box-shadow:0 0 0 1px #2B333C, 0 14px 36px -10px rgb(0 0 0/.6)}
+.pagegear svg{width:1rem;height:1rem}
+.pagepanel{position:fixed;z-index:45;display:none;width:15rem;padding:.75rem;
+  border:1px solid hsl(var(--border));border-radius:var(--radius);background:hsl(var(--popover));
+  color:hsl(var(--popover-foreground));box-shadow:0 14px 40px -10px rgb(0 0 0/.4)}
+.pagepanel[data-open]{display:block}
+.pp-head{display:flex;align-items:center;gap:.375rem;font-weight:600;font-size:.8125rem;margin-bottom:.625rem}
+.pp-head svg{width:.9375rem;height:.9375rem}
+.pp-lbl{margin:0 0 .375rem;font-size:.6875rem;font-weight:500;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:.05em}
+.pp-swatches{display:flex;flex-wrap:wrap;gap:.375rem;margin-bottom:.5rem}
+.pp-note{margin:.125rem 0 .5rem;font-size:.6875rem;color:hsl(var(--muted-foreground))}
+.pp-toggles{border-top:1px solid hsl(var(--border));margin-top:.25rem;padding-top:.5rem;display:flex;flex-direction:column;gap:.125rem}
+.palrow .input{height:2rem;font-size:.8125rem}
+/* hex read-out paired with the native colour wells elsewhere in the panel */
+.colorrow{display:flex;gap:.375rem;align-items:center}
+.colorrow .colorfield{flex:0 0 auto}
+.hexin{flex:1 1 auto;min-width:0;height:2.25rem;text-transform:uppercase;font-family:ui-monospace,monospace}
+/* Design preview dialog — live sample layout on the left, editable settings
+   on the right, so a look can be tuned and seen at the same time. */
+.dlg-editor{max-width:62rem;width:calc(100vw - 3rem)}
+.ss-wrap{display:grid;grid-template-columns:minmax(0,1fr) 17rem;gap:1rem;max-height:68vh}
+.ss-preview{overflow:auto;background:hsl(var(--muted)/.4);border:1px solid hsl(var(--border));border-radius:var(--radius);padding:1rem}
+.ss-page{background:var(--paper);border-radius:calc(var(--radius) - 2px);box-shadow:0 1px 4px rgb(0 0 0/.14);
+  padding:1.5rem 1.75rem;font-family:var(--doc-body);font-size:var(--doc-body-size);
+  line-height:var(--doc-body-leading);color:var(--doc-body-color,var(--doc-text))}
+.ss-controls{overflow:auto;display:flex;flex-direction:column;gap:.875rem;padding-right:.25rem}
+.pv-field .label{display:block;margin-bottom:.3125rem}
+.pv-seg{display:flex;gap:.25rem}
+.pv-seg button{flex:1;font:inherit;font-size:.75rem;padding:.35rem .25rem;border:1px solid hsl(var(--border));
+  border-radius:calc(var(--radius) - 3px);background:hsl(var(--background));color:inherit;cursor:pointer}
+.pv-seg button[aria-pressed="true"]{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:transparent}
+.pv-row{display:flex;align-items:center;gap:.5rem}
+.pv-row input[type="range"]{flex:1}
+/* palette strip under the sample page */
+.ss-palette{display:flex;flex-wrap:wrap;gap:.75rem}
+.ss-pal{display:flex;flex-direction:column;align-items:center;gap:.25rem;font-family:ui-monospace,monospace;font-size:.625rem;text-align:center}
+.ss-pal .dot{width:2.25rem;height:2.25rem;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(0 0 0/.25)}
+@media (max-width:720px){ .ss-wrap{grid-template-columns:1fr;max-height:74vh} }
 @media screen and (max-width:900px){
   #view-editor{grid-template-columns:1fr}
   .ed-side{position:fixed;z-index:50;top:3.25rem;bottom:0;left:-20rem;width:19rem;background:hsl(var(--background));transition:left .2s;box-shadow:0 0 40px rgb(0 0 0/.2)}
@@ -892,7 +1058,10 @@ table.doc thead th{position:relative}
     </div>
 
     <div class="pane" id="pane-design" hidden>
-      <div class="themebar">
+      <div class="field" style="margin:0 0 1rem">
+        <button class="btn btn-outline btn-sm" id="stylePreviewBtn" style="width:100%"><span data-icon="type"></span> Preview stylesheet</button>
+      </div>
+      <div class="themebar" hidden>
         <div class="field" style="margin:0">
           <label class="label" for="themeSel">Theme</label>
           <select class="select" id="themeSel"></select>
@@ -951,6 +1120,14 @@ table.doc thead th{position:relative}
           <div class="field"><label class="label" for="textCustom">Custom text colour</label><input type="color" class="colorfield" id="textCustom"></div>
           <p class="helptext" id="textNote" style="margin:0 0 .375rem"></p>
           <p class="helptext" style="margin:0">This sets the whole document. To colour part of a paragraph, select the words and use the colour dots on the floating toolbar.</p>
+        </div>
+      </div>
+
+      <div class="acc" data-acc="palette">
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="droplet"></span><span class="acc-label">Palette</span><span class="acc-sum" id="sumPalette"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <div class="acc-body" hidden>
+          <p class="helptext" style="margin:0 0 .625rem">Five reusable text colours. Type a hex or click the well; name them however you like — Tailwind names by default. They fill the colour button on the floating toolbar.</p>
+          <div id="paletteRows"></div>
         </div>
       </div>
 
@@ -1094,6 +1271,32 @@ table.doc thead th{position:relative}
   </div>
 </div>
 
+<div class="dialog dlg-editor" id="dlgStyle" role="dialog" aria-modal="true" aria-labelledby="dlgStyleTitle">
+  <h2 id="dlgStyleTitle">Design preview</h2>
+  <p class="dsc">Edit type, colour and page on the right; the sample layout on the left updates as you go.</p>
+  <div class="ss-wrap">
+    <div class="ss-preview">
+      <div class="ss-page" id="ssPage">
+        <div data-t="label"><span class="labeltext" style="--label-size:9pt">Section label</span></div>
+        <div data-t="h1"><span class="eyebrow">Chapter 01</span><span>A headline that sets the tone</span></div>
+        <div data-t="body"><p>Body copy runs in the reading typeface at the size you choose. The quick brown fox jumps over the lazy dog, and a second sentence shows how the lines wrap and set on the page.</p></div>
+        <div data-t="h2"><span>A subheading</span></div>
+        <div data-t="body"><p>Another paragraph, so you can judge measure, leading and colour together against the paper you picked.</p></div>
+        <div data-t="stats">
+          <div class="stat"><span class="v">1,240.9</span><span class="l">Revenue RMm</span></div>
+          <div class="stat"><span class="v">+18.2%</span><span class="l">Year on year</span></div>
+          <div class="stat"><span class="v">58%</span><span class="l">Manufacturing</span></div>
+        </div>
+        <div data-t="h3"><span>A smaller heading</span></div>
+        <div data-t="quote"><span>A pull quote carries the accent rule and the display face.</span><cite>Name, Role</cite></div>
+      </div>
+      <div id="ssPalStrip"></div>
+    </div>
+    <div class="ss-controls" id="ssControls"></div>
+  </div>
+  <div class="dialog-footer"><button class="btn btn-default" data-close>Done</button></div>
+</div>
+
 <div class="dialog" id="dlgTheme" role="dialog" aria-modal="true" aria-labelledby="dlgThemeTitle">
   <h2 id="dlgThemeTitle">Save theme</h2>
   <p class="dsc">Name this design so you can apply it to other reports later. It captures every setting in the Design panel, not the report's text or images.</p>
@@ -1105,6 +1308,10 @@ table.doc thead th{position:relative}
   </div>
 </div>
 
+<!-- One docked editor: block controls (built into #blkSlot) sit above the
+     rich-text formatting controls (#fmtbar), as a single rail. -->
+<div class="editrail" id="editrail">
+<div id="blkSlot"></div>
 <div class="fmtbar" id="fmtbar">
   <button data-cmd="bold" title="Bold (⌘B)" class="hbtn" style="font-weight:800">B</button>
   <button data-cmd="italic" title="Italic (⌘I)" class="hbtn" style="font-style:italic;font-family:Georgia,serif">I</button>
@@ -1113,26 +1320,52 @@ table.doc thead th{position:relative}
   <span class="div"></span>
   <button data-link="set" title="Add or edit a link"><span data-icon="link"></span></button>
   <button data-link="clear" title="Remove the link"><span data-icon="unlink"></span></button>
-  <button data-color="auto" title="Default text colour" class="cdot"><i style="background:var(--doc-body-color,var(--doc-text))"></i></button>
-  <button data-color="muted" title="Muted" class="cdot"><i style="background:var(--doc-dim)"></i></button>
-  <button data-color="accent" title="Accent" class="cdot"><i style="background:var(--doc-accent-vis)"></i></button>
-  <button data-color="#9595B2" title="Lavender" class="cdot"><i style="background:#9595B2"></i></button>
-  <button data-color="#F9F9FB" title="Highlight" class="cdot"><i style="background:#F9F9FB"></i></button>
-  <label class="cdot" title="Pick a colour for the selection" style="cursor:pointer"><i id="selSwatch" style="background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)"></i><input type="color" id="selColor" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></label>
+  <div class="grp" id="colorGrp">
+    <button class="cdot grptrig" data-grp="color" title="Text colour" aria-label="Text colour"><i id="selSwatch"></i></button>
+    <div class="pop" id="colorPop">
+      <button data-color="auto" title="Default text colour" class="cdot"><i style="background:var(--doc-body-color,var(--doc-text))"></i></button>
+      <button data-color="muted" title="Muted" class="cdot"><i style="background:var(--doc-dim)"></i></button>
+      <button data-color="accent" title="Accent" class="cdot"><i style="background:var(--doc-accent-vis)"></i></button>
+      <button data-color="#9595B2" title="Lavender" class="cdot"><i style="background:#9595B2"></i></button>
+      <button data-color="#F9F9FB" title="Highlight" class="cdot"><i style="background:#F9F9FB"></i></button>
+      <label class="cdot" title="Pick a custom colour" style="cursor:pointer"><i style="background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)"></i><input type="color" id="selColor" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></label>
+    </div>
+  </div>
   <button data-cmd="removeFormat" title="Clear formatting"><span data-icon="eraser"></span></button>
   <span class="div body-only"></span>
   <button data-cmd="insertUnorderedList" class="body-only" title="Bulleted list"><span data-icon="list"></span></button>
   <button data-cmd="insertOrderedList" class="body-only" title="Numbered list"><span data-icon="listnum"></span></button>
-  <button data-cmd="justifyLeft" class="body-only" title="Align left"><span data-icon="alignleft"></span></button>
-  <button data-cmd="justifyFull" class="body-only" title="Justify"><span data-icon="alignjustify"></span></button>
+  <div class="grp body-only" id="alignGrp">
+    <button class="grptrig" data-grp="align" title="Alignment" aria-label="Alignment"><span data-icon="alignleft"></span></button>
+    <div class="pop" id="alignPop">
+      <button data-cmd="justifyLeft" title="Align left"><span data-icon="alignleft"></span></button>
+      <button data-cmd="justifyFull" title="Justify"><span data-icon="alignjustify"></span></button>
+    </div>
+  </div>
   <button data-cols="1" class="body-only" title="One column"><span data-icon="col1"></span></button>
   <button data-cols="2" class="body-only" title="Two columns — splits the selected text into its own block"><span data-icon="col2"></span></button>
   <button data-cmd="splitblock" class="body-only" title="Split into a new block here"><span data-icon="split"></span> Split</button>
+</div>
 </div>
 
 <div class="menu" id="menu"></div>
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 <div id="measure"></div>
+
+<!-- Per-page quick settings, opened from the gear that appears on page hover -->
+<div class="pagepanel" id="pageSettings" role="dialog" aria-label="Page settings">
+  <div class="pp-head"><span data-icon="settings"></span> <span id="ppTitle">Page</span></div>
+  <p class="pp-lbl">Colour</p>
+  <div class="pp-swatches" id="ppSwatches"></div>
+  <div class="colorrow"><input type="color" class="colorfield" id="ppColor" aria-label="Page colour"><input type="text" class="input hexin" id="ppHex" maxlength="7" spellcheck="false" aria-label="Page colour hex"></div>
+  <p class="pp-note" id="ppNote"></p>
+  <button class="btn btn-ghost btn-sm" id="ppReset" style="width:100%;margin:.125rem 0 .5rem"><span data-icon="reset"></span> Restore default colour</button>
+  <div class="pp-toggles">
+    <div class="switch-row"><span class="label">Header</span><button class="switch" id="ppHead" role="switch" aria-checked="false"></button></div>
+    <div class="switch-row"><span class="label">Footer</span><button class="switch" id="ppFoot" role="switch" aria-checked="false"></button></div>
+    <div class="switch-row"><span class="label">Page number</span><button class="switch" id="ppNum" role="switch" aria-checked="true"></button></div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -1184,6 +1417,8 @@ const ICONS = {
   wrapfull:'<rect x="3" y="4" width="18" height="9" rx="1"/><path d="M3 17h18"/><path d="M3 21h12"/>',
   reset:'<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>',
   h3:'<path d="M3 12h6"/><path d="M3 18V6"/><path d="M9 18V6"/><path d="M13 10c0-1 1-1.5 2-1.5s2 .5 2 1.5-1 1.5-2 1.5c1 0 2 .5 2 1.6s-1 1.6-2 1.6-2-.5-2-1.4"/>',
+  h4:'<path d="M4 12h6"/><path d="M4 18V6"/><path d="M10 18V6"/><path d="M17 10v4h4"/><path d="M21 10v8"/>',
+  h5:'<path d="M4 12h6"/><path d="M4 18V6"/><path d="M10 18V6"/><path d="M17 13v-3h4"/><path d="M17 17.7c.4.2.9.3 1.4.3 1.4 0 2.6-.9 2.6-2.3s-1.2-2.2-2.6-2.2H17"/>',
   type:'<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
   expand:'<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
   collapse:'<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/>',
@@ -1205,6 +1440,7 @@ const ICONS = {
   col2:'<rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/>',
   grip:'<circle cx="9" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="15" cy="18" r="1.4"/>',
   droplet:'<path d="M12 2.7 6.6 8a7.6 7.6 0 1 0 10.8 0Z"/>',
+  settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   shrink:'<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
   'chevron-down':'<path d="m6 9 6 6 6-6"/>',
   layers:'<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/>',
@@ -1486,6 +1722,8 @@ function newBlock(type){
   if(type==='h1'){ b.eyebrow='Section'; b.text='Section title'; b.newPage=true; }
   if(type==='h2'){ b.text='Subheading'; }
   if(type==='h3'){ b.text='Small heading'; }
+  if(type==='h4'){ b.text='Minor heading'; }
+  if(type==='h5'){ b.text='Micro heading'; }
   if(type==='label'){ b.text='Label'; b.sizePt=9; }
   if(type==='body'){ b.html='<p>Write here. Select text to make it bold, italic or a list — or split the block at the cursor to push the rest onto the next page.</p>'; }
   if(type==='quote'){ b.text='A single sentence worth pulling out of the page.'; b.by='Attribution'; }
@@ -2035,6 +2273,41 @@ function openCellColor(b, anchor){
   const close = ev => { if(!pop.contains(ev.target)){ pop.remove(); document.removeEventListener('mousedown', close, true); } };
   setTimeout(() => document.addEventListener('mousedown', close, true), 0);
 }
+/* per-block text colour: Default (clear), Accent, Muted, the five palette
+   colours and a custom picker — sets b.color, which renderBlock applies */
+function openBlockColor(b, anchor){
+  document.getElementById('cellpop')?.remove();
+  const pal = getPalette();
+  const cssFor = v => v === '' ? 'transparent' : (v === 'accent' ? 'var(--doc-accent-vis)' : (v === 'muted' ? 'var(--doc-dim)' : v));
+  const SW = [['Default',''],['Accent','accent'],['Muted','muted']].concat(pal.map(c => [c.name || c.hex, c.hex]));
+  const pop = document.createElement('div');
+  pop.id = 'cellpop'; pop.className = 'cellpop';
+  SW.forEach(([name, val]) => {
+    const s = document.createElement('button');
+    s.className = 'sw'; s.title = name; s.type = 'button';
+    s.style.background = cssFor(val);
+    if(val === '') s.textContent = '✕';
+    if((b.color || '') === val) s.setAttribute('aria-pressed', 'true');
+    s.onclick = ev => { ev.stopPropagation(); if(val === '') delete b.color; else b.color = val; commit(); pop.remove(); };
+    pop.appendChild(s);
+  });
+  const lbl = document.createElement('label');
+  lbl.className = 'sw'; lbl.title = 'Custom colour'; lbl.style.cursor = 'pointer';
+  lbl.style.background = 'conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)';
+  const inp = document.createElement('input');
+  inp.type = 'color'; inp.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none';
+  if(/^#[0-9a-f]{6}$/i.test(b.color || '')) inp.value = b.color;
+  inp.onchange = () => { b.color = inp.value.toUpperCase(); commit(); pop.remove(); };
+  lbl.appendChild(inp);
+  lbl.onclick = ev => { ev.stopPropagation(); inp.click(); };
+  pop.appendChild(lbl);
+  document.body.appendChild(pop);
+  const rct = anchor.getBoundingClientRect();
+  pop.style.left = Math.min(rct.left, innerWidth - pop.offsetWidth - 8) + 'px';
+  pop.style.top = (rct.bottom + 6) + 'px';
+  const close = ev => { if(!pop.contains(ev.target)){ pop.remove(); document.removeEventListener('mousedown', close, true); } };
+  setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+}
 /* placeholder artwork for a graph block before a real chart image is dropped in */
 function chartGlyph(style){
   if(style === 'line'){
@@ -2062,7 +2335,7 @@ function renderBlock(b, forMeasure){
   if(b.type === 'h1'){
     el.innerHTML = (b.eyebrow ? `<span class="eyebrow" data-f="eyebrow" ${ce}>${esc(b.eyebrow)}</span>` : '')
       + `<span data-f="text" ${ce}>${esc(b.text)}</span>`;
-  } else if(b.type === 'h2' || b.type === 'h3'){
+  } else if(/^h[2-5]$/.test(b.type)){
     const num = D.settings.numberHeadings && hNums[b.id] ? `<span class="hnum">${hNums[b.id]}</span>` : '';
     el.innerHTML = num + `<span data-f="text" ${ce}>${esc(b.text)}</span>`;
   } else if(b.type === 'label'){
@@ -2179,29 +2452,52 @@ function renderBlock(b, forMeasure){
   } else if(b.type === 'spacer'){
     el.style.height = b.mm + 'mm'; el.style.marginBottom = '0';
   }
+  applyBlockColor(el, b);
   return el;
+}
+/* per-block text colour override: any text element can be recoloured, falling
+   back to the theme when unset. Named choices track the paper/accent. */
+function blockColorValue(b){
+  const c = b && b.color;
+  if(!c || c === 'auto') return '';
+  if(c === 'accent') return 'var(--doc-accent-vis)';
+  if(c === 'muted') return 'var(--doc-dim)';
+  return c;                               // a hex
+}
+function applyBlockColor(el, b){
+  const c = blockColorValue(b);
+  if(!c) return;
+  const target = b.type === 'label' ? el.querySelector('.labeltext') : el;
+  if(target) target.style.color = c;
 }
 
 /* 2.1 / 2.1.1 style numbering, derived from position rather than typed in */
 function headingNumbers(){
   const map = {};
-  let s = 0, a = 0, c = 0;
+  let s = 0;
+  const cnt = [0, 0, 0, 0];   // counters for h2, h3, h4, h5
   D.blocks.forEach(b => {
-    if(b.type === 'h1'){ s++; a = 0; c = 0; }
-    else if(b.type === 'h2'){ a++; c = 0; map[b.id] = (s || 1) + '.' + a; }
-    /* a small heading sitting directly under a section reads 2.1, not 2.1.1 */
-    else if(b.type === 'h3'){ c++; map[b.id] = a ? (s || 1) + '.' + a + '.' + c : (s || 1) + '.' + c; }
+    if(b.type === 'h1'){ s++; cnt.fill(0); return; }
+    const m = /^h([2-5])$/.exec(b.type); if(!m) return;
+    const lvl = +m[1] - 2;                 // 0..3
+    cnt[lvl]++;
+    for(let k = lvl + 1; k < cnt.length; k++) cnt[k] = 0;
+    /* a heading sitting directly under a higher one skips empty levels, so a
+       small heading under a section reads 2.1, not 2.0.1 */
+    const parts = [s || 1];
+    for(let k = 0; k <= lvl; k++) if(cnt[k]) parts.push(cnt[k]);
+    map[b.id] = parts.join('.');
   });
   return map;
 }
 let hNums = {};
-/* Topics and subsections are listed by default, small headings are not.
-   Either can be overridden per heading with b.toc. */
+/* Topics and subsections are listed in the contents by default; smaller
+   headings are not. Either can be overridden per heading with b.toc. */
 function inContents(b){
-  if(!/^h[123]$/.test(b.type)) return false;
+  if(!/^h[1-5]$/.test(b.type)) return false;
   if(b.toc === true) return true;
   if(b.toc === false) return false;
-  return b.type !== 'h3';
+  return b.type === 'h1' || b.type === 'h2';
 }
 function tocEntries(){
   const out = [];
@@ -2278,32 +2574,35 @@ function renderEnd(){
   return page;
 }
 /* the strip bleeds to both edges, so its height follows the artwork's ratio */
-function footerStripMm(){
-  if(!D.settings.showFoot) return 0;
+/* hasFoot lets a single page decide its own footer (per-page override); it
+   defaults to the document setting when omitted */
+function footerStripMm(hasFoot){
+  if(hasFoot == null) hasFoot = D.settings.showFoot;
+  if(!hasFoot) return 0;
   const f = D.meta.footer;
   if(!imgSrc(f.imgId)) return 9;
   if(!f.w || !f.h) return 0;
   return PAGE_W_MM * (f.h / f.w);
 }
 /* where the folio sits by default: clear of the footer strip if there is one */
-function autoFolioBottomMm(){
+function autoFolioBottomMm(hasFoot){
   const base = MARGINS[D.settings.margin].top / 2 - 2;
-  const strip = footerStripMm();
+  const strip = footerStripMm(hasFoot);
   return strip ? Math.max(base, +(strip + 3).toFixed(2)) : base;
 }
-function folioPlacement(){
+function folioPlacement(hasFoot){
   const f = D.settings.folio || {};
   const m = MARGINS[D.settings.margin];
   return {
     align: f.align || 'right',
-    bottom: f.bottom == null ? autoFolioBottomMm() : f.bottom,
+    bottom: f.bottom == null ? autoFolioBottomMm(hasFoot) : f.bottom,
     side: f.side == null ? m.side : f.side,
     color: f.color || 'auto'
   };
 }
 const FOLIO_COLORS = { auto:'var(--doc-num)', muted:'var(--doc-dim)', light:'#F9F9FB', accent:'var(--doc-accent-vis)' };
-function styleFolio(pn){
-  const f = folioPlacement();
+function styleFolio(pn, hasFoot){
+  const f = folioPlacement(hasFoot);
   pn.style.bottom = f.bottom + 'mm';
   if(f.align === 'center'){
     pn.style.left = '0'; pn.style.right = '0'; pn.style.textAlign = 'center';
@@ -2389,7 +2688,14 @@ function render(){
   const box = contentBox();
   pages.forEach((pg, pi) => {
     const page = document.createElement('div'); page.className = 'page'; page.dataset.page = String(pi + 1);
-    if(D.settings.showHead && !pageOpensTopic(pi)){
+    /* per-page overrides: paper colour + header/footer/number, each falling
+       back to the document (Design) setting when not set for this page */
+    const ov = (D.settings.pages && D.settings.pages[pi]) || {};
+    const showHead = ov.head != null ? ov.head : D.settings.showHead;
+    const showFoot = ov.foot != null ? ov.foot : D.settings.showFoot;
+    const showNum  = ov.num  != null ? ov.num  : D.settings.showNum;
+    if(ov.paper) applyPagePaper(page, ov.paper);
+    if(showHead && !pageOpensTopic(pi)){
       const hb = document.createElement('div'); hb.className = 'headband';
       hb.style.setProperty('--hh', headerBandMm() + 'mm');
       const custom = imgSrc(D.meta.header.imgId);
@@ -2401,7 +2707,7 @@ function render(){
     const body = document.createElement('div'); body.className = 'pageBody';
     pg.forEach(b => body.appendChild(renderBlock(b, false)));
     page.appendChild(body);
-    if(D.settings.showFoot){
+    if(showFoot){
       const fs = document.createElement('div'); fs.className = 'footstrip';
       const fImg = imgSrc(D.meta.footer.imgId);
       fs.innerHTML = fImg
@@ -2409,10 +2715,10 @@ function render(){
         : `<span class="bandph strip">Footer image — full width, flush to the edges</span>`;
       page.appendChild(fs);
     }
-    if(D.settings.showNum){
+    if(showNum){
       const pn = document.createElement('div'); pn.className = 'pagenum';
       pn.textContent = pi+1;
-      styleFolio(pn);
+      styleFolio(pn, showFoot);
       page.appendChild(pn);
     }
     const over = pg.some(b => overflowing.has(b.id));
@@ -2422,6 +2728,7 @@ function render(){
       w.textContent = 'Taller than one page on its own — split the text or shrink the image';
       page.appendChild(w);
     }
+    addPageGear(page);
     host.append(sheet(page, String(pi+1), '', over));
   });
 
@@ -2459,7 +2766,7 @@ function paintAuthorDots(){
 }
 
 /* ---------- selection + block toolbar ---------- */
-const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',label:'Label',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',chart:'Graph',blurb:'Blurb',image:'Image',divider:'Divider',spacer:'Spacer'};
+const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',h4:'Minor head',h5:'Micro head',label:'Label',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',chart:'Graph',blurb:'Blurb',image:'Image',divider:'Divider',spacer:'Spacer'};
 /* A bar belongs to the block's own container — the page body for top-level
    blocks, or the cell for something inside a column — so it lines up in both. */
 function barHost(el){
@@ -2468,21 +2775,15 @@ function barHost(el){
 }
 function paintSelection(){
   desk.querySelectorAll('.blk.sel').forEach(el => el.classList.remove('sel'));
-  desk.querySelectorAll('.blkbar').forEach(el => el.remove());
-  if(!sel) return;
+  const slot = $('blkSlot'); if(slot) slot.innerHTML = '';   // block controls live in the unified rail
+  if(!sel){ updateEditRail(); return; }
   const el = desk.querySelector(`.blk[data-id="${sel}"]`);
   const b = findBlock(sel);
-  if(!el || !b) return;
+  if(!el || !b){ updateEditRail(); return; }
   el.classList.add('sel');
   if(cropId === sel && b.type === 'image') el.classList.add('cropping');
-  const bar = blockBar(b);
-  const host = barHost(el);
-  if(!host) return;
-  bar.style.position = 'absolute';
-  bar.style.right = host.classList.contains('gcell') ? '0' : 'var(--ms)';
-  const above = el.offsetTop - 34;
-  bar.style.top = (above < 2 ? el.offsetTop + 2 : above) + 'px';
-  host.appendChild(bar);
+  if(slot) slot.appendChild(blockBar(b));
+  updateEditRail();
 }
 function select(id){
   if(id !== cropId) cropId = null;   // leaving the cropped image exits crop mode
@@ -2662,10 +2963,26 @@ function blockBar(b){
                btn(svg('minus'),'Remove the last figure',()=>{ if(b.items.length>1){ b.items.pop(); commit(); } }));
   }
   if(b.type === 'label'){
-    extra.push(
-      btn('A−', 'Smaller label', () => { b.sizePt = Math.max(6, +(((b.sizePt || 9) - 0.5)).toFixed(1)); commit(); }),
-      btn('A+', 'Bigger label', () => { b.sizePt = Math.min(48, +(((b.sizePt || 9) + 0.5)).toFixed(1)); commit(); })
-    );
+    /* size is chosen from a preset dropdown, with a number field for any
+       custom value — replaces the old A− / A+ nudge buttons */
+    const cur = +(b.sizePt || 9);
+    const PRESETS = [8,9,10,11,12,14,16,18,20,24,28,32,40,48];
+    const opts = PRESETS.includes(cur) ? PRESETS.slice() : PRESETS.concat(cur).sort((x,y) => x - y);
+    const sel = document.createElement('select');
+    sel.className = 'blk-size'; sel.title = 'Label size — pick a preset';
+    sel.innerHTML = opts.map(p => `<option value="${p}">${p}pt</option>`).join('');
+    sel.value = String(cur);
+    sel.onmousedown = ev => ev.stopPropagation();
+    sel.onchange = () => { b.sizePt = +sel.value; commit(); };
+    const num = document.createElement('input');
+    num.type = 'number'; num.className = 'blk-sizenum'; num.title = 'Custom label size (pt)';
+    num.min = '4'; num.max = '200'; num.step = '0.5'; num.value = String(cur);
+    num.onmousedown = ev => ev.stopPropagation();
+    num.onchange = () => {
+      const n = parseFloat(num.value);
+      if(isFinite(n)){ b.sizePt = Math.min(200, Math.max(4, +n.toFixed(1))); commit(); }
+    };
+    extra.push(sel, num);
   }
   if(b.type === 'body'){
     const one = btn(svg('col1'), 'One column', () => applyColumnsToBlock(b, 1));
@@ -2673,14 +2990,15 @@ function blockBar(b){
     (b.cols === 2 ? two : one).dataset.on = '1';
     extra.push(one, two);
   }
-  if((/^h[123]$/.test(b.type) || b.type === 'body') && !isNested(b.id)){
-    STYLE_LEVELS.forEach(([type, label, title]) => {
-      const x = btn(label, title, () => convertBlock(b, type));
-      if(b.type === type) x.dataset.on = '1';
-      extra.push(x);
-    });
+  if(/^h[1-5]$/.test(b.type) || b.type === 'body' || b.type === 'label' || b.type === 'quote'){
+    const cc = btn(svg('droplet'), 'Text colour for this block', () => openBlockColor(b, cc));
+    if(b.color && b.color !== 'auto') cc.dataset.on = '1';
+    extra.push(cc);
   }
-  if(/^h[123]$/.test(b.type)){
+  if((/^h[1-5]$/.test(b.type) || b.type === 'body') && !isNested(b.id)){
+    extra.push(buildStyleGroup(b));
+  }
+  if(/^h[1-5]$/.test(b.type)){
     const t = btn(svg('toclist'), 'List this heading in the contents', () => {
       b.toc = !inContents(b);
       commit();
@@ -2723,8 +3041,34 @@ const STYLE_LEVELS = [
   ['h1', 'H1', 'Topic'],
   ['h2', 'H2', 'Subsection'],
   ['h3', 'H3', 'Small heading'],
+  ['h4', 'H4', 'Minor heading'],
+  ['h5', 'H5', 'Micro heading'],
   ['body', '¶', 'Body text']
 ];
+/* the H1–H5 / body switcher as one collapsible group: a trigger showing the
+   current level, opening a popover of every level (matches the format bar) */
+function buildStyleGroup(b){
+  const grp = document.createElement('div'); grp.className = 'grp';
+  const cur = STYLE_LEVELS.find(x => x[0] === b.type) || ['', '¶', 'Text'];
+  const trig = document.createElement('button');
+  trig.className = 'grptrig'; trig.textContent = cur[1];
+  trig.title = 'Text style — ' + (cur[2] || '');
+  trig.setAttribute('aria-label', 'Text style');
+  trig.onmousedown = ev => { ev.preventDefault(); ev.stopPropagation(); };
+  trig.onclick = ev => { ev.stopPropagation(); grp.toggleAttribute('data-open'); };
+  const pop = document.createElement('div'); pop.className = 'pop';
+  STYLE_LEVELS.forEach(([type, label, title]) => {
+    const o = document.createElement('button');
+    o.innerHTML = `<b>${label}</b><span>${title}</span>`;
+    o.title = title;
+    if(b.type === type) o.dataset.on = '1';
+    o.onmousedown = ev => { ev.preventDefault(); ev.stopPropagation(); };
+    o.onclick = ev => { ev.stopPropagation(); convertBlock(b, type); };   // commit re-renders the bar
+    pop.appendChild(o);
+  });
+  grp.append(trig, pop);
+  return grp;
+}
 function plainText(html){
   const tmp = document.createElement('div');
   tmp.innerHTML = html || '';
@@ -2732,8 +3076,8 @@ function plainText(html){
 }
 function convertBlock(b, to){
   if(!b || b.type === to) return;
-  const wasHeading = /^h[123]$/.test(b.type);
-  const toHeading = /^h[123]$/.test(to);
+  const wasHeading = /^h[1-5]$/.test(b.type);
+  const toHeading = /^h[1-5]$/.test(to);
 
   if(wasHeading && to === 'body'){
     b.html = '<p>' + esc(b.text || '') + '</p>';
@@ -3628,14 +3972,48 @@ document.addEventListener('selectionchange', () => {
   if($('view-editor').hidden) return;
   const s = getSelection();
   const host = richHostFrom(s.anchorNode);
-  if(!host || s.isCollapsed){ fmt.removeAttribute('data-open'); return; }
-  const r = s.getRangeAt(0).getBoundingClientRect();
-  if(!r.width){ fmt.removeAttribute('data-open'); return; }
+  /* Open as soon as the caret is inside any editable field — no text
+     selection required. The bar docks to the edge via CSS, so it never
+     covers the words the way the old floating bar did. */
+  if(!host){ fmt.removeAttribute('data-open'); closeGrps(); updateEditRail(); return; }
   fmt.classList.toggle('for-body', host.dataset.f === 'html');
   fmt.setAttribute('data-open','');
-  fmt.style.left = Math.max(8, Math.min(innerWidth - fmt.offsetWidth - 8, r.left + r.width/2 - fmt.offsetWidth/2)) + 'px';
-  fmt.style.top = Math.max(60, r.top - fmt.offsetHeight - 8) + 'px';
+  updateEditRail();
 });
+/* Collapsible groups inside the toolbar (colour, alignment). */
+function closeGrps(){ fmt.querySelectorAll('.grp[data-open]').forEach(g => g.removeAttribute('data-open')); }
+function activePage(){
+  const host = richHostFrom(getSelection().anchorNode);
+  let page = host && host.closest('.page');
+  if(!page && sel){ const el = desk.querySelector(`.blk[data-id="${sel}"]`); page = el && el.closest('.page'); }
+  return page;
+}
+/* The single editor rail is shown whenever a block is selected or a rich field
+   is being edited, and docked beside the active page (right edge). Below
+   1100px the CSS keeps it pinned to the viewport's right instead. */
+function updateEditRail(){
+  const rail = $('editrail'); if(!rail) return;
+  const slot = $('blkSlot');
+  const show = (slot && slot.children.length) || fmt.hasAttribute('data-open');
+  if(!show){ rail.removeAttribute('data-open'); return; }
+  rail.setAttribute('data-open','');
+  dockEditRail();
+}
+function dockEditRail(){
+  const rail = $('editrail'); if(!rail || !rail.hasAttribute('data-open')) return;
+  if(!matchMedia('(min-width:1100px)').matches){
+    rail.style.left = rail.style.top = rail.style.right = rail.style.bottom = rail.style.transform = '';
+    return;
+  }
+  const page = activePage(); if(!page) return;
+  const r = page.getBoundingClientRect();
+  const w = rail.offsetWidth, h = rail.offsetHeight;
+  let left = Math.min(r.right + 14, innerWidth - w - 8);
+  left = Math.max(left, r.left + 8);
+  const top = Math.min(Math.max(64, r.top + r.height / 2 - h / 2), innerHeight - h - 8);
+  rail.style.left = left + 'px'; rail.style.top = top + 'px';
+  rail.style.right = 'auto'; rail.style.bottom = 'auto'; rail.style.transform = 'none';
+}
 /* Colour a run of words. Named choices use CSS variables so they keep
    tracking the paper and accent when those change. */
 const SEL_COLORS = { auto:'var(--doc-body-color)', muted:'var(--doc-dim)', accent:'var(--doc-accent-vis)' };
@@ -3823,27 +4201,45 @@ $('linkApply').onclick = applyLink;
 $('linkUrl').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); applyLink(); } });
 
 fmt.addEventListener('mousedown', e => { rememberRange(); e.preventDefault(); });
-$('selColor').addEventListener('input', e => { colorSelection(e.target.value); $('selSwatch').style.background = e.target.value; });
+function onSelColor(e){ colorSelection(e.target.value); $('selSwatch').style.background = e.target.value; }
+$('selColor').addEventListener('input', onSelColor);
 fmt.addEventListener('click', e => {
+  /* group triggers open/close their popover; clicking a different one closes
+     the rest so only a single popover is ever open */
+  const trig = e.target.closest('.grptrig');
+  if(trig){
+    const grp = trig.closest('.grp'), wasOpen = grp.hasAttribute('data-open');
+    closeGrps();
+    if(!wasOpen) grp.setAttribute('data-open','');
+    return;
+  }
   const lk = e.target.closest('[data-link]');
-  if(lk){ lk.dataset.link === 'clear' ? clearLink() : openLinkDialog(); return; }
+  if(lk){ lk.dataset.link === 'clear' ? clearLink() : openLinkDialog(); closeGrps(); return; }
   const colBtn = e.target.closest('[data-cols]');
-  if(colBtn){ setColumns(Number(colBtn.dataset.cols)); return; }
+  if(colBtn){ setColumns(Number(colBtn.dataset.cols)); closeGrps(); return; }
   const dot = e.target.closest('[data-color]');
   if(dot){
     const key = dot.dataset.color;
     colorSelection(SEL_COLORS[key] || key);   // named choices map to a variable, hex passes through
+    $('selSwatch').style.background = getComputedStyle(dot.querySelector('i')).backgroundColor;
+    closeGrps();
     return;
   }
   const pick = e.target.closest('label.cdot');
   if(pick){ $('selColor').click(); return; }
   const btn = e.target.closest('button'); if(!btn) return;
+  closeGrps();
   if(btn.hasAttribute('data-code')){ toggleCode(); return; }
   if(btn.dataset.cmd === 'splitblock'){ splitAtCaret(); return; }
   document.execCommand(btn.dataset.cmd, false, null);
   const host = richHostFrom(getSelection().anchorNode);
   if(host) commitRichHost(host);
 });
+/* keep the rails pinned to the page as it scrolls or the window resizes,
+   and dismiss any open popover when the click lands outside the toolbar */
+desk.addEventListener('scroll', dockEditRail, { passive:true });
+window.addEventListener('resize', dockEditRail);
+document.addEventListener('mousedown', e => { if(!e.target.closest('#editrail')) closeGrps(); });
 function splitAtCaret(){
   const s = getSelection(); if(!s.rangeCount) return;
   const blk = bodyBlockFrom(s.anchorNode);
@@ -4045,7 +4441,7 @@ const BLOCK_ICON = { body:'pilcrow', table:'table', chart:'chart', blurb:'blurb'
   stat:'stat', grid:'col3' };
 const ADD_MENU = [
   ['#','Text'],
-  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['label','Label','type'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'], ['blurb','Blurb','blurb'],
+  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['h4','Minor heading','h4'], ['h5','Micro heading','h5'], ['label','Label','type'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'], ['blurb','Blurb','blurb'],
   ['#','Data'],
   ['stat','Statistic','stat'], ['stats','Key figures','hash'], ['table','Table','table'], ['chart','Graph','chart'],
   ['#','Layout'],
@@ -4063,7 +4459,7 @@ const CELL_ADD_MENU = ADD_MENU.filter(([v]) =>
 ).filter((item, i, arr) => !(item[0] === '#' && (!arr[i+1] || arr[i+1][0] === '#')));
 const collapsed = new Set();
 
-function rank(t){ return t === 'h1' ? 1 : (t === 'h2' ? 2 : (t === 'h3' ? 3 : 4)); }
+function rank(t){ return ({ h1:1, h2:2, h3:3, h4:4, h5:5 })[t] || 6; }
 /* keep the tree's own drag from being mistaken for a text selection */
 $('tree').addEventListener('dragstart', e => e.preventDefault());
 function pageMap(){
@@ -4216,6 +4612,7 @@ function setColumns(cols){
 const RETYPE_MENU = [
   ['#', 'Turn selection into'],
   ['h1', 'Topic', 'h1'], ['h2', 'Subsection', 'h2'], ['h3', 'Small heading', 'h3'],
+  ['h4', 'Minor heading', 'h4'], ['h5', 'Micro heading', 'h5'],
   ['body', 'Body text', 'pilcrow'], ['quote', 'Pull quote', 'quote']
 ];
 function makeTypedBlock(type, html){
@@ -4258,7 +4655,7 @@ function retypeSelection(type){
   commit();
   const el = desk.querySelector(`.blk[data-id="${target.id}"]`);
   if(el) el.scrollIntoView({ block:'nearest' });
-  const name = { h1:'topic', h2:'subsection', h3:'small heading', body:'paragraph', quote:'pull quote' }[type] || type;
+  const name = { h1:'topic', h2:'subsection', h3:'small heading', h4:'minor heading', h5:'micro heading', body:'paragraph', quote:'pull quote' }[type] || type;
   toast('Retyped the selection as a ' + name);
 }
 desk.addEventListener('contextmenu', e => {
@@ -4547,7 +4944,7 @@ function nodeRow(node, depth, pgm){
     row.append(inp);
   }
 
-  if(/^h[123]$/.test(b.type) && !inContents(b)){
+  if(/^h[1-5]$/.test(b.type) && !inContents(b)){
     const flag = document.createElement('span');
     flag.className = 'noToc';
     flag.innerHTML = svg('toclist');
@@ -4929,31 +5326,47 @@ function readableAccent(accentHex, paperHex){
   }
   return toHex(mix(a, toward, 0.95));
 }
-function applyTheme(){
-  const t = TYPES[D.settings.type], r = document.documentElement.style;
-  const pal = paperPalette(D.settings.paperColor);
-  document.documentElement.dataset.paper = pal.dark ? 'dark' : 'light';
-  const accentVis = readableAccent(D.settings.accent, pal.paper);
-  const bodyColor = D.settings.textColor === 'muted' ? pal.dim
-    : (D.settings.textColor === 'accent' ? accentVis
-    : (/^#[0-9a-f]{6}$/i.test(D.settings.textColor || '') ? D.settings.textColor : pal.text));
-  const lc = D.settings.linkColor;
-  const linkColor = lc === 'accent' ? accentVis
-    : (lc === 'muted' ? pal.dim
-    : (lc === 'text' ? bodyColor
-    : (/^#[0-9a-f]{6}$/i.test(lc || '') ? lc : accentVis)));
-  const tok = {
+/* Every paper-derived token for one paper colour, so the same set can theme
+   :root (the whole document) or a single .page for a per-page override. */
+function paperTokens(paperColor, accent, textColor, linkColor, linkUnderline){
+  const pal = paperPalette(paperColor);
+  const accentVis = readableAccent(accent, pal.paper);
+  const bodyColor = textColor === 'muted' ? pal.dim
+    : (textColor === 'accent' ? accentVis
+    : (/^#[0-9a-f]{6}$/i.test(textColor || '') ? textColor : pal.text));
+  const linkCol = linkColor === 'accent' ? accentVis
+    : (linkColor === 'muted' ? pal.dim
+    : (linkColor === 'text' ? bodyColor
+    : (/^#[0-9a-f]{6}$/i.test(linkColor || '') ? linkColor : accentVis)));
+  return {
+    dark: pal.dark,
     '--paper':pal.paper, '--doc-text':pal.text, '--doc-head':pal.head, '--doc-quote':pal.quote,
     '--doc-dim':pal.dim, '--doc-faint':pal.faint, '--doc-rule':pal.rule, '--doc-rule-strong':pal.ruleStrong,
     '--doc-hair':pal.hair, '--doc-hair2':pal.hair2, '--doc-hair3':pal.hair3, '--doc-zebra':pal.zebra,
     '--doc-total':pal.total, '--doc-holder':pal.holder, '--doc-runhead':pal.runhead, '--doc-num':pal.num,
     '--doc-toc-l2':pal.tocL2, '--doc-toc-p':pal.tocP, '--doc-lead':pal.lead,
     '--doc-body-color': bodyColor,
-    '--doc-link': linkColor, '--doc-link-ud': D.settings.linkUnderline === false ? 'none' : 'underline',
-    '--doc-accent':D.settings.accent, '--doc-accent-vis':accentVis,
+    '--doc-link': linkCol, '--doc-link-ud': linkUnderline === false ? 'none' : 'underline',
+    '--doc-accent':accent, '--doc-accent-vis':accentVis,
     '--doc-thead-fg': relLum(toRgb(accentVis)) > 0.5 ? '#12151A' : '#FFFFFF'
   };
-  Object.keys(tok).forEach(k => r.setProperty(k, tok[k]));
+}
+/* the CSS custom properties paperTokens controls, so a page override can be
+   cleared cleanly */
+const PAGE_VAR_KEYS = Object.keys(paperTokens('#FFFFFF','#000000','auto','accent',true)).filter(k => k[0] === '-');
+/* paint / clear a single page's paper (text auto-derived, so it stays legible) */
+function applyPagePaper(page, hex){
+  const tok = paperTokens(hex, D.settings.accent, 'auto', D.settings.linkColor, D.settings.linkUnderline);
+  PAGE_VAR_KEYS.forEach(k => page.style.setProperty(k, tok[k]));
+  page.classList.toggle('paper-dark', !!tok.dark);
+}
+function clearPagePaper(page){ PAGE_VAR_KEYS.forEach(k => page.style.removeProperty(k)); page.classList.remove('paper-dark'); }
+function applyTheme(){
+  const t = TYPES[D.settings.type], r = document.documentElement.style;
+  const pal = paperPalette(D.settings.paperColor);
+  document.documentElement.dataset.paper = pal.dark ? 'dark' : 'light';
+  const tok = paperTokens(D.settings.paperColor, D.settings.accent, D.settings.textColor, D.settings.linkColor, D.settings.linkUnderline);
+  PAGE_VAR_KEYS.forEach(k => r.setProperty(k, tok[k]));
   r.setProperty('--doc-display', t.display);
   r.setProperty('--doc-body', t.body);
   r.setProperty('--doc-util', t.util);
@@ -5206,7 +5619,430 @@ function syncControls(){
     x.setAttribute('aria-pressed', String(String(x.dataset.link).toLowerCase() === String(D.settings.linkColor||'').toLowerCase())));
   $('linkCustom').value = /^#[0-9a-f]{6}$/i.test(D.settings.linkColor || '') ? D.settings.linkColor : '#2B3A8F';
   setSwitch($('linkUnderline'), D.settings.linkUnderline !== false);
+  syncPalette(); renderColorPop(); refreshHexFields();
 }
+
+/* ==========================================================================
+   PALETTE — five reusable, named text colours (Tailwind names by default).
+   Edited in the Design panel, surfaced on the floating toolbar's colour
+   button, and previewed in the style sheet.
+   ========================================================================== */
+/* The Tailwind default palette, kept compact: one space-separated ramp per
+   family (shades 50 → 950). Used for the colour library and to name any
+   custom colour by its nearest Tailwind match. */
+const TW_SHADES = [50,100,200,300,400,500,600,700,800,900,950];
+const TW_RAMPS = {
+  slate:'f8fafc f1f5f9 e2e8f0 cbd5e1 94a3b8 64748b 475569 334155 1e293b 0f172a 020617',
+  gray:'f9fafb f3f4f6 e5e7eb d1d5db 9ca3af 6b7280 4b5563 374151 1f2937 111827 030712',
+  zinc:'fafafa f4f4f5 e4e4e7 d4d4d8 a1a1aa 71717a 52525b 3f3f46 27272a 18181b 09090b',
+  neutral:'fafafa f5f5f5 e5e5e5 d4d4d4 a3a3a3 737373 525252 404040 262626 171717 0a0a0a',
+  stone:'fafaf9 f5f5f4 e7e5e4 d6d3d1 a8a29e 78716c 57534e 44403c 292524 1c1917 0c0a09',
+  red:'fef2f2 fee2e2 fecaca fca5a5 f87171 ef4444 dc2626 b91c1c 991b1b 7f1d1d 450a0a',
+  orange:'fff7ed ffedd5 fed7aa fdba74 fb923c f97316 ea580c c2410c 9a3412 7c2d12 431407',
+  amber:'fffbeb fef3c7 fde68a fcd34d fbbf24 f59e0b d97706 b45309 92400e 78350f 451a03',
+  yellow:'fefce8 fef9c3 fef08a fde047 facc15 eab308 ca8a04 a16207 854d0e 713f12 422006',
+  lime:'f7fee7 ecfccb d9f99d bef264 a3e635 84cc16 65a30d 4d7c0f 3f6212 365314 1a2e05',
+  green:'f0fdf4 dcfce7 bbf7d0 86efac 4ade80 22c55e 16a34a 15803d 166534 14532d 052e16',
+  emerald:'ecfdf5 d1fae5 a7f3d0 6ee7b7 34d399 10b981 059669 047857 065f46 064e3b 022c22',
+  teal:'f0fdfa ccfbf1 99f6e4 5eead4 2dd4bf 14b8a6 0d9488 0f766e 115e59 134e4a 042f2e',
+  cyan:'ecfeff cffafe a5f3fc 67e8f9 22d3ee 06b6d4 0891b2 0e7490 155e75 164e63 083344',
+  sky:'f0f9ff e0f2fe bae6fd 7dd3fc 38bdf8 0ea5e9 0284c7 0369a1 075985 0c4a6e 082f49',
+  blue:'eff6ff dbeafe bfdbfe 93c5fd 60a5fa 3b82f6 2563eb 1d4ed8 1e40af 1e3a8a 172554',
+  indigo:'eef2ff e0e7ff c7d2fe a5b4fc 818cf8 6366f1 4f46e5 4338ca 3730a3 312e81 1e1b4b',
+  violet:'f5f3ff ede9fe ddd6fe c4b5fd a78bfa 8b5cf6 7c3aed 6d28d9 5b21b6 4c1d95 2e1065',
+  purple:'faf5ff f3e8ff e9d5ff d8b4fe c084fc a855f7 9333ea 7e22ce 6b21a8 581c87 3b0764',
+  fuchsia:'fdf4ff fae8ff f5d0fe f0abfc e879f9 d946ef c026d3 a21caf 86198f 701a75 4a044e',
+  pink:'fdf2f8 fce7f3 fbcfe8 f9a8d4 f472b6 ec4899 db2777 be185d 9d174d 831843 500724',
+  rose:'fff1f2 ffe4e6 fecdd3 fda4af fb7185 f43f5e e11d48 be123c 9f1239 881337 4c0519'
+};
+const TW_LIST = [];
+Object.keys(TW_RAMPS).forEach(fam => TW_RAMPS[fam].trim().split(/\s+/).forEach((h, i) => {
+  const hex = '#' + h; TW_LIST.push({ name: fam + '-' + TW_SHADES[i], hex, rgb: toRgb(hex) });
+}));
+function nearestTw(hex){
+  const c = toRgb(hex); let best = TW_LIST[0], bd = Infinity;
+  for(const t of TW_LIST){
+    const dr = c.r - t.rgb.r, dg = c.g - t.rgb.g, db = c.b - t.rgb.b, d = dr*dr + dg*dg + db*db;
+    if(d < bd){ bd = d; best = t; }
+  }
+  return best ? best.name : '';
+}
+function closeTwLibrary(){ const p = $('twlib'); if(p) p.remove(); document.removeEventListener('mousedown', twOutside, true); }
+function twOutside(e){ if(!e.target.closest('#twlib')) closeTwLibrary(); }
+/* the colour library: every Tailwind swatch, grouped by family, opened from a
+   palette slot's name so a colour can be picked by name */
+function openTwLibrary(anchor, current, onPick){
+  closeTwLibrary();
+  const pop = document.createElement('div'); pop.id = 'twlib'; pop.className = 'twlib';
+  pop.innerHTML = '<div class="twlib-scroll">' + Object.keys(TW_RAMPS).map(fam => {
+    const hexes = TW_RAMPS[fam].trim().split(/\s+/);
+    return `<div class="twrow"><span class="twfam">${fam}</span><div class="twshades">`
+      + hexes.map((h, i) => {
+          const name = fam + '-' + TW_SHADES[i], hex = '#' + h;
+          return `<button class="twsw${name === current ? ' on' : ''}" style="background:${hex}" title="${name} ${hex}" data-name="${name}" data-hex="${hex}"></button>`;
+        }).join('') + '</div></div>';
+  }).join('') + '</div>';
+  document.body.appendChild(pop);
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.top = Math.max(8, Math.min(r.bottom + 6, innerHeight - pop.offsetHeight - 8)) + 'px';
+  pop.addEventListener('mousedown', e => e.stopPropagation());
+  pop.addEventListener('click', e => {
+    const sw = e.target.closest('.twsw'); if(!sw) return;
+    onPick({ name: sw.dataset.name, hex: sw.dataset.hex.toUpperCase() });
+    closeTwLibrary();
+  });
+  setTimeout(() => document.addEventListener('mousedown', twOutside, true), 0);
+}
+function afterPaletteChange(){ syncPalette(); renderColorPop(); syncPreviewControls(); save(); }
+
+const TW_DEFAULT_PALETTE = [
+  { name:'slate-600',   hex:'#475569' },
+  { name:'red-500',     hex:'#EF4444' },
+  { name:'emerald-600', hex:'#059669' },
+  { name:'sky-500',     hex:'#0EA5E9' },
+  { name:'amber-500',   hex:'#F59E0B' }
+];
+function getPalette(){
+  if(!D || !D.settings) return TW_DEFAULT_PALETTE;
+  if(!Array.isArray(D.settings.palette) || D.settings.palette.length !== 5)
+    D.settings.palette = TW_DEFAULT_PALETTE.map(c => ({ ...c }));
+  return D.settings.palette;
+}
+function buildPaletteEditor(){
+  const host = $('paletteRows'); if(!host || host.dataset.built) return;
+  host.dataset.built = '1';
+  for(let i = 0; i < 5; i++){
+    const row = document.createElement('div');
+    row.className = 'palrow';
+    row.innerHTML =
+      `<label class="palwell" title="Pick a colour"><span></span><input type="color" data-pi="${i}"></label>`
+    + `<input class="input palhex" data-ph="${i}" spellcheck="false" maxlength="7" placeholder="#000000" aria-label="Hex colour">`
+    + `<input class="input palname" data-pn="${i}" readonly title="Choose from the Tailwind colour library" placeholder="name" aria-label="Colour name">`;
+    host.appendChild(row);
+  }
+  /* picking a colour (well or hex) renames the slot to its nearest Tailwind
+     match; the name field opens the library instead of free typing */
+  host.addEventListener('input', e => {
+    const pal = getPalette(), t = e.target;
+    let hex;
+    if(t.dataset.pi != null){ hex = (t.value || '').toUpperCase(); }
+    else if(t.dataset.ph != null){
+      let v = (t.value || '').trim(); if(v && v[0] !== '#') v = '#' + v;
+      if(!/^#[0-9a-f]{6}$/i.test(v)) return;              // wait for a full hex
+      hex = v.toUpperCase();
+    }
+    else return;
+    pal[+ (t.dataset.pi ?? t.dataset.ph)] = { hex, name: nearestTw(hex) };
+    afterPaletteChange();
+  });
+  host.addEventListener('click', e => {
+    const nm = e.target.closest('.palname'); if(!nm) return;
+    const i = +nm.dataset.pn, pal = getPalette();
+    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; afterPaletteChange(); });
+  });
+}
+function syncPalette(){
+  const pal = getPalette();
+  document.querySelectorAll('#paletteRows .palrow').forEach((row, i) => {
+    const c = pal[i] || { name:'', hex:'#000000' };
+    const ok = /^#[0-9a-f]{6}$/i.test(c.hex);
+    row.querySelector('[data-pi]').value = ok ? c.hex : '#000000';
+    row.querySelector('.palwell span').style.background = c.hex;
+    const hx = row.querySelector('[data-ph]'); if(document.activeElement !== hx) hx.value = c.hex;
+    const nm = row.querySelector('[data-pn]'); if(nm) nm.value = c.name || '';   // readonly, safe to set
+  });
+  const sum = $('sumPalette');
+  if(sum) sum.textContent = pal.map(c => c.name).filter(Boolean).slice(0, 3).join(', ');
+}
+let _popSig = '';
+function renderColorPop(){
+  const pop = $('colorPop'); if(!pop) return;
+  const pal = getPalette();
+  const sig = pal.map(c => c.hex + '·' + c.name).join('|');
+  if(sig === _popSig && pop.dataset.built) return;   // skip needless rebuilds
+  _popSig = sig; pop.dataset.built = '1';
+  pop.innerHTML =
+    `<button data-color="auto" title="Default text colour" class="cdot"><i style="background:var(--doc-body-color,var(--doc-text))"></i></button>`
+  + pal.map(c => `<button data-color="${c.hex}" title="${esc(c.name || c.hex)}" class="cdot"><i style="background:${c.hex}"></i></button>`).join('')
+  + `<label class="cdot" title="Pick a custom colour" style="cursor:pointer"><i style="background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)"></i><input type="color" id="selColor" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></label>`;
+  $('selColor').addEventListener('input', onSelColor);
+}
+buildPaletteEditor();
+
+/* ---------- hex read-out beside the native colour pickers ---------- */
+function refreshHexFields(){
+  document.querySelectorAll('.hexin[data-hexfor]').forEach(h => {
+    const c = $(h.dataset.hexfor);
+    if(c && document.activeElement !== h) h.value = (c.value || '').toUpperCase();
+  });
+}
+function enhanceHex(colorId){
+  const c = $(colorId); if(!c || c.dataset.hexed) return;
+  c.dataset.hexed = '1';
+  const hex = document.createElement('input');
+  hex.type = 'text'; hex.className = 'input hexin'; hex.spellcheck = false; hex.maxLength = 7;
+  hex.setAttribute('aria-label', 'Hex colour'); hex.dataset.hexfor = colorId;
+  const wrap = document.createElement('div'); wrap.className = 'colorrow';
+  c.parentNode.insertBefore(wrap, c); wrap.appendChild(c); wrap.appendChild(hex);
+  c.addEventListener('input', () => { if(document.activeElement !== hex) hex.value = (c.value || '').toUpperCase(); });
+  hex.addEventListener('input', () => {
+    let v = hex.value.trim(); if(v && v[0] !== '#') v = '#' + v;
+    if(/^#[0-9a-f]{6}$/i.test(v)){ c.value = v; c.dispatchEvent(new Event('input', { bubbles:true })); }
+  });
+  hex.value = (c.value || '').toUpperCase();
+}
+['accentCustom','paperCustom','textCustom','linkCustom','endCustom'].forEach(enhanceHex);
+
+/* ---------- design preview: a live sample layout with editable settings,
+   so type/colour/page can be tuned and seen at once (replaces the Theme box) */
+function pvApply(){ applyTheme(); scheduleRepaginate(); syncControls(); save(); syncPreviewControls(); }
+function pvField(label){
+  const d = document.createElement('div'); d.className = 'pv-field';
+  const l = document.createElement('label'); l.className = 'label'; l.textContent = label;
+  d.appendChild(l); return d;
+}
+function pvColor(host, label, get, set, id){
+  const f = pvField(label);
+  const row = document.createElement('div'); row.className = 'colorrow';
+  const well = document.createElement('input'); well.type = 'color'; well.className = 'colorfield'; well.id = id + 'W';
+  const hex = document.createElement('input'); hex.type = 'text'; hex.className = 'input hexin'; hex.maxLength = 7;
+  hex.spellcheck = false; hex.id = id + 'H'; hex.setAttribute('aria-label', label + ' hex');
+  row.append(well, hex); f.appendChild(row); host.appendChild(f);
+  const apply = v => { set(v); pvApply(); };
+  well.addEventListener('input', () => { hex.value = well.value.toUpperCase(); apply(well.value); });
+  hex.addEventListener('input', () => {
+    let v = hex.value.trim(); if(v && v[0] !== '#') v = '#' + v;
+    if(/^#[0-9a-f]{6}$/i.test(v)){ well.value = v; apply(v); }
+  });
+}
+function buildPreviewControls(){
+  const host = $('ssControls'); if(!host || host.dataset.built) return;
+  host.dataset.built = '1';
+  /* type set */
+  const typeF = pvField('Type set');
+  const seg = document.createElement('div'); seg.className = 'pv-seg';
+  [['editorial','Editorial'],['corporate','Corporate'],['classic','Classic']].forEach(([v, l]) => {
+    const b = document.createElement('button'); b.textContent = l; b.dataset.pvtype = v;
+    b.onclick = () => { D.settings.type = v; pvApply(); };
+    seg.appendChild(b);
+  });
+  typeF.appendChild(seg); host.appendChild(typeF);
+  /* body size */
+  const sizeF = pvField('Body size');
+  const srow = document.createElement('div'); srow.className = 'pv-row';
+  const range = document.createElement('input'); range.type = 'range'; range.min = '80'; range.max = '140'; range.step = '1'; range.id = 'pvSizeRange';
+  const numpt = document.createElement('input'); numpt.type = 'number'; numpt.className = 'input'; numpt.min = '8'; numpt.max = '14'; numpt.step = '0.1'; numpt.id = 'pvSizeNum'; numpt.style.width = '4.5rem';
+  const setSize = pt => { const n = Math.min(140, Math.max(80, Math.round(pt * 10))); D.settings.bodySize = n; pvApply(); };
+  range.oninput = () => setSize(+range.value / 10);
+  numpt.onchange = () => { const n = parseFloat(numpt.value); if(isFinite(n)) setSize(n); };
+  srow.append(range, numpt); sizeF.appendChild(srow); host.appendChild(sizeF);
+  /* colours */
+  pvColor(host, 'Background (paper)', () => D.settings.paperColor, v => D.settings.paperColor = v, 'pvPaper');
+  pvColor(host, 'Body text', () => (/^#[0-9a-f]{6}$/i.test(D.settings.textColor || '') ? D.settings.textColor : ''), v => D.settings.textColor = v, 'pvText');
+  pvColor(host, 'Accent', () => D.settings.accent, v => D.settings.accent = v, 'pvAccent');
+  /* palette */
+  const palF = pvField('Palette'); palF.id = 'pvPalWrap';
+  for(let i = 0; i < 5; i++){
+    const row = document.createElement('div'); row.className = 'palrow';
+    row.innerHTML =
+      `<label class="palwell" title="Pick a colour"><span></span><input type="color" data-pvpi="${i}"></label>`
+    + `<input class="input palhex" data-pvph="${i}" maxlength="7" spellcheck="false" aria-label="Hex colour">`
+    + `<input class="input palname" data-pvpn="${i}" readonly title="Choose from the Tailwind colour library" aria-label="Colour name">`;
+    palF.appendChild(row);
+  }
+  palF.addEventListener('input', e => {
+    const pal = getPalette(), t = e.target;
+    let hex;
+    if(t.dataset.pvpi != null){ hex = (t.value || '').toUpperCase(); }
+    else if(t.dataset.pvph != null){ let v = (t.value || '').trim(); if(v && v[0] !== '#') v = '#' + v; if(!/^#[0-9a-f]{6}$/i.test(v)) return; hex = v.toUpperCase(); }
+    else return;
+    pal[+ (t.dataset.pvpi ?? t.dataset.pvph)] = { hex, name: nearestTw(hex) };
+    afterPaletteChange();
+  });
+  palF.addEventListener('click', e => {
+    const nm = e.target.closest('.palname'); if(!nm) return;
+    const i = +nm.dataset.pvpn, pal = getPalette();
+    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; afterPaletteChange(); });
+  });
+  host.appendChild(palF);
+}
+function pvColorSync(id, val, fallback){
+  const well = $(id + 'W'), hex = $(id + 'H'); if(!well) return;
+  const ok = /^#[0-9a-f]{6}$/i.test(val || '');
+  if(document.activeElement !== well) well.value = ok ? val : fallback;
+  if(hex && document.activeElement !== hex) hex.value = (val || '').toUpperCase();
+}
+function refreshPreviewPalette(){
+  const el = $('ssPalStrip'); if(!el) return;
+  const pal = getPalette();
+  el.innerHTML = `<p class="grouplbl" style="margin:.75rem 0 .25rem">Palette</p><div class="ss-palette">`
+    + pal.map(c => `<div class="ss-pal"><span class="dot" style="background:${c.hex}"></span>${esc(c.name || '')}<br>${(c.hex || '').toUpperCase()}</div>`).join('')
+    + `</div>`;
+}
+function syncPreviewControls(){
+  if(!D || !$('ssControls') || !$('ssControls').dataset.built) return;
+  document.querySelectorAll('#ssControls [data-pvtype]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pvtype === D.settings.type)));
+  const r = $('pvSizeRange'), n = $('pvSizeNum');
+  if(r && document.activeElement !== r) r.value = String(D.settings.bodySize);
+  if(n && document.activeElement !== n) n.value = (D.settings.bodySize / 10).toFixed(1);
+  pvColorSync('pvPaper', D.settings.paperColor, '#FFFFFF');
+  pvColorSync('pvText', /^#[0-9a-f]{6}$/i.test(D.settings.textColor || '') ? D.settings.textColor : '', '#1A1D22');
+  pvColorSync('pvAccent', D.settings.accent, '#0B5D57');
+  const pal = getPalette();
+  document.querySelectorAll('#pvPalWrap .palrow').forEach((row, i) => {
+    const c = pal[i] || { name:'', hex:'#000000' };
+    const w = row.querySelector('[data-pvpi]'), hx = row.querySelector('[data-pvph]'), nm = row.querySelector('[data-pvpn]');
+    if(w) w.value = /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : '#000000';
+    row.querySelector('.palwell span').style.background = c.hex;
+    if(hx && document.activeElement !== hx) hx.value = c.hex;
+    if(nm) nm.value = c.name || '';   // readonly, safe to set
+  });
+  refreshPreviewPalette();
+}
+function buildStyleSheet(){ buildPreviewControls(); syncPreviewControls(); }
+on('stylePreviewBtn', 'click', () => { buildStyleSheet(); showDialog('dlgStyle'); });
+
+/* ==========================================================================
+   PER-PAGE SETTINGS — a gear appears when a page is hovered; clicking it docks
+   a panel beside THAT page for its own paper colour, header, footer and page
+   number. Each setting overrides the Design (document) base for this page only,
+   so you can drop in a contrast page. Colour picks keep the text readable.
+   Overrides live in D.settings.pages, keyed by page index.
+   ========================================================================== */
+function pageOv(idx){
+  if(!D.settings.pages) D.settings.pages = {};
+  if(!D.settings.pages[idx]) D.settings.pages[idx] = {};
+  return D.settings.pages[idx];
+}
+function prunePageOv(idx){
+  const o = D.settings.pages && D.settings.pages[idx];
+  if(o && !Object.keys(o).length) delete D.settings.pages[idx];
+}
+/* the values in effect for a page: its own override or the document base */
+function effPage(idx){
+  const o = (D.settings.pages && D.settings.pages[idx]) || {};
+  return {
+    paper: o.paper || D.settings.paperColor || '#FFFFFF',
+    paperOv: !!o.paper,
+    head: o.head != null ? o.head : D.settings.showHead,
+    foot: o.foot != null ? o.foot : D.settings.showFoot,
+    num:  o.num  != null ? o.num  : D.settings.showNum
+  };
+}
+function addPageGear(page){
+  const g = document.createElement('button');
+  g.className = 'pagegear'; g.title = 'Page settings'; g.setAttribute('aria-label', 'Page settings');
+  g.innerHTML = svg('settings');
+  g.onmousedown = e => { e.preventDefault(); e.stopPropagation(); };
+  g.onclick = e => { e.stopPropagation(); openPageSettings(page, g); };
+  page.appendChild(g);
+}
+let pageGearBtn = null, pageGearIdx = null;
+function openPageSettings(pageEl, gearBtn){
+  const p = $('pageSettings');
+  if(p.hasAttribute('data-open') && pageGearBtn === gearBtn){ closePageSettings(); return; }  // toggle off
+  if(pageGearBtn) pageGearBtn.classList.remove('on');
+  pageGearBtn = gearBtn || null;
+  pageGearIdx = pageEl ? Number(pageEl.dataset.page) - 1 : null;    // 0-based override key
+  if(pageGearBtn) pageGearBtn.classList.add('on');
+  syncPagePanel();
+  p.setAttribute('data-open', '');
+  dockPagePanel(pageEl);
+}
+function dockPagePanel(pageEl){
+  const p = $('pageSettings'); if(!p.hasAttribute('data-open')) return;
+  const el = pageEl || (pageGearBtn && pageGearBtn.closest('.page'));
+  if(!el) return;
+  const r = el.getBoundingClientRect(), w = p.offsetWidth, h = p.offsetHeight;
+  const left = Math.max(8, Math.min(r.right + 12, innerWidth - w - 8));
+  const top = Math.min(Math.max(64, r.top + 8), innerHeight - h - 8);
+  p.style.left = left + 'px'; p.style.top = top + 'px';
+}
+function closePageSettings(){
+  $('pageSettings').removeAttribute('data-open');
+  if(pageGearBtn) pageGearBtn.classList.remove('on');
+  pageGearBtn = null; pageGearIdx = null;
+}
+/* after a re-render the old gear/page nodes are gone; grab the same page by
+   index (falling back to the first) so the panel keeps tracking it */
+function reanchorPagePanel(){
+  if(!$('pageSettings').hasAttribute('data-open')) return;
+  let el = pageGearIdx != null ? desk.querySelector(`.page[data-page="${pageGearIdx + 1}"]`) : null;
+  if(!el) el = desk.querySelector('.page[data-page]');
+  if(!el){ closePageSettings(); return; }
+  pageGearIdx = Number(el.dataset.page) - 1;
+  pageGearBtn = el.querySelector('.pagegear');
+  if(pageGearBtn) pageGearBtn.classList.add('on');
+  dockPagePanel(el);
+}
+function currentPageEl(){ return pageGearBtn && pageGearBtn.closest('.page'); }
+function syncPagePanel(){
+  if(!D || pageGearIdx == null) return;
+  const e = effPage(pageGearIdx);
+  const ok = /^#[0-9a-f]{6}$/i.test(e.paper);
+  const ttl = $('ppTitle'); if(ttl) ttl.textContent = 'Page ' + (pageGearIdx + 1);
+  if(document.activeElement !== $('ppColor')) $('ppColor').value = ok ? e.paper : '#FFFFFF';
+  if(document.activeElement !== $('ppHex')) $('ppHex').value = (e.paper || '').toUpperCase();
+  document.querySelectorAll('#ppSwatches .sw').forEach(x =>
+    x.setAttribute('aria-pressed', String((x.dataset.paper || '').toLowerCase() === String(e.paper).toLowerCase())));
+  $('ppNote').textContent = (e.paperOv ? 'This page only. ' : 'Using the Design colour. ')
+    + (paperPalette(e.paper).dark ? 'Dark paper — text is a light ink automatically.' : 'Light paper — text stays dark.');
+  $('ppReset').style.display = e.paperOv ? '' : 'none';
+  setSwitch($('ppHead'), e.head);
+  setSwitch($('ppFoot'), e.foot);
+  setSwitch($('ppNum'), e.num);
+}
+/* store an override only when it differs from the Design base, so a page that
+   matches the base keeps inheriting future base changes */
+function setPageColorOverride(hex){
+  if(pageGearIdx == null) return;
+  const base = String(D.settings.paperColor || '').toLowerCase();
+  const o = pageOv(pageGearIdx), same = hex.toLowerCase() === base;
+  if(same) delete o.paper; else o.paper = hex;
+  prunePageOv(pageGearIdx);
+  const el = currentPageEl();
+  if(el){ same ? clearPagePaper(el) : applyPagePaper(el, hex); }
+  syncPagePanel(); save();
+}
+function restorePageColor(){
+  if(pageGearIdx == null) return;
+  const o = D.settings.pages && D.settings.pages[pageGearIdx];
+  if(o){ delete o.paper; prunePageOv(pageGearIdx); }
+  const el = currentPageEl(); if(el) clearPagePaper(el);
+  syncPagePanel(); save(); toast('Page colour back to the Design default');
+}
+function togglePageFlag(key){
+  if(pageGearIdx == null) return;
+  const base = { head:D.settings.showHead, foot:D.settings.showFoot, num:D.settings.showNum }[key];
+  const e = effPage(pageGearIdx), next = !{ head:e.head, foot:e.foot, num:e.num }[key];
+  const o = pageOv(pageGearIdx);
+  if(next === base) delete o[key]; else o[key] = next;
+  prunePageOv(pageGearIdx);
+  commit(); syncPagePanel(); reanchorPagePanel();
+}
+(function wirePagePanel(){
+  const sw = $('ppSwatches');
+  PAPERS.forEach(([hex, name]) => {
+    const b = document.createElement('button');
+    b.className = 'sw'; b.style.background = hex; b.title = name; b.setAttribute('aria-label', name);
+    b.dataset.paper = hex;
+    b.onclick = () => setPageColorOverride(hex);
+    sw.appendChild(b);
+  });
+  on('ppColor', 'input', e => { $('ppHex').value = e.target.value.toUpperCase(); setPageColorOverride(e.target.value); });
+  on('ppHex', 'input', e => { let v = e.target.value.trim(); if(v && v[0] !== '#') v = '#' + v; if(/^#[0-9a-f]{6}$/i.test(v)){ $('ppColor').value = v; setPageColorOverride(v); } });
+  $('ppReset').onclick = restorePageColor;
+  $('ppHead').onclick = () => togglePageFlag('head');
+  $('ppFoot').onclick = () => togglePageFlag('foot');
+  $('ppNum').onclick  = () => togglePageFlag('num');
+})();
+window.addEventListener('resize', () => dockPagePanel());
+desk.addEventListener('scroll', () => dockPagePanel(), { passive:true });
+document.addEventListener('mousedown', e => {
+  if($('pageSettings').hasAttribute('data-open') && !e.target.closest('#pageSettings') && !e.target.closest('.pagegear')) closePageSettings();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('pageSettings').hasAttribute('data-open')) closePageSettings(); });
 
 /* ==========================================================================
    THEMES — a snapshot of every design setting, so a look can be reused across
