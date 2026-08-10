@@ -340,6 +340,11 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .sw{width:1.75rem;height:1.75rem;border-radius:999px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgb(0 0 0/.2)}
 .sw[aria-pressed="true"]{border-color:hsl(var(--foreground))}
 .sw:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
+/* "Recently used" colours sit in their own labelled row above the presets */
+.recentrow[hidden]{display:none}
+.recentrow{margin:0 0 .5rem}
+.recentlbl{font-size:.6875rem;font-weight:500;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:.05em;margin:0 0 .375rem}
+.recentsws{margin-bottom:0}
 /* colour picker rendered as a round well */
 .colorfield{width:2.25rem;height:2.25rem;padding:0;border:1px solid hsl(var(--input));border-radius:999px;
   background:hsl(var(--background));overflow:hidden;cursor:pointer;-webkit-appearance:none;appearance:none}
@@ -661,6 +666,8 @@ table.doc thead th{position:relative}
   background:hsl(var(--popover));border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
 .cellpop .sw{width:22px;height:22px;border-radius:999px;border:1px solid hsl(var(--border));cursor:pointer;font-size:10px;color:hsl(var(--muted-foreground));padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
 .cellpop .sw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
+.cellpop .cellpoplbl{grid-column:1/-1;margin:.125rem 0 -.125rem;font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:hsl(var(--muted-foreground))}
+.cellpop .cellpoplbl:first-child{margin-top:0}
 /* paste-an-SVG popover for the blurb icon */
 .svgpop{position:fixed;z-index:70;width:19rem;padding:.75rem;display:flex;flex-direction:column;gap:.5rem;
   border-radius:.75rem;background:hsl(var(--popover));color:hsl(var(--popover-foreground));
@@ -865,13 +872,13 @@ table.doc thead th{position:relative}
 /* collapsible group (e.g. the H1–H5 style switcher) mirrors the format bar */
 .blkbar .grp{position:relative;display:flex}
 .blkbar .grptrig{min-width:1.75rem;gap:.1875rem}
-.blkbar .pop{position:absolute;display:none;flex-direction:column;z-index:2;padding:.25rem;gap:.0625rem;min-width:8.5rem;
+.blkbar .pop{position:absolute;display:none;flex-direction:column;z-index:2;padding:.25rem;gap:.0625rem;min-width:8.5rem;width:max-content;
   border-radius:.625rem;background:#33333a;box-shadow:0 12px 30px -8px rgb(0 0 0/.6),0 0 0 1px rgb(0 0 0/.4);
   top:0;left:calc(100% + .375rem)}
 .blkbar .grp[data-open] > .pop{display:flex}
-.blkbar .pop button{width:100%;height:1.75rem;display:flex;align-items:center;gap:.5rem;justify-content:flex-start;
-  padding:0 .5rem;font-size:.75rem}
-.blkbar .pop button b{width:1.5rem;flex:0 0 auto;font-weight:700}
+.blkbar .pop button{width:100%;min-height:1.75rem;display:flex;align-items:center;gap:.5rem;justify-content:flex-start;
+  padding:.25rem .5rem;font-size:.75rem;text-align:left;white-space:nowrap}
+.blkbar .pop button b{width:1.5rem;flex:0 0 auto;font-weight:700;text-align:center}
 .blkbar .pop button span{color:var(--fg-dim)}
 .blkbar .pop button[data-on] span{color:#fff}
 /* Docked variant: a vertical rail in the page's left margin, so the block /
@@ -925,6 +932,8 @@ table.doc thead th{position:relative}
   bottom:calc(100% + .375rem);left:50%;transform:translateX(-50%)}
 .fmtbar .grp[data-open] > .pop{display:flex}
 .fmtbar #colorPop{flex-wrap:wrap;width:6.75rem;justify-content:center}
+.fmtbar .cdotlbl{flex:0 0 100%;margin:.125rem 0 .1875rem;font-size:.5625rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:hsl(0 0% 100%/.55);text-align:center}
+.fmtbar .cdotlbl:first-child{margin-top:0}
 /* Wide screens: dock the toolbar beside the page as a vertical rail. */
 @media screen and (min-width:1100px){
   .fmtbar{left:auto;bottom:auto;right:1.25rem;top:50%;transform:translateY(-50%);
@@ -936,33 +945,36 @@ table.doc thead th{position:relative}
   .fmtbar .pop{bottom:auto;left:auto;right:calc(100% + .5rem);top:50%;transform:translateY(-50%)}
 }
 /* ==========================================================================
-   UNIFIED EDITOR RAIL — one docked pill on the right holding the block
-   controls (#blkSlot) above the rich-text formatting controls (#fmtbar).
-   The two sections are transparent; the rail itself is the pill.
+   UNIFIED EDITOR RAIL — one floating pill at the top of the editor holding the
+   block controls (#blkSlot) beside the rich-text formatting controls (#fmtbar),
+   as a single horizontal bar. The two sections are transparent; the rail itself
+   is the pill. It centres over the pages, just below the editor's top bar.
    ========================================================================== */
-.editrail{position:fixed;z-index:40;display:none;flex-direction:column;align-items:stretch;gap:.1875rem;
+.editrail{position:fixed;z-index:40;display:none;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:.25rem;
   --fg:#e7e7ea;--fg-dim:#a1a1aa;--hov:rgba(255,255,255,.12);--on:rgba(255,255,255,.2);
-  border-radius:.75rem;background:#26262b;color:var(--fg);padding:.25rem;
+  border-radius:.75rem;background:#26262b;color:var(--fg);padding:.25rem .375rem;
   box-shadow:0 10px 30px -8px rgb(0 0 0/.5),0 0 0 1px rgb(0 0 0/.4);
-  right:1.25rem;top:50%;transform:translateY(-50%);max-width:calc(100vw - 2rem)}
+  left:50%;top:3.75rem;transform:translateX(-50%);max-width:calc(100vw - 2rem);justify-content:center}
 .editrail[data-open]{display:flex}
-#blkSlot{display:flex;flex-direction:column;align-items:stretch;gap:.125rem}
+#blkSlot{display:flex;flex-direction:row;align-items:center;flex-wrap:nowrap;gap:.0625rem}
 #blkSlot:empty{display:none}
-/* sections are transparent and always stack vertically inside the rail */
+/* sections are transparent and lay out in a single horizontal row */
 .editrail .blkbar,.editrail .fmtbar{position:static;background:none;box-shadow:none;border:0;border-radius:0;
   padding:0;margin:0;left:auto;right:auto;top:auto;bottom:auto;transform:none;max-width:none;max-height:none;
-  flex-direction:column;align-items:stretch;gap:.125rem}
+  flex-direction:row;align-items:center;flex-wrap:nowrap;gap:.0625rem}
 .editrail .fmtbar{display:none}
 .editrail .fmtbar[data-open]{display:flex}
 .editrail .blkbar .tag{display:none}
 .editrail .blkbar button{width:auto}
-.editrail .blkbar .grptrig{width:100%}
-.editrail .blkbar select.blk-size,.editrail .blkbar input.blk-sizenum{width:100%;min-width:0}
-.editrail .blkbar .div,.editrail .fmtbar .div{width:auto;height:1px;margin:.25rem .25rem;background:rgba(255,255,255,.14)}
-/* hairline between the two sections when both are showing */
-#blkSlot:not(:empty) + .fmtbar[data-open]{border-top:1px solid rgba(255,255,255,.14);margin-top:.125rem;padding-top:.25rem}
-/* popovers open toward the page (to the left of the right-docked rail) */
-.editrail .blkbar .pop{left:auto;right:calc(100% + .375rem)}
+.editrail .blkbar button.blk-wide{justify-content:center}
+.editrail .blkbar .grptrig{width:auto}
+.editrail .blkbar select.blk-size,.editrail .blkbar input.blk-sizenum{width:auto;min-width:0}
+.editrail .blkbar .div,.editrail .fmtbar .div{width:1px;height:1.125rem;margin:0 .1875rem;background:rgba(255,255,255,.14)}
+/* a vertical hairline between the block controls and the text controls */
+#blkSlot:not(:empty) + .fmtbar[data-open]{border-left:1px solid rgba(255,255,255,.14);margin-left:.125rem;padding-left:.3125rem}
+/* popovers drop down from the top bar */
+.editrail .blkbar .pop{top:calc(100% + .375rem);left:0;right:auto}
+.editrail .fmtbar .pop{top:calc(100% + .375rem);bottom:auto;left:50%;right:auto;transform:translateX(-50%)}
 #measure{position:fixed;left:-99999px;top:0;visibility:hidden}
 
 /* ==========================================================================
@@ -971,7 +983,11 @@ table.doc thead th{position:relative}
 @page{size:A4;margin:0}
 @media print{
   #view-library{display:none!important}
-  .ed-top,.ed-side,.editrail,.blkbar,.fmtbar,.pagegear,.pagepanel,.folio,.overflag,.toast,.coverEmpty,#measure,.dialog,.dialog-overlay{display:none!important}
+  .ed-top,.ed-side,.editrail,.blkbar,.fmtbar,.pagegear,.pagepanel,.folio,.overflag,.toast,.coverEmpty,#measure,.dialog,.dialog-overlay,
+  .authordot,.peerdot,.peer-banner,.lockbanner,.insbar{display:none!important}
+  /* collaboration chrome never belongs in the exported file */
+  .blk.peer-locked{opacity:1!important}
+  .blk.peer-locked::after{display:none!important}
   html,body{height:auto;background:var(--paper);margin:0!important;padding:0!important;overflow:visible!important}
   #view-editor{display:block;height:auto}
   .desk{overflow:visible;padding:0;background:var(--paper)}
@@ -1390,8 +1406,13 @@ table.doc thead th{position:relative}
   <button data-cmd="strikeThrough" title="Strikethrough" style="text-decoration:line-through">S</button>
   <button data-code title="Inline code"><span data-icon="code"></span></button>
   <span class="div"></span>
-  <button data-link="set" title="Add or edit a link"><span data-icon="link"></span></button>
-  <button data-link="clear" title="Remove the link"><span data-icon="unlink"></span></button>
+  <div class="grp" id="linkGrp">
+    <button class="grptrig" data-grp="link" title="Link" aria-label="Link"><span data-icon="link"></span></button>
+    <div class="pop" id="linkPop">
+      <button data-link="set" title="Add or edit a link"><span data-icon="link"></span></button>
+      <button data-link="clear" title="Remove the link"><span data-icon="unlink"></span></button>
+    </div>
+  </div>
   <div class="grp" id="colorGrp">
     <button class="cdot grptrig" data-grp="color" title="Text colour" aria-label="Text colour"><i id="selSwatch"></i></button>
     <div class="pop" id="colorPop">
@@ -1405,8 +1426,13 @@ table.doc thead th{position:relative}
   </div>
   <button data-cmd="removeFormat" title="Clear formatting"><span data-icon="eraser"></span></button>
   <span class="div body-only"></span>
-  <button data-cmd="insertUnorderedList" class="body-only" title="Bulleted list"><span data-icon="list"></span></button>
-  <button data-cmd="insertOrderedList" class="body-only" title="Numbered list"><span data-icon="listnum"></span></button>
+  <div class="grp body-only" id="listGrp">
+    <button class="grptrig" data-grp="list" title="Lists" aria-label="Lists"><span data-icon="list"></span></button>
+    <div class="pop" id="listPop">
+      <button data-cmd="insertUnorderedList" title="Bulleted list"><span data-icon="list"></span></button>
+      <button data-cmd="insertOrderedList" title="Numbered list"><span data-icon="listnum"></span></button>
+    </div>
+  </div>
   <div class="grp body-only" id="alignGrp">
     <button class="grptrig" data-grp="align" title="Alignment" aria-label="Alignment"><span data-icon="alignleft"></span></button>
     <div class="pop" id="alignPop">
@@ -1414,8 +1440,13 @@ table.doc thead th{position:relative}
       <button data-cmd="justifyFull" title="Justify"><span data-icon="alignjustify"></span></button>
     </div>
   </div>
-  <button data-cols="1" class="body-only" title="One column"><span data-icon="col1"></span></button>
-  <button data-cols="2" class="body-only" title="Two columns — splits the selected text into its own block"><span data-icon="col2"></span></button>
+  <div class="grp body-only" id="colsGrp">
+    <button class="grptrig" data-grp="cols" title="Columns" aria-label="Columns"><span data-icon="col2"></span></button>
+    <div class="pop" id="colsPop">
+      <button data-cols="1" title="One column"><span data-icon="col1"></span></button>
+      <button data-cols="2" title="Two columns — splits the selected text into its own block"><span data-icon="col2"></span></button>
+    </div>
+  </div>
   <button data-cmd="splitblock" class="body-only" title="Split into a new block here"><span data-icon="split"></span> Split</button>
 </div>
 </div>
@@ -2328,17 +2359,26 @@ function openCellColor(b, anchor){
     ['Red','#FBE4E4'],['Amber','#FBEFD6'],['Green','#E4F3E7'],['Blue','#E2ECFA'],['Violet','#ECE5FA']];
   const pop = document.createElement('div');
   pop.id = 'cellpop'; pop.className = 'cellpop';
+  const setCell = val => { b.cellbg = b.cellbg || {}; if(val){ b.cellbg[key] = val; recordRecentColor(val); } else delete b.cellbg[key]; commit(); pop.remove(); };
+  if(recentColors.length){
+    const rl = document.createElement('p'); rl.className = 'cellpoplbl'; rl.textContent = 'Recently used';
+    pop.appendChild(rl);
+    recentColors.forEach(hex => {
+      const s = document.createElement('button'); s.className = 'sw'; s.type = 'button';
+      s.style.background = hex; s.title = hex;
+      if((b.cellbg && b.cellbg[key] || '').toLowerCase() === hex.toLowerCase()) s.setAttribute('aria-pressed', 'true');
+      s.onclick = ev => { ev.stopPropagation(); setCell(hex); };
+      pop.appendChild(s);
+    });
+    const pl = document.createElement('p'); pl.className = 'cellpoplbl'; pl.textContent = 'Presets';
+    pop.appendChild(pl);
+  }
   SW.forEach(([name, val]) => {
     const s = document.createElement('button');
     s.className = 'sw'; s.title = name; s.type = 'button';
     s.style.background = val || 'transparent';
     if(!val) s.textContent = '✕';
-    s.onclick = ev => {
-      ev.stopPropagation();
-      b.cellbg = b.cellbg || {};
-      if(val) b.cellbg[key] = val; else delete b.cellbg[key];
-      commit(); pop.remove();
-    };
+    s.onclick = ev => { ev.stopPropagation(); setCell(val); };
     pop.appendChild(s);
   });
   document.body.appendChild(pop);
@@ -2357,13 +2397,26 @@ function openBlockColor(b, anchor){
   const SW = [['Default',''],['Accent','accent'],['Muted','muted']].concat(pal.map(c => [c.name || c.hex, c.hex]));
   const pop = document.createElement('div');
   pop.id = 'cellpop'; pop.className = 'cellpop';
+  if(recentColors.length){
+    const rl = document.createElement('p'); rl.className = 'cellpoplbl'; rl.textContent = 'Recently used';
+    pop.appendChild(rl);
+    recentColors.forEach(hex => {
+      const s = document.createElement('button'); s.className = 'sw'; s.type = 'button';
+      s.style.background = hex; s.title = hex;
+      if((b.color || '').toLowerCase() === hex.toLowerCase()) s.setAttribute('aria-pressed', 'true');
+      s.onclick = ev => { ev.stopPropagation(); b.color = hex; recordRecentColor(hex); commit(); pop.remove(); };
+      pop.appendChild(s);
+    });
+    const pl = document.createElement('p'); pl.className = 'cellpoplbl'; pl.textContent = 'Presets';
+    pop.appendChild(pl);
+  }
   SW.forEach(([name, val]) => {
     const s = document.createElement('button');
     s.className = 'sw'; s.title = name; s.type = 'button';
     s.style.background = cssFor(val);
     if(val === '') s.textContent = '✕';
     if((b.color || '') === val) s.setAttribute('aria-pressed', 'true');
-    s.onclick = ev => { ev.stopPropagation(); if(val === '') delete b.color; else b.color = val; commit(); pop.remove(); };
+    s.onclick = ev => { ev.stopPropagation(); if(val === '') delete b.color; else { b.color = val; recordRecentColor(val); } commit(); pop.remove(); };
     pop.appendChild(s);
   });
   const lbl = document.createElement('label');
@@ -2372,7 +2425,7 @@ function openBlockColor(b, anchor){
   const inp = document.createElement('input');
   inp.type = 'color'; inp.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none';
   if(/^#[0-9a-f]{6}$/i.test(b.color || '')) inp.value = b.color;
-  inp.onchange = () => { b.color = inp.value.toUpperCase(); commit(); pop.remove(); };
+  inp.onchange = () => { b.color = inp.value.toUpperCase(); recordRecentColor(b.color); commit(); pop.remove(); };
   lbl.appendChild(inp);
   lbl.onclick = ev => { ev.stopPropagation(); inp.click(); };
   pop.appendChild(lbl);
@@ -2427,11 +2480,11 @@ function renderBlock(b, forMeasure){
     el.innerHTML = b.html || '<p></p>';
     if(!forMeasure){ el.contentEditable = 'true'; el.dataset.f = 'html'; }
   } else if(b.type === 'quote'){
-    el.innerHTML = `<span data-f="text" ${ce}>${esc(b.text)}</span><cite data-f="by" ${ce}>${esc(b.by)}</cite>`;
+    el.innerHTML = `<span data-f="text" data-rich ${ce}>${b.text || ''}</span><cite data-f="by" data-rich ${ce}>${b.by || ''}</cite>`;
   } else if(b.type === 'stats'){
     el.innerHTML = b.items.map((s,i) => `<div class="stat">
-      <span class="v" data-f="items.${i}.v" ${ce}>${esc(s.v)}</span>
-      <span class="l" data-f="items.${i}.l" ${ce}>${esc(s.l)}</span></div>`).join('');
+      <span class="v" data-f="items.${i}.v" data-rich ${ce}>${s.v || ''}</span>
+      <span class="l" data-f="items.${i}.l" data-rich ${ce}>${s.l || ''}</span></div>`).join('');
   } else if(b.type === 'table'){
     normTable(b);
     const cells = b.head.length;
@@ -2508,9 +2561,9 @@ function renderBlock(b, forMeasure){
       + `<div class="blurb-title" data-f="title" data-rich ${ce} style="margin-bottom:${L.gapTitle}mm">${b.title || ''}</div>`
       + `<div class="blurb-body" data-f="body" data-rich ${ce}>${b.body || '<p></p>'}</div>`;
   } else if(b.type === 'stat'){
-    el.innerHTML = `<span class="sv" data-f="v" ${ce}>${esc(b.v)}</span>`
-      + `<span class="sl" data-f="l" ${ce}>${esc(b.l)}</span>`
-      + (b.note ? `<span class="sn" data-f="note" ${ce}>${esc(b.note)}</span>` : '');
+    el.innerHTML = `<span class="sv" data-f="v" data-rich ${ce}>${b.v || ''}</span>`
+      + `<span class="sl" data-f="l" data-rich ${ce}>${b.l || ''}</span>`
+      + (b.note ? `<span class="sn" data-f="note" data-rich ${ce}>${b.note || ''}</span>` : '');
   } else if(b.type === 'grid'){
     const cw = colWidths(b);
     el.dataset.cols = b.cols;
@@ -3084,14 +3137,13 @@ function blockBar(b){
     };
     extra.push(sel, num);
   }
-  if(b.type === 'body'){
-    const one = btn(svg('col1'), 'One column', () => applyColumnsToBlock(b, 1));
-    const two = btn(svg('col2'), 'Two columns', () => applyColumnsToBlock(b, 2));
-    (b.cols === 2 ? two : one).dataset.on = '1';
-    extra.push(one, two);
-  }
-  if(/^h[1-5]$/.test(b.type) || b.type === 'body' || b.type === 'label' || b.type === 'quote'){
-    const cc = btn(svg('droplet'), 'Text colour for this block', () => openBlockColor(b, cc));
+  /* columns live only in the rich-text toolbar's Columns group now (it also
+     handles splitting a selection into its own multi-column block) */
+  /* Text colour: body/label/quote colour text through the floating toolbar's
+     colour control (which also colours a selection), so no duplicate here.
+     Headings have no inline toolbar, so they keep this element-level droplet. */
+  if(/^h[1-5]$/.test(b.type)){
+    const cc = btn(svg('droplet'), 'Text colour for this heading', () => openBlockColor(b, cc));
     if(b.color && b.color !== 'auto') cc.dataset.on = '1';
     extra.push(cc);
   }
@@ -3116,8 +3168,8 @@ function blockBar(b){
      the space around it (the blurb's panel adds its type, colours and icon) */
   {
     const opener = b.type === 'blurb' ? openBlurbPanel : openBlockPanel;
-    const gear = btn(svg('settings') + '<span class="blk-lbl">Settings</span>',
-      'Element settings — background, padding & spacing', () => opener(b, gear));
+    const gear = btn('<span class="blk-lbl">Customize</span>',
+      'Customize this element — background, padding & spacing', () => opener(b, gear));
     gear.classList.add('blk-wide');
     extra.push(gear);
   }
@@ -3126,8 +3178,8 @@ function blockBar(b){
     const d = document.createElement('span'); d.className = 'div'; bar.append(d);
   }
   bar.append(
-    btn(svg('up'), 'Move up', () => move(b,-1)),
-    btn(svg('down'), 'Move down', () => move(b,1)),
+    /* reordering lives in the layer/outline panel, so the bar keeps only the
+       two element-level actions */
     btn(svg('copy'), 'Duplicate', () => {
       const list = ownerList(b.id) || D.blocks;
       const i = list.indexOf(b);
@@ -3241,7 +3293,7 @@ function _panelColorField(label, cur, noneLabel, set, live, done){
     const s = document.createElement('button'); s.type = 'button'; s.className = 'sw'; s.title = name;
     s.style.background = cssFor(val); if(val === '') s.textContent = '✕';
     if(cur === val) s.classList.add('on');
-    s.onclick = () => { set(val); done(); };
+    s.onclick = () => { recordRecentColor(val); set(val); done(); };
     return s;
   };
   strip.appendChild(mk(noneLabel, ''));
@@ -3252,12 +3304,25 @@ function _panelColorField(label, cur, noneLabel, set, live, done){
   const inp = document.createElement('input'); inp.type = 'color';
   if(/^#[0-9a-f]{6}$/i.test(cur)) inp.value = cur;
   inp.oninput = () => { set(inp.value.toUpperCase()); live(); };
-  inp.onchange = () => { set(inp.value.toUpperCase()); done(); };
+  inp.onchange = () => { set(inp.value.toUpperCase()); recordRecentColor(inp.value); done(); };
   wl.appendChild(inp); strip.appendChild(wl);
   const more = document.createElement('button'); more.type = 'button'; more.className = 'sw';
   more.textContent = '…'; more.title = 'Colour library';
-  more.onclick = () => openTwLibrary(more, /^#/.test(cur) ? cur : '', pick => { set(pick.hex); done(); });
+  more.onclick = () => openTwLibrary(more, /^#/.test(cur) ? cur : '', pick => { recordRecentColor(pick.hex); set(pick.hex); done(); });
   strip.appendChild(more);
+  /* recently used colours, above the fixed presets */
+  if(recentColors.length){
+    const rlab = document.createElement('div'); rlab.className = 'recentlbl'; rlab.textContent = 'Recently used';
+    const rstrip = document.createElement('div'); rstrip.className = 'bp-sw';
+    recentColors.forEach(hex => {
+      const s = document.createElement('button'); s.type = 'button'; s.className = 'sw'; s.title = hex;
+      s.style.background = hex; if(cur.toLowerCase() === hex.toLowerCase()) s.classList.add('on');
+      s.onclick = () => { recordRecentColor(hex); set(hex); done(); };
+      rstrip.appendChild(s);
+    });
+    const plab = document.createElement('div'); plab.className = 'recentlbl'; plab.textContent = 'Presets';
+    f.append(lab, rlab, rstrip, plab, strip); return f;
+  }
   f.append(lab, strip); return f;
 }
 /* mount a floating settings panel: build(panel, rebuild) fills it, and rebuild
@@ -3436,12 +3501,6 @@ function convertBlock(b, to){
   if(el) el.scrollIntoView({ block:'nearest' });
   const name = (STYLE_LEVELS.find(x => x[0] === to) || [])[2] || to;
   toast('Now a ' + name.toLowerCase());
-}
-function move(b, dir){
-  const list = ownerList(b.id) || D.blocks;
-  const i = list.indexOf(b), j = i + dir;
-  if(j < 0 || j >= list.length) return;
-  list.splice(i,1); list.splice(j,0,b); commit();
 }
 /* a copied grid must not reuse its children's ids */
 function reId(b){
@@ -4350,20 +4409,11 @@ function updateEditRail(){
   rail.setAttribute('data-open','');
   dockEditRail();
 }
+/* The rail floats top-centre via CSS; clear any stale inline positioning so it
+   stays there through scrolls and resizes. */
 function dockEditRail(){
   const rail = $('editrail'); if(!rail || !rail.hasAttribute('data-open')) return;
-  if(!matchMedia('(min-width:1100px)').matches){
-    rail.style.left = rail.style.top = rail.style.right = rail.style.bottom = rail.style.transform = '';
-    return;
-  }
-  const page = activePage(); if(!page) return;
-  const r = page.getBoundingClientRect();
-  const w = rail.offsetWidth, h = rail.offsetHeight;
-  let left = Math.min(r.right + 14, innerWidth - w - 8);
-  left = Math.max(left, r.left + 8);
-  const top = Math.min(Math.max(64, r.top + r.height / 2 - h / 2), innerHeight - h - 8);
-  rail.style.left = left + 'px'; rail.style.top = top + 'px';
-  rail.style.right = 'auto'; rail.style.bottom = 'auto'; rail.style.transform = 'none';
+  rail.style.left = rail.style.top = rail.style.right = rail.style.bottom = rail.style.transform = '';
 }
 /* Colour a run of words. Named choices use CSS variables so they keep
    tracking the paper and accent when those change. */
@@ -4552,7 +4602,7 @@ $('linkApply').onclick = applyLink;
 $('linkUrl').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); applyLink(); } });
 
 fmt.addEventListener('mousedown', e => { rememberRange(); e.preventDefault(); });
-function onSelColor(e){ colorSelection(e.target.value); $('selSwatch').style.background = e.target.value; }
+function onSelColor(e){ const v = e.target.value; colorSelection(v); $('selSwatch').style.background = v; }
 $('selColor').addEventListener('input', onSelColor);
 fmt.addEventListener('click', e => {
   /* group triggers open/close their popover; clicking a different one closes
@@ -4573,6 +4623,7 @@ fmt.addEventListener('click', e => {
     const key = dot.dataset.color;
     colorSelection(SEL_COLORS[key] || key);   // named choices map to a variable, hex passes through
     $('selSwatch').style.background = getComputedStyle(dot.querySelector('i')).backgroundColor;
+    recordRecentColor(key);                   // after reading the swatch — this rebuilds the popover
     closeGrps();
     return;
   }
@@ -4604,6 +4655,11 @@ function splitAtCaret(){
   b.html = cleanHtml(blk);
   const nb = newBlock('body');
   nb.html = tmp.innerHTML || '<p></p>';
+  /* carry the block's look forward — columns, colour, background fill, padding
+     and corner radius — so the continuation keeps the same style instead of
+     resetting to a default paragraph (spacing is left off so the two halves
+     still read as one flowing run) */
+  ['cols','color','fill','boxPad','boxRad'].forEach(k => { if(b[k] !== undefined) nb[k] = clone(b[k]); });
   const splitList = ownerList(b.id) || D.blocks;
   splitList.splice(splitList.indexOf(b)+1, 0, nb);
   sel = nb.id;
@@ -5164,7 +5220,7 @@ function addSection(){
   if(inp){ inp.focus(); inp.select(); }
 }
 function preview(b){
-  const cut = (t,n) => { t = String(t||'').replace(/\s+/g,' ').trim(); return t.length > n ? t.slice(0,n) + '…' : t; };
+  const cut = (t,n) => { t = String(t||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim(); return t.length > n ? t.slice(0,n) + '…' : t; };
   if(b.type === 'table') return cut(b.caption, 30);
   if(b.type === 'body') return cut((b.html||'').replace(/<[^>]*>/g,' '), 30) || 'Empty';
   if(b.type === 'quote') return cut(b.text, 30);
@@ -5748,6 +5804,62 @@ function paperNote(){
     ? 'Dark paper carries into the PDF. Good on screen, heavy on a desktop printer.'
     : 'Text, rules and figures are derived from this colour, so contrast holds on any paper.';
 }
+/* ==========================================================================
+   RECENTLY USED COLOURS — a small, global, cross-report ring of the last hex
+   colours actually picked. Shown above the fixed presets in every colour
+   picker, so a colour used once is one click away again. Persisted in the same
+   IndexedDB kv store as the other UI preferences (not tied to a document).
+   ========================================================================== */
+const K_RECENT = 'studio:recentColors';
+const RECENT_MAX = 8;
+let recentColors = [];                       // most-recent-first, upper-case #RRGGBB
+const _recentRowRenderers = [];              // static rows re-rendered when the ring changes
+function isHex6(v){ return /^#[0-9a-f]{6}$/i.test(v || ''); }
+/* record a concrete colour at the front of the ring; named choices ("auto",
+   "accent", css vars…) are ignored so only real, reusable colours are kept */
+function recordRecentColor(hex){
+  if(!isHex6(hex)) return;
+  hex = hex.toUpperCase();
+  const next = [hex, ...recentColors.filter(h => h !== hex)].slice(0, RECENT_MAX);
+  if(next.join() === recentColors.join()) return;   // already newest
+  recentColors = next;
+  sSet(K_RECENT, recentColors);
+  refreshRecentColorRows();
+}
+function refreshRecentColorRows(){ _recentRowRenderers.forEach(fn => { try{ fn(); }catch(e){} }); }
+/* fill `strip` with one swatch per recent colour (built by mkBtn), hiding the
+   whole `row` while the ring is empty */
+function renderRecentInto(row, strip, mkBtn, limit){
+  strip.textContent = '';
+  const list = limit ? recentColors.slice(0, limit) : recentColors;
+  list.forEach(hex => strip.appendChild(mkBtn(hex)));
+  row.hidden = list.length === 0;
+}
+/* insert a labelled "Recently used" block (styled like `swatchCls`) before the
+   preset container `host`, and register it to refresh whenever the ring changes.
+   mkBtn(hex) builds one clickable swatch in that surface's own style. */
+function mountRecentRow(host, swatchCls, mkBtn, limit){
+  if(!host) return;
+  const row = document.createElement('div'); row.className = 'recentrow';
+  const lbl = document.createElement('p'); lbl.className = 'recentlbl'; lbl.textContent = 'Recently used';
+  const strip = document.createElement('div'); strip.className = swatchCls + ' recentsws';
+  row.append(lbl, strip);
+  host.parentNode.insertBefore(row, host);
+  const render = () => renderRecentInto(row, strip, mkBtn, limit);
+  _recentRowRenderers.push(render); render();
+}
+/* a round `.sw` recent swatch bound to a setting: getCur() drives the pressed
+   ring, clicking records it and applies it through `apply` */
+function swRecentBtn(getCur, apply){
+  return hex => {
+    const b = document.createElement('button');
+    b.className = 'sw'; b.style.background = hex; b.title = hex; b.setAttribute('aria-label', hex);
+    b.setAttribute('aria-pressed', String((getCur() || '').toLowerCase() === hex.toLowerCase()));
+    b.onclick = () => { recordRecentColor(hex); apply(hex); };
+    return b;
+  };
+}
+
 const TEXT_CHOICES = [
   ['auto','Automatic','var(--doc-text)'],
   ['muted','Muted','var(--doc-dim)'],
@@ -5760,7 +5872,7 @@ TEXT_CHOICES.forEach(([key,name,css]) => {
   const b = document.createElement('button');
   b.className = 'sw'; b.style.background = css; b.title = name; b.setAttribute('aria-label', name);
   b.dataset.text = key;
-  b.onclick = () => { D.settings.textColor = key; applyTheme(); syncControls(); save(); };
+  b.onclick = () => { D.settings.textColor = key; recordRecentColor(key); applyTheme(); syncControls(); save(); };
   textSws.appendChild(b);
 });
 const LINK_CHOICES = [
@@ -5774,7 +5886,7 @@ LINK_CHOICES.forEach(([key,name,css]) => {
   const b = document.createElement('button');
   b.className = 'sw'; b.style.background = css; b.title = name; b.setAttribute('aria-label', name);
   b.dataset.link = key;
-  b.onclick = () => { D.settings.linkColor = key; applyTheme(); syncControls(); save(); };
+  b.onclick = () => { D.settings.linkColor = key; recordRecentColor(key); applyTheme(); syncControls(); save(); };
   linkSws.appendChild(b);
 });
 on('linkCustom','input', e => { D.settings.linkColor = e.target.value; applyTheme(); syncControls(); save(); });
@@ -5788,16 +5900,25 @@ PAPERS.forEach(([hex,name]) => {
   const b = document.createElement('button');
   b.className = 'sw'; b.style.background = hex; b.title = name; b.setAttribute('aria-label', name);
   b.dataset.paper = hex;
-  b.onclick = () => { D.settings.paperColor = hex; applyTheme(); syncControls(); commit(); };
+  b.onclick = () => { D.settings.paperColor = hex; recordRecentColor(hex); applyTheme(); syncControls(); commit(); };
   paperSws.appendChild(b);
 });
 const sws = $('swatches');
 ACCENTS.forEach(([hex,name]) => {
   const b = document.createElement('button');
   b.className = 'sw'; b.style.background = hex; b.title = name; b.setAttribute('aria-label', name);
-  b.onclick = () => { D.settings.accent = hex; applyTheme(); syncControls(); commit(); };
+  b.onclick = () => { D.settings.accent = hex; recordRecentColor(hex); applyTheme(); syncControls(); commit(); };
   sws.appendChild(b);
 });
+/* a "Recently used" row above each of the report-wide colour presets */
+mountRecentRow($('swatches'), 'swatches', swRecentBtn(() => D && D.settings.accent,
+  hex => { D.settings.accent = hex; applyTheme(); syncControls(); commit(); }));
+mountRecentRow($('paperSwatches'), 'swatches', swRecentBtn(() => D && D.settings.paperColor,
+  hex => { D.settings.paperColor = hex; applyTheme(); syncControls(); commit(); }));
+mountRecentRow($('textSwatches'), 'swatches', swRecentBtn(() => D && D.settings.textColor,
+  hex => { D.settings.textColor = hex; applyTheme(); syncControls(); save(); }));
+mountRecentRow($('linkSwatches'), 'swatches', swRecentBtn(() => D && D.settings.linkColor,
+  hex => { D.settings.linkColor = hex; applyTheme(); syncControls(); save(); }));
 function setSwitch(el, on){ el.setAttribute('aria-checked', String(!!on)); }
 function bindSwitch(id, get, set){
   $(id).onclick = () => { set(!get()); setSwitch($(id), get()); commit(); };
@@ -5922,6 +6043,10 @@ document.querySelectorAll('#typeSet .tabs-trigger').forEach(b => b.onclick = () 
 });
 on('paperCustom','input', e => { D.settings.paperColor = e.target.value; applyTheme(); syncControls(); save(); });
 on('textCustom','input', e => { D.settings.textColor = e.target.value; applyTheme(); syncControls(); save(); });
+/* the native wells apply live on "input"; only the settled value (on "change")
+   joins the recent ring, so a drag through the picker leaves one colour, not many */
+['accentCustom','paperCustom','textCustom','linkCustom','endCustom'].forEach(id =>
+  on(id, 'change', e => recordRecentColor(e.target.value)));
 bindSwitch('numHead', () => D.settings.numberHeadings, v => D.settings.numberHeadings = v);
 /* base64 runs about 4/3 the size of the bytes it encodes */
 function b64Mb(n){ return (n * 0.75 / 1048576).toFixed(1) + ' MB'; }
@@ -5970,7 +6095,7 @@ function syncControls(){
     x.setAttribute('aria-pressed', String(String(x.dataset.link).toLowerCase() === String(D.settings.linkColor||'').toLowerCase())));
   $('linkCustom').value = /^#[0-9a-f]{6}$/i.test(D.settings.linkColor || '') ? D.settings.linkColor : '#2B3A8F';
   setSwitch($('linkUnderline'), D.settings.linkUnderline !== false);
-  syncPalette(); renderColorPop(); refreshHexFields();
+  syncPalette(); renderColorPop(); refreshHexFields(); refreshRecentColorRows();
 }
 
 /* ==========================================================================
@@ -6085,12 +6210,14 @@ function buildPaletteEditor(){
     }
     else return;
     pal[+ (t.dataset.pi ?? t.dataset.ph)] = { hex, name: nearestTw(hex) };
+    if(t.dataset.ph != null) recordRecentColor(hex);         // typed hex is discrete; the well waits for "change"
     afterPaletteChange();
   });
+  host.addEventListener('change', e => { if(e.target.dataset.pi != null) recordRecentColor(e.target.value); });
   host.addEventListener('click', e => {
     const nm = e.target.closest('.palname'); if(!nm) return;
     const i = +nm.dataset.pn, pal = getPalette();
-    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; afterPaletteChange(); });
+    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; recordRecentColor(pick.hex); afterPaletteChange(); });
   });
 }
 function syncPalette(){
@@ -6110,15 +6237,22 @@ let _popSig = '';
 function renderColorPop(){
   const pop = $('colorPop'); if(!pop) return;
   const pal = getPalette();
-  const sig = pal.map(c => c.hex + '·' + c.name).join('|');
+  const sig = pal.map(c => c.hex + '·' + c.name).join('|') + '||' + recentColors.join(',');
   if(sig === _popSig && pop.dataset.built) return;   // skip needless rebuilds
   _popSig = sig; pop.dataset.built = '1';
-  pop.innerHTML =
+  const recentHtml = recentColors.length
+    ? `<p class="cdotlbl">Recently used</p>`
+      + recentColors.map(h => `<button data-color="${h}" title="${h}" class="cdot"><i style="background:${h}"></i></button>`).join('')
+      + `<p class="cdotlbl">Presets</p>`
+    : '';
+  pop.innerHTML = recentHtml +
     `<button data-color="auto" title="Default text colour" class="cdot"><i style="background:var(--doc-body-color,var(--doc-text))"></i></button>`
   + pal.map(c => `<button data-color="${c.hex}" title="${esc(c.name || c.hex)}" class="cdot"><i style="background:${c.hex}"></i></button>`).join('')
   + `<label class="cdot" title="Pick a custom colour" style="cursor:pointer"><i style="background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)"></i><input type="color" id="selColor" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></label>`;
   $('selColor').addEventListener('input', onSelColor);
+  $('selColor').addEventListener('change', e => recordRecentColor(e.target.value));   // only the settled colour joins the ring
 }
+_recentRowRenderers.push(renderColorPop);   // rebuild the toolbar swatches when the ring changes
 buildPaletteEditor();
 
 /* ---------- hex read-out beside the native colour pickers ---------- */
@@ -6162,9 +6296,10 @@ function pvColor(host, label, get, set, id){
   row.append(well, hex); f.appendChild(row); host.appendChild(f);
   const apply = v => { set(v); pvApply(); };
   well.addEventListener('input', () => { hex.value = well.value.toUpperCase(); apply(well.value); });
+  well.addEventListener('change', () => recordRecentColor(well.value));   // settled, not every drag step
   hex.addEventListener('input', () => {
     let v = hex.value.trim(); if(v && v[0] !== '#') v = '#' + v;
-    if(/^#[0-9a-f]{6}$/i.test(v)){ well.value = v; apply(v); }
+    if(/^#[0-9a-f]{6}$/i.test(v)){ well.value = v; apply(v); recordRecentColor(v); }
   });
 }
 function buildPreviewControls(){
@@ -6209,12 +6344,14 @@ function buildPreviewControls(){
     else if(t.dataset.pvph != null){ let v = (t.value || '').trim(); if(v && v[0] !== '#') v = '#' + v; if(!/^#[0-9a-f]{6}$/i.test(v)) return; hex = v.toUpperCase(); }
     else return;
     pal[+ (t.dataset.pvpi ?? t.dataset.pvph)] = { hex, name: nearestTw(hex) };
+    if(t.dataset.pvph != null) recordRecentColor(hex);       // typed hex is discrete; the well waits for "change"
     afterPaletteChange();
   });
+  palF.addEventListener('change', e => { if(e.target.dataset.pvpi != null) recordRecentColor(e.target.value); });
   palF.addEventListener('click', e => {
     const nm = e.target.closest('.palname'); if(!nm) return;
     const i = +nm.dataset.pvpn, pal = getPalette();
-    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; afterPaletteChange(); });
+    openTwLibrary(nm, pal[i].name, pick => { pal[i] = { name: pick.name, hex: pick.hex }; recordRecentColor(pick.hex); afterPaletteChange(); });
   });
   host.appendChild(palF);
 }
@@ -6343,6 +6480,7 @@ function syncPagePanel(){
   setSwitch($('ppHead'), e.head);
   setSwitch($('ppFoot'), e.foot);
   setSwitch($('ppNum'), e.num);
+  refreshRecentColorRows();
 }
 /* store an override only when it differs from the Design base, so a page that
    matches the base keeps inheriting future base changes */
@@ -6378,11 +6516,17 @@ function togglePageFlag(key){
     const b = document.createElement('button');
     b.className = 'sw'; b.style.background = hex; b.title = name; b.setAttribute('aria-label', name);
     b.dataset.paper = hex;
-    b.onclick = () => setPageColorOverride(hex);
+    b.onclick = () => { recordRecentColor(hex); setPageColorOverride(hex); };
     sw.appendChild(b);
   });
+  mountRecentRow($('ppSwatches'), 'pp-swatches',
+    swRecentBtn(() => (pageGearIdx != null ? effPage(pageGearIdx).paper : ''),
+      hex => setPageColorOverride(hex)), 5);   // show at most 5 recent colours here
+  /* apply live while the picker moves, but only bank the settled colour into the
+     recent ring on "change" — dragging must not flood it with in-between shades */
   on('ppColor', 'input', e => { $('ppHex').value = e.target.value.toUpperCase(); setPageColorOverride(e.target.value); });
-  on('ppHex', 'input', e => { let v = e.target.value.trim(); if(v && v[0] !== '#') v = '#' + v; if(/^#[0-9a-f]{6}$/i.test(v)){ $('ppColor').value = v; setPageColorOverride(v); } });
+  on('ppColor', 'change', e => recordRecentColor(e.target.value));
+  on('ppHex', 'input', e => { let v = e.target.value.trim(); if(v && v[0] !== '#') v = '#' + v; if(/^#[0-9a-f]{6}$/i.test(v)){ $('ppColor').value = v; setPageColorOverride(v); recordRecentColor(v); } });
   $('ppReset').onclick = restorePageColor;
   $('ppHead').onclick = () => togglePageFlag('head');
   $('ppFoot').onclick = () => togglePageFlag('foot');
@@ -7767,6 +7911,11 @@ function shareReceiveDialog(prefillCode){
   const savedFull = await sGet('studio:full');
   fullView = savedFull === '1';
   applyFullView();
+  const savedRecent = await sGet(K_RECENT);
+  if(Array.isArray(savedRecent)){
+    recentColors = savedRecent.filter(isHex6).map(h => h.toUpperCase()).slice(0, RECENT_MAX);
+    refreshRecentColorRows();
+  }
   await loadIndex();
   const cb = $('cloudBtn'); if(cb) cb.onclick = cloudMenu;
   const pb = $('publishBtn'); if(pb){ pb.hidden = !CLOUD.enabled; pb.onclick = () => sharePublishDialog(D); }
