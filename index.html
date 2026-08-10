@@ -661,6 +661,57 @@ table.doc thead th{position:relative}
   background:hsl(var(--popover));border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
 .cellpop .sw{width:22px;height:22px;border-radius:999px;border:1px solid hsl(var(--border));cursor:pointer;font-size:10px;color:hsl(var(--muted-foreground));padding:0;line-height:1;display:flex;align-items:center;justify-content:center}
 .cellpop .sw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
+/* paste-an-SVG popover for the blurb icon */
+.svgpop{position:fixed;z-index:70;width:19rem;padding:.75rem;display:flex;flex-direction:column;gap:.5rem;
+  border-radius:.75rem;background:hsl(var(--popover));color:hsl(var(--popover-foreground));
+  border:1px solid hsl(var(--border));box-shadow:0 16px 40px -12px rgb(0 0 0/.45)}
+.svgpop-h{font-size:.75rem;font-weight:600}
+.svgpop-ta{width:100%;height:6.5rem;resize:vertical;border:1px solid hsl(var(--input));border-radius:.5rem;
+  background:hsl(var(--background));color:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.6875rem;line-height:1.4;padding:.5rem}
+.svgpop-ta:focus{outline:none;border-color:hsl(var(--ring));box-shadow:0 0 0 1px hsl(var(--ring))}
+.svgpop-prev{display:flex;align-items:center;gap:.5rem;font-size:.6875rem;color:hsl(var(--muted-foreground))}
+.svgpop-prev .box{width:2.25rem;height:2.25rem;flex:0 0 auto;display:grid;place-items:center;border-radius:.5rem;
+  background:#1A1D22;color:#ECECF0;border:1px solid hsl(var(--border))}
+.svgpop-prev .box svg,.svgpop-prev .box img{width:1.5rem;height:1.5rem;display:block}
+.svgpop-hint{font-size:.6875rem;color:hsl(var(--muted-foreground))}
+.svgpop-hint code{font-family:ui-monospace,monospace;font-size:.625rem}
+.svgpop-row{display:flex;justify-content:flex-end;gap:.5rem}
+.svgpop-row button{height:1.75rem;padding:0 .75rem;border-radius:.5rem;font:inherit;font-size:.75rem;font-weight:500;
+  cursor:pointer;border:1px solid hsl(var(--border));background:hsl(var(--background));color:inherit}
+.svgpop-row .svgpop-use{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:transparent}
+.svgpop-row button:hover{filter:brightness(.97)}
+/* Blurb settings — a full, labelled panel (like page settings) so padding,
+   spacing and colours read clearly instead of as bare icons */
+.blurbpanel{position:fixed;z-index:60;width:17rem;max-height:calc(100vh - 2rem);overflow:auto;padding:.875rem;
+  border-radius:.75rem;background:hsl(var(--popover));color:hsl(var(--popover-foreground));
+  border:1px solid hsl(var(--border));box-shadow:0 18px 46px -12px rgb(0 0 0/.5)}
+.bp-sec{margin-top:.875rem}
+.bp-sec:first-of-type{margin-top:.5rem}
+.bp-sec > .pp-lbl{margin:0 0 .375rem}
+.bp-field{margin-bottom:.625rem}
+.bp-field:last-child{margin-bottom:0}
+.bp-field .label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3125rem;font-size:.75rem}
+.bp-field .label .muted{color:hsl(var(--muted-foreground));font-family:ui-monospace,monospace;font-size:.6875rem}
+.bp-field input[type="range"]{width:100%;display:block}
+.bp-seg{display:flex;gap:.25rem}
+.bp-seg button{flex:1;font:inherit;font-size:.75rem;padding:.4rem .25rem;border:1px solid hsl(var(--border));
+  border-radius:.5rem;background:hsl(var(--background));color:inherit;cursor:pointer}
+.bp-seg button[aria-pressed="true"]{background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-color:transparent}
+.bp-sw{display:flex;flex-wrap:wrap;gap:.375rem;align-items:center}
+.bp-sw .sw{position:relative;width:1.5rem;height:1.5rem;border-radius:999px;border:1px solid hsl(var(--border));
+  cursor:pointer;padding:0;font-size:.625rem;color:hsl(var(--muted-foreground));display:grid;place-items:center}
+.bp-sw .sw:hover{outline:2px solid hsl(var(--ring));outline-offset:1px}
+.bp-sw .sw.on{outline:2px solid hsl(var(--foreground));outline-offset:1px}
+.bp-sw .sw input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.bp-actions{display:flex;flex-direction:column;gap:.375rem}
+.bp-actions button{display:flex;align-items:center;gap:.5rem;width:100%;justify-content:flex-start;
+  height:2rem;padding:0 .625rem;border:1px solid hsl(var(--border));border-radius:.5rem;
+  background:hsl(var(--background));color:inherit;font:inherit;font-size:.75rem;cursor:pointer}
+.bp-actions button:hover{background:hsl(var(--muted)/.5)}
+.bp-actions button[data-on]{border-color:hsl(var(--ring));font-weight:600}
+.bp-actions button svg{width:.9375rem;height:.9375rem;flex:0 0 auto}
+.bp-actions .bp-reset{justify-content:center;color:hsl(var(--muted-foreground))}
 @media print{ .tfit{display:none!important} .tcolrz{display:none!important} .blk[data-t="table"] .selcell{outline:none!important} }
 /* wrapped images float, so text beside them reflows automatically */
 [data-t="image"][data-wrap="left"],[data-t="image"][data-wrap="right"]{width:var(--iw);z-index:2}
@@ -711,8 +762,8 @@ table.doc thead th{position:relative}
 [data-t="blurb"][data-tone="paper"]{--blurb-bg:var(--doc-holder);--blurb-fg:var(--doc-text)}
 [data-t="blurb"][data-tone="accent"]{--blurb-bg:var(--doc-accent-vis);--blurb-fg:#FFFFFF}
 .blurb-mark{margin-bottom:11mm;line-height:0}
-.blurb-mark svg{width:15mm;height:15mm;color:var(--blurb-fg)}
-.blurb-mark img{width:15mm;height:15mm;object-fit:contain}
+.blurb-mark svg{width:var(--blurb-mark-size,15mm);height:var(--blurb-mark-size,15mm);color:var(--blurb-fg)}
+.blurb-mark img{width:var(--blurb-mark-size,15mm);height:var(--blurb-mark-size,15mm);object-fit:contain}
 .blurb-title{font-family:var(--doc-display);font-weight:var(--doc-display-weight);font-size:29pt;line-height:1.06;
   letter-spacing:var(--doc-display-tracking);margin-bottom:8mm;max-width:135mm}
 .blurb-title em,.blurb-title i{font-style:italic}
@@ -720,6 +771,17 @@ table.doc thead th{position:relative}
 .blurb-body p{margin:0 0 3.6mm}
 .blurb-body p:last-child{margin-bottom:0}
 [data-t="blurb"] [contenteditable]:focus{outline:none}
+/* a pasted icon fills the mark box and follows the panel foreground wherever it
+   uses currentColor, keeping its own colours otherwise */
+.blurb-mark svg{display:block}
+/* Feature: an icon-led panel with a bold sans headline — a product-style
+   statement card. The default (statement) keeps the serif display look above. */
+[data-t="blurb"][data-variant="feature"]{padding:18mm 15mm}
+[data-t="blurb"][data-variant="feature"] .blurb-mark{margin-bottom:9mm}
+[data-t="blurb"][data-variant="feature"] .blurb-title{font-family:Inter,Helvetica,Arial,sans-serif;
+  font-weight:700;font-size:33pt;line-height:1.02;letter-spacing:-.028em;margin-bottom:7mm;max-width:120mm;hyphens:auto}
+[data-t="blurb"][data-variant="feature"] .blurb-body{font-family:Inter,Helvetica,Arial,sans-serif;
+  font-size:10pt;line-height:1.5;opacity:.72;max-width:92mm}
 
 .cover{position:absolute;inset:0;overflow:hidden;background:#0E1116}
 .cover .art{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
@@ -794,6 +856,11 @@ table.doc thead th{position:relative}
 .blkbar button[data-on]{background:var(--on);color:#fff;font-weight:600}
 .blkbar button svg{width:.8125rem;height:.8125rem}
 .blkbar .tag{padding:0 .375rem;font-size:.6875rem;font-weight:500;color:var(--fg-dim)}
+/* a wide, labelled rail button (e.g. the Blurb settings entry) so it reads as a
+   control, not a bare icon */
+.blkbar button.blk-wide{width:auto;gap:.375rem;padding:0 .5rem;justify-content:center}
+.editrail .blkbar button.blk-wide{justify-content:flex-start}
+.blkbar .blk-lbl{font-size:.6875rem;font-weight:500;white-space:nowrap}
 .blkbar .div{width:1px;height:1rem;background:rgba(255,255,255,.14);margin:0 .125rem}
 /* collapsible group (e.g. the H1–H5 style switcher) mirrors the format bar */
 .blkbar .grp{position:relative;display:flex}
@@ -1752,8 +1819,11 @@ function newBlock(type){
   if(type==='image'){ b.imgId=null; b.w=0; b.h=0; b.scale=100; b.ar=0; b.ox=50; b.oy=50; b.zoom=1; b.wrap='none'; b.caption='Caption'; }
   if(type==='chart'){ b.imgId=null; b.w=0; b.h=0; b.style='bar'; b.caption='Figure 1 — Chart title'; b.note=''; }
   if(type==='blurb'){
-    b.tone = 'dark';
-    b.imgId = null; b.w = 0; b.h = 0;   // optional custom mark
+    b.variant = 'statement';            // 'statement' (serif) | 'feature' (icon-led sans)
+    b.tone = 'dark';                    // base palette; bg/fg below override it
+    b.bg = ''; b.fg = '';               // optional custom colours ('accent' or #hex)
+    b.imgId = null; b.w = 0; b.h = 0;   // optional custom raster mark
+    b.icon = '';                        // optional pasted inline SVG mark
     b.title = 'A shared <em>idea</em>, stated simply';
     b.body = '<p>Use a blurb to open a section with a designed statement — a mark, a large line with one word set in italic, and a short passage that frames what follows.</p>'
       + '<p>Select any word in the heading and press ⌘I to italicise it. Everything here is editable, and the panel tone can switch to match the page.</p>';
@@ -2421,10 +2491,21 @@ function renderBlock(b, forMeasure){
     el.innerHTML = cap + figure + note;
   } else if(b.type === 'blurb'){
     el.dataset.tone = b.tone || 'dark';
+    el.dataset.variant = b.variant || 'statement';
+    const blurbCol = v => v === 'accent' ? 'var(--doc-accent-vis)' : (/^#[0-9a-f]{6}$/i.test(v || '') ? v : '');
+    const cbg = blurbCol(b.bg), cfg = blurbCol(b.fg);
+    if(cbg) el.style.setProperty('--blurb-bg', cbg);
+    if(cfg) el.style.setProperty('--blurb-fg', cfg);
+    const L = blurbLayout(b);
+    el.style.padding = L.pad + 'mm';
+    el.style.borderRadius = L.radius + 'mm';
+    el.style.setProperty('--blurb-mark-size', L.markSize + 'mm');
     const mImg = imgSrc(b.imgId);
-    const mark = `<div class="blurb-mark">${mImg ? `<img src="${mImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}>` : blurbMark()}</div>`;
+    const markInner = b.icon ? b.icon
+      : (mImg ? `<img src="${mImg}" draggable="false" alt=""${forMeasure ? '' : ' onerror="imgFallback(this)"'}>` : blurbMark());
+    const mark = `<div class="blurb-mark" style="margin-bottom:${L.gapMark}mm">${markInner}</div>`;
     el.innerHTML = mark
-      + `<div class="blurb-title" data-f="title" data-rich ${ce}>${b.title || ''}</div>`
+      + `<div class="blurb-title" data-f="title" data-rich ${ce} style="margin-bottom:${L.gapTitle}mm">${b.title || ''}</div>`
       + `<div class="blurb-body" data-f="body" data-rich ${ce}>${b.body || '<p></p>'}</div>`;
   } else if(b.type === 'stat'){
     el.innerHTML = `<span class="sv" data-f="v" ${ce}>${esc(b.v)}</span>`
@@ -2462,6 +2543,7 @@ function renderBlock(b, forMeasure){
     el.style.height = b.mm + 'mm'; el.style.marginBottom = '0';
   }
   applyBlockColor(el, b);
+  applyBox(el, b);
   return el;
 }
 /* per-block text colour override: any text element can be recoloured, falling
@@ -2478,6 +2560,24 @@ function applyBlockColor(el, b){
   if(!c) return;
   const target = b.type === 'label' ? el.querySelector('.labeltext') : el;
   if(target) target.style.color = c;
+}
+/* Universal box model shared by every block: a background (transparent by
+   default), padding, corner radius and the space above/below the element. Each
+   is applied only when set, so untouched blocks keep their built-in look. */
+function isNum(v){ return typeof v === 'number' && isFinite(v); }
+function fillColor(v){
+  if(v === 'accent') return 'var(--doc-accent-vis)';
+  return /^#[0-9a-f]{6}$/i.test(v || '') ? v : '';
+}
+function applyBox(el, b){
+  const c = fillColor(b.fill);
+  /* a background with no explicit padding gets a small default so the colour
+     doesn't crowd the text (the blurb manages its own padding) */
+  if(c){ el.style.background = c; if(!isNum(b.boxPad) && b.type !== 'blurb') el.style.padding = '5mm'; }
+  if(isNum(b.boxPad)) el.style.padding = b.boxPad + 'mm';
+  if(isNum(b.boxRad)) el.style.borderRadius = b.boxRad + 'mm';
+  if(isNum(b.spaceAbove)) el.style.marginTop = b.spaceAbove + 'mm';
+  if(isNum(b.spaceBelow)) el.style.marginBottom = b.spaceBelow + 'mm';
 }
 
 /* 2.1 / 2.1.1 style numbering, derived from position rather than typed in */
@@ -2907,15 +3007,6 @@ function blockBar(b){
       commit();
     }));
   }
-  if(b.type === 'blurb'){
-    const TONES = ['dark','paper','accent'];
-    extra.push(btn(svg('paint'), 'Cycle the panel tone', () => {
-      b.tone = TONES[(TONES.indexOf(b.tone || 'dark') + 1) % TONES.length];
-      commit(); toast('Panel: ' + b.tone);
-    }),
-    btn(svg('upload'), imgSrc(b.imgId) ? 'Replace the mark' : 'Use a custom mark', () => pickImage(b)));
-    if(imgSrc(b.imgId)) extra.push(btn(svg('reset'), 'Back to the default mark', () => { b.imgId = null; b.w = 0; b.h = 0; commit(); }));
-  }
   if(b.type === 'chart'){
     const bar = btn(svg('chart'), 'Bar placeholder', () => { b.style = 'bar'; commit(); });
     const line = btn(svg('stat'), 'Line placeholder', () => { b.style = 'line'; commit(); });
@@ -3021,6 +3112,15 @@ function blockBar(b){
       b.newPage = !b.newPage; commit(); toast(b.newPage ? 'Topic starts on a new page' : 'Topic flows with the text');
     }));
   }
+  /* every block gets the same labelled settings panel: background, padding and
+     the space around it (the blurb's panel adds its type, colours and icon) */
+  {
+    const opener = b.type === 'blurb' ? openBlurbPanel : openBlockPanel;
+    const gear = btn(svg('settings') + '<span class="blk-lbl">Settings</span>',
+      'Element settings — background, padding & spacing', () => opener(b, gear));
+    gear.classList.add('blk-wide');
+    extra.push(gear);
+  }
   if(extra.length){
     extra.forEach(x => bar.append(x));
     const d = document.createElement('span'); d.className = 'div'; bar.append(d);
@@ -3077,6 +3177,237 @@ function buildStyleGroup(b){
   });
   grp.append(trig, pop);
   return grp;
+}
+/* the blurb type switcher: Statement (serif display) or Feature (bold sans,
+   icon-led), mirroring the heading style dropdown */
+const BLURB_VARIANTS = [
+  ['statement', 'Statement', 'Serif display line with an italic accent'],
+  ['feature',   'Feature',   'Bold sans headline, icon-led — like a feature card']
+];
+/* Blurb layout: the sliders shown in the panel, plus variant-aware defaults so
+   an untouched blurb reads exactly as its type intends and each control still
+   shows a sensible current value. */
+const BLURB_LAYOUT = [
+  ['pad',      'Padding',           0, 40, 1],
+  ['gapMark',  'Space after icon',  0, 30, 1],
+  ['gapTitle', 'Space after title', 0, 30, 1],
+  ['markSize', 'Icon size',         6, 40, 1],
+  ['radius',   'Corner radius',     0, 12, 0.5]
+];
+function blurbDefaults(b){
+  const feat = (b.variant || 'statement') === 'feature';
+  return { pad: feat ? 18 : 15, gapMark: feat ? 9 : 11, gapTitle: feat ? 7 : 8, markSize: feat ? 17 : 15, radius: 2 };
+}
+function blurbLayout(b){
+  const d = blurbDefaults(b);
+  const n = (v, def) => (typeof v === 'number' && isFinite(v)) ? v : def;
+  return { pad:n(b.pad,d.pad), gapMark:n(b.gapMark,d.gapMark), gapTitle:n(b.gapTitle,d.gapTitle),
+           markSize:n(b.markSize,d.markSize), radius:n(b.radius,d.radius) };
+}
+/* ---- shared settings-panel primitives (used by every element's panel) ---- */
+function _panelSection(title){
+  const s = document.createElement('div'); s.className = 'bp-sec';
+  const l = document.createElement('p'); l.className = 'pp-lbl'; l.textContent = title;
+  s.appendChild(l); return s;
+}
+function _panelActionBtn(icon, label, fn){
+  const x = document.createElement('button'); x.type = 'button';
+  x.innerHTML = svg(icon) + `<span>${label}</span>`;
+  x.onmousedown = ev => ev.stopPropagation();
+  x.onclick = fn; return x;
+}
+function _panelSlider(label, value, min, max, step, oninput, onchange){
+  const f = document.createElement('div'); f.className = 'bp-field';
+  const lab = document.createElement('label'); lab.className = 'label';
+  const val = document.createElement('span'); val.className = 'muted';
+  const fmt = v => (Number.isInteger(v) ? v : (+v).toFixed(1)) + 'mm';
+  val.textContent = fmt(value);
+  lab.append(document.createTextNode(label), val);
+  const r = document.createElement('input'); r.type = 'range';
+  r.min = min; r.max = max; r.step = step; r.value = value;
+  r.oninput = () => { val.textContent = fmt(+r.value); oninput(+r.value); };
+  r.onchange = () => { if(onchange) onchange(+r.value); };
+  f.append(lab, r); return f;
+}
+/* a colour picker row: an ✕ (none/default) swatch, Accent, the report palette,
+   a native custom well and the full colour library ("…") */
+function _panelColorField(label, cur, noneLabel, set, live, done){
+  const f = document.createElement('div'); f.className = 'bp-field';
+  const lab = document.createElement('div'); lab.className = 'label'; lab.textContent = label;
+  const strip = document.createElement('div'); strip.className = 'bp-sw';
+  cur = cur || '';
+  const cssFor = v => v === '' ? 'transparent' : (v === 'accent' ? 'var(--doc-accent-vis)' : v);
+  const mk = (name, val) => {
+    const s = document.createElement('button'); s.type = 'button'; s.className = 'sw'; s.title = name;
+    s.style.background = cssFor(val); if(val === '') s.textContent = '✕';
+    if(cur === val) s.classList.add('on');
+    s.onclick = () => { set(val); done(); };
+    return s;
+  };
+  strip.appendChild(mk(noneLabel, ''));
+  strip.appendChild(mk('Accent', 'accent'));
+  getPalette().forEach(c => strip.appendChild(mk(c.name || c.hex, c.hex)));
+  const wl = document.createElement('label'); wl.className = 'sw'; wl.title = 'Custom colour';
+  wl.style.background = 'conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)';
+  const inp = document.createElement('input'); inp.type = 'color';
+  if(/^#[0-9a-f]{6}$/i.test(cur)) inp.value = cur;
+  inp.oninput = () => { set(inp.value.toUpperCase()); live(); };
+  inp.onchange = () => { set(inp.value.toUpperCase()); done(); };
+  wl.appendChild(inp); strip.appendChild(wl);
+  const more = document.createElement('button'); more.type = 'button'; more.className = 'sw';
+  more.textContent = '…'; more.title = 'Colour library';
+  more.onclick = () => openTwLibrary(more, /^#/.test(cur) ? cur : '', pick => { set(pick.hex); done(); });
+  strip.appendChild(more);
+  f.append(lab, strip); return f;
+}
+/* mount a floating settings panel: build(panel, rebuild) fills it, and rebuild
+   re-runs build in place (for live highlight after a discrete change) */
+function _mountPanel(build, anchor){
+  document.getElementById('elemPanel')?.remove();
+  const panel = document.createElement('div'); panel.id = 'elemPanel'; panel.className = 'blurbpanel';
+  document.body.appendChild(panel);
+  const rebuild = () => build(panel, rebuild);
+  rebuild();
+  const r = anchor.getBoundingClientRect();
+  panel.style.left = Math.max(8, Math.min(r.left - panel.offsetWidth - 10, innerWidth - panel.offsetWidth - 8)) + 'px';
+  panel.style.top = Math.max(8, Math.min(r.top - 8, innerHeight - panel.offsetHeight - 8)) + 'px';
+  panel.addEventListener('mousedown', e => e.stopPropagation());
+  const closeP = ev => {
+    const t = ev.target;
+    if(panel.contains(t) || (t.closest && (t.closest('#twlib') || t.closest('#svgpop')))) return;
+    panel.remove(); document.removeEventListener('mousedown', closeP, true);
+  };
+  setTimeout(() => document.addEventListener('mousedown', closeP, true), 0);
+  return panel;
+}
+/* the generic element panel: background (transparent by default), padding,
+   corner radius and the space above/below — the same controls on every block */
+function openBlockPanel(b, anchor){
+  _mountPanel((panel, rebuild) => {
+    const live = () => { render(); save(); };
+    const done = () => { commit(); rebuild(); };
+    panel.innerHTML = '';
+    const head = document.createElement('div'); head.className = 'pp-head';
+    head.innerHTML = svg('settings') + `<span>${NAMES[b.type] || 'Element'}</span>`;
+    panel.appendChild(head);
+    const secBg = _panelSection('Background');
+    secBg.appendChild(_panelColorField('Fill', b.fill || '', 'Transparent', v => { b.fill = v; }, live, done));
+    panel.appendChild(secBg);
+    const secLay = _panelSection('Spacing & layout');
+    const padVal = isNum(b.boxPad) ? b.boxPad : (fillColor(b.fill) ? 5 : 0);
+    secLay.appendChild(_panelSlider('Padding', padVal, 0, 40, 1, v => { b.boxPad = v; live(); }, () => histCommit()));
+    secLay.appendChild(_panelSlider('Corner radius', isNum(b.boxRad) ? b.boxRad : 0, 0, 12, 0.5, v => { b.boxRad = v; live(); }, () => histCommit()));
+    secLay.appendChild(_panelSlider('Space above', isNum(b.spaceAbove) ? b.spaceAbove : 0, 0, 40, 1, v => { b.spaceAbove = v; live(); }, () => histCommit()));
+    secLay.appendChild(_panelSlider('Space below', isNum(b.spaceBelow) ? b.spaceBelow : 0, 0, 40, 1, v => { b.spaceBelow = v; live(); }, () => histCommit()));
+    const rw = document.createElement('div'); rw.className = 'bp-actions';
+    const rb = _panelActionBtn('reset', 'Reset background & spacing', () => {
+      ['fill','boxPad','boxRad','spaceAbove','spaceBelow'].forEach(k => delete b[k]);
+      commit(); rebuild(); toast('Reset to default');
+    });
+    rb.classList.add('bp-reset'); rw.appendChild(rb); secLay.appendChild(rw);
+    panel.appendChild(secLay);
+  }, anchor);
+}
+/* the blurb's own panel: everything the generic one has plus the blurb type,
+   its two colours, inner spacing and the icon */
+function openBlurbPanel(b, anchor){
+  _mountPanel((panel, rebuild) => {
+    const live = () => { render(); save(); };
+    const done = () => { commit(); rebuild(); };
+    panel.innerHTML = '';
+    const head = document.createElement('div'); head.className = 'pp-head';
+    head.innerHTML = svg('settings') + '<span>Blurb</span>';
+    panel.appendChild(head);
+    /* type */
+    const secType = _panelSection('Type');
+    const seg = document.createElement('div'); seg.className = 'bp-seg';
+    BLURB_VARIANTS.forEach(([v, label, title]) => {
+      const x = document.createElement('button'); x.type = 'button'; x.textContent = label; x.title = title;
+      if((b.variant || 'statement') === v) x.setAttribute('aria-pressed', 'true');
+      x.onclick = () => { b.variant = v; done(); };
+      seg.appendChild(x);
+    });
+    secType.appendChild(seg); panel.appendChild(secType);
+    /* colours */
+    const secCol = _panelSection('Colours');
+    secCol.appendChild(_panelColorField('Background', b.bg || '', 'Follow tone', v => { b.bg = v; }, live, done));
+    secCol.appendChild(_panelColorField('Text & icon', b.fg || '', 'Follow tone', v => { b.fg = v; }, live, done));
+    panel.appendChild(secCol);
+    /* spacing & layout */
+    const secLay = _panelSection('Spacing & layout');
+    const L = blurbLayout(b);
+    BLURB_LAYOUT.forEach(([key, label, min, max, step]) => {
+      secLay.appendChild(_panelSlider(label, L[key], min, max, step, v => { b[key] = v; live(); }, () => histCommit()));
+    });
+    secLay.appendChild(_panelSlider('Space above', isNum(b.spaceAbove) ? b.spaceAbove : 0, 0, 40, 1, v => { b.spaceAbove = v; live(); }, () => histCommit()));
+    secLay.appendChild(_panelSlider('Space below', isNum(b.spaceBelow) ? b.spaceBelow : 0, 0, 40, 1, v => { b.spaceBelow = v; live(); }, () => histCommit()));
+    const rw = document.createElement('div'); rw.className = 'bp-actions';
+    const rb = _panelActionBtn('reset', 'Reset spacing', () => {
+      ['pad','gapMark','gapTitle','markSize','radius','spaceAbove','spaceBelow'].forEach(k => delete b[k]);
+      commit(); rebuild(); toast('Spacing reset to the type default');
+    });
+    rb.classList.add('bp-reset'); rw.appendChild(rb); secLay.appendChild(rw);
+    panel.appendChild(secLay);
+    /* icon */
+    const secIcon = _panelSection('Icon');
+    const acts = document.createElement('div'); acts.className = 'bp-actions';
+    const pasteB = _panelActionBtn('code', b.icon ? 'Replace pasted SVG' : 'Paste SVG icon', () => openSvgPaste(b, pasteB));
+    if(b.icon) pasteB.dataset.on = '1';
+    const upB = _panelActionBtn('upload', imgSrc(b.imgId) ? 'Replace image mark' : 'Upload image mark', () => pickImage(b));
+    if(imgSrc(b.imgId)) upB.dataset.on = '1';
+    acts.append(pasteB, upB);
+    if(b.icon || imgSrc(b.imgId)){
+      acts.appendChild(_panelActionBtn('reset', 'Back to the default mark', () => {
+        b.icon = ''; b.imgId = null; b.w = 0; b.h = 0; commit(); rebuild(); toast('Default mark restored');
+      }));
+    }
+    secIcon.appendChild(acts); panel.appendChild(secIcon);
+  }, anchor);
+}
+/* paste raw SVG markup copied from any icon library (Lucide, Heroicons, Tabler,
+   Font Awesome, …). It is sanitised and inlined, so where the icon uses
+   currentColor it follows the panel's text/icon colour. */
+function openSvgPaste(b, anchor){
+  document.getElementById('svgpop')?.remove();
+  const pop = document.createElement('div');
+  pop.id = 'svgpop'; pop.className = 'svgpop';
+  pop.innerHTML =
+    '<div class="svgpop-h">Paste an SVG icon</div>'
+  + '<textarea class="svgpop-ta" spellcheck="false" placeholder="Paste &lt;svg&gt;…&lt;/svg&gt; markup copied from any icon library"></textarea>'
+  + '<div class="svgpop-prev"><span class="box"></span><span class="msg">Paste markup to preview it here.</span></div>'
+  + '<div class="svgpop-hint">Icons that use <code>currentColor</code> follow the panel colour.</div>'
+  + '<div class="svgpop-row"><button class="svgpop-cancel" type="button">Cancel</button><button class="svgpop-use" type="button">Use icon</button></div>';
+  document.body.appendChild(pop);
+  const ta = pop.querySelector('.svgpop-ta');
+  const box = pop.querySelector('.svgpop-prev .box');
+  const msg = pop.querySelector('.svgpop-prev .msg');
+  pop.addEventListener('mousedown', e => e.stopPropagation());
+  const r = anchor.getBoundingClientRect();
+  pop.style.left = Math.max(8, Math.min(r.left - pop.offsetWidth - 8, innerWidth - pop.offsetWidth - 8)) + 'px';
+  pop.style.top = Math.max(8, Math.min(r.top, innerHeight - pop.offsetHeight - 8)) + 'px';
+  let clean = null;
+  const preview = () => {
+    const raw = ta.value.trim();
+    if(!raw){ clean = null; box.innerHTML = ''; msg.textContent = 'Paste markup to preview it here.'; return; }
+    const out = sanitizeSvg(raw);
+    if(out && out.markup){ clean = out.markup; box.innerHTML = clean; msg.textContent = 'Looks good.'; }
+    else { clean = null; box.innerHTML = ''; msg.textContent = 'That doesn’t look like valid SVG.'; }
+  };
+  ta.addEventListener('input', preview);
+  const close = () => { pop.remove(); document.removeEventListener('mousedown', out, true); };
+  const out = ev => { if(!pop.contains(ev.target)) close(); };
+  pop.querySelector('.svgpop-use').onclick = () => {
+    if(!clean){ toast('That doesn’t look like valid SVG'); return; }
+    b.icon = clean; b.imgId = null; b.w = 0; b.h = 0;
+    commit(); close(); toast('Icon added');
+  };
+  pop.querySelector('.svgpop-cancel').onclick = close;
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(t => {
+      if(t && /<svg[\s>]/i.test(t) && !ta.value){ ta.value = t.trim(); preview(); }
+    }).catch(() => {});
+  }
+  setTimeout(() => { document.addEventListener('mousedown', out, true); ta.focus(); }, 0);
 }
 function plainText(html){
   const tmp = document.createElement('div');
@@ -4314,7 +4645,7 @@ function sanitizeSvg(text){
   if(!svg.getAttribute('xmlns')) svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   const markup = new XMLSerializer().serializeToString(svg);
   const url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(markup)));
-  return { url, w, h };
+  return { url, w, h, markup };
 }
 function readVector(file, cb){
   const fr = new FileReader();
