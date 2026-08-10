@@ -746,9 +746,14 @@ table.doc thead th{position:relative}
   letter-spacing:var(--doc-display-tracking);margin:0 0 3mm;color:var(--doc-head)}
 .tocRule{height:2px;width:22mm;background:var(--doc-accent-vis);margin:0 0 9mm}
 .tocList{list-style:none;margin:0;padding:0}
-.tocList li{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0}
+.tocList li{padding:0}
 .tocList li.l2{padding-left:9mm}
 .tocList li.l3{padding-left:16mm}
+.tocList .tocLink{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0;
+  text-decoration:none;color:inherit;cursor:pointer;transition:opacity .12s}
+.tocList .tocLink:hover .t{color:var(--doc-accent-vis)}
+.tocList .tocLink:hover .lead{border-bottom-color:var(--doc-accent-vis)}
+@media print{ .tocList .tocLink:hover .t{color:inherit} .tocList .tocLink:hover .lead{border-bottom-color:var(--doc-lead)} }
 .tocList li.l3 .t{font-size:9pt;color:var(--doc-toc-l2)}
 .tocList .n{font-family:var(--doc-util);font-size:8pt;color:var(--doc-accent-vis);min-width:8mm;letter-spacing:.08em}
 .tocList .t{font-size:11pt}
@@ -2331,6 +2336,10 @@ function blurbMark(){
 function renderBlock(b, forMeasure){
   const el = document.createElement('div');
   el.className = 'blk'; el.dataset.t = b.type; el.dataset.id = b.id;
+  /* headings carry a stable anchor id so the contents links can jump to them —
+     both on screen and as internal links in the exported PDF. Only on the real
+     render, never the hidden measure copy, so ids stay unique. */
+  if(!forMeasure && /^h[1-5]$/.test(b.type)) el.id = 'h-' + b.id;
   const ce = forMeasure ? '' : 'contenteditable="true"';
   if(b.type === 'h1'){
     el.innerHTML = (b.eyebrow ? `<span class="eyebrow" data-f="eyebrow" ${ce}>${esc(b.eyebrow)}</span>` : '')
@@ -2554,8 +2563,8 @@ function renderToc(){
   const majors = e.filter(x => x.level === 1);
   body.innerHTML = `<div class="tocTitle" data-m="tocTitle" contenteditable="true">${esc(D.toc.title)}</div><div class="tocRule"></div>` + (e.length
     ? `<ul class="tocList">${e.map(x => `<li class="${x.level===3?'l3':(x.level===2?'l2':'')}">
-        ${x.level===1 ? `<span class="n">${String(majors.indexOf(x)+1).padStart(2,'0')}</span>` : ''}
-        <span class="t">${esc(x.text)}</span><span class="lead"></span><span class="p">${x.page}</span></li>`).join('')}</ul>`
+        <a class="tocLink" href="#h-${x.id}" data-toc-target="${x.id}" contenteditable="false">${x.level===1 ? `<span class="n">${String(majors.indexOf(x)+1).padStart(2,'0')}</span>` : ''}
+        <span class="t">${esc(x.text)}</span><span class="lead"></span><span class="p">${x.page}</span></a></li>`).join('')}</ul>`
     : `<p class="tocEmpty">Topics and subsections appear here automatically, with the page they land on.</p>`);
   page.appendChild(body);
   return page;
@@ -3731,6 +3740,17 @@ function columnPx(el){
   return body.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
 }
 desk.addEventListener('click', e => {
+  /* a contents entry jumps to its heading. We handle it ourselves rather than
+     letting the browser follow the #anchor, so the desk scrolls smoothly and the
+     URL hash stays clean (it's used for share links). The real href is kept so
+     the same links export as clickable internal links in the PDF. */
+  const tocLink = e.target.closest('.tocLink');
+  if(tocLink){
+    e.preventDefault();
+    const id = tocLink.dataset.tocTarget;
+    if(id && desk.querySelector(`.blk[data-id="${id}"]`)) goTo(id);
+    return;
+  }
   const cellAdd = e.target.closest('[data-celladd]');
   if(cellAdd){
     const gridEl = cellAdd.closest('.blk[data-t="grid"]');
