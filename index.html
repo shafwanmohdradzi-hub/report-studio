@@ -524,6 +524,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
    ========================================================================== */
 .pageBody{position:absolute;inset:0;padding:var(--mt) var(--ms);
   font-family:var(--doc-body);font-size:var(--doc-body-size);line-height:var(--doc-body-leading);color:var(--doc-body-color,var(--doc-text))}
+code,.blk code{font-family:var(--doc-util),ui-monospace,monospace;font-size:.9em;
+  background:var(--doc-hair3,rgba(0,0,0,.05));padding:.05em .3em;border-radius:2px}
 /* the band bleeds to the left edge like the footer does, and the rule runs
    from that edge up to the text column so the label aligns with the body */
 .headband{position:absolute;left:0;right:0;top:0;height:var(--hh,13mm);padding-right:var(--ms);
@@ -564,6 +566,10 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   letter-spacing:var(--doc-display-tracking);margin:0 0 3mm;color:var(--doc-head)}
 [data-t="h3"]{font-family:var(--doc-display);font-weight:var(--doc-sub-weight);font-size:11.5pt;line-height:1.28;
   letter-spacing:var(--doc-display-tracking);margin:0 0 2.2mm;color:var(--doc-head)}
+/* Label — a small eyebrow/tag whose size is set per-block via --label-size */
+[data-t="label"]{margin:0 0 2.6mm;line-height:1.35}
+[data-t="label"] .labeltext{font-family:var(--doc-util);font-weight:500;font-size:var(--label-size,9pt);
+  letter-spacing:.01em;color:var(--doc-accent-vis)}
 .hnum{color:var(--doc-accent-vis);margin-right:1.6mm;font-variant-numeric:tabular-nums}
 /* a two-column passage starts clear of any float so it never gets squeezed */
 [data-t="body"][data-cols="2"]{column-count:2;column-gap:8mm;clear:both}
@@ -769,17 +775,23 @@ table.doc thead th{position:relative}
 .blkbar button svg{width:.8125rem;height:.8125rem}
 .blkbar .tag{padding:0 .375rem;font-size:.6875rem;font-weight:500;color:hsl(var(--muted-foreground))}
 .blkbar .div{width:1px;height:1rem;background:hsl(var(--border));margin:0 .125rem}
-.fmtbar{position:fixed;z-index:40;display:none;align-items:center;gap:.125rem;
-  border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);background:hsl(var(--popover));
-  box-shadow:0 8px 24px -8px rgb(0 0 0/.35);padding:.1875rem}
+.fmtbar{position:fixed;z-index:40;display:none;align-items:center;gap:.0625rem;
+  --fg:#e7e7ea;--fg-dim:#a1a1aa;--hov:rgba(255,255,255,.12);--on:rgba(255,255,255,.2);
+  border:0;border-radius:.75rem;background:#26262b;color:var(--fg);
+  box-shadow:0 10px 30px -8px rgb(0 0 0/.5),0 0 0 1px rgb(0 0 0/.4);padding:.25rem}
 .fmtbar[data-open]{display:flex}
-.fmtbar button{height:1.75rem;min-width:1.75rem;padding:0 .4375rem;border:0;background:none;color:inherit;
-  border-radius:calc(var(--radius) - 4px);cursor:pointer;font:inherit;font-size:.8125rem;display:inline-flex;align-items:center;gap:.25rem}
-.fmtbar button:hover{background:hsl(var(--accent))}
-.fmtbar button svg{width:.875rem;height:.875rem}
-.fmtbar .cdot{position:relative;display:inline-flex;align-items:center;justify-content:center;height:1.75rem;min-width:1.5rem;border-radius:calc(var(--radius) - 4px)}
-.fmtbar .cdot:hover{background:hsl(var(--accent))}
-.fmtbar .cdot i{display:block;width:.875rem;height:.875rem;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(0 0 0/.25)}
+.fmtbar button{height:1.875rem;min-width:1.875rem;padding:0 .5rem;border:0;background:none;color:var(--fg);
+  border-radius:.5rem;cursor:pointer;font:inherit;font-size:.8125rem;display:inline-flex;align-items:center;justify-content:center;gap:.25rem;transition:background-color .1s}
+.fmtbar button:hover{background:var(--hov)}
+.fmtbar button[data-on]{background:var(--on);color:#fff}
+.fmtbar button svg{width:.9375rem;height:.9375rem}
+.fmtbar .hbtn{font-family:var(--doc-display),Georgia,serif;font-weight:600;letter-spacing:-.01em}
+.fmtbar .div{width:1px;height:1.125rem;background:rgba(255,255,255,.14);margin:0 .1875rem;flex:0 0 auto}
+.fmtbar .cdot{position:relative;display:inline-flex;align-items:center;justify-content:center;height:1.875rem;min-width:1.625rem;border-radius:.5rem;cursor:pointer}
+.fmtbar .cdot:hover{background:var(--hov)}
+.fmtbar .cdot i{display:block;width:.875rem;height:.875rem;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(255 255 255/.35)}
+.fmtbar.for-body .body-only{display:inline-flex}
+.fmtbar .body-only{display:none}
 #measure{position:fixed;left:-99999px;top:0;visibility:hidden}
 
 /* ==========================================================================
@@ -1094,27 +1106,28 @@ table.doc thead th{position:relative}
 </div>
 
 <div class="fmtbar" id="fmtbar">
-  <button data-cmd="bold" title="Bold" style="font-weight:700">B</button>
-  <button data-cmd="italic" title="Italic" style="font-style:italic;font-family:Georgia,serif">I</button>
-  <button data-cmd="insertUnorderedList" title="Bulleted list"><span data-icon="list"></span></button>
-  <button data-cmd="insertOrderedList" title="Numbered list"><span data-icon="listnum"></span></button>
-  <button data-cmd="justifyLeft" title="Align left"><span data-icon="alignleft"></span></button>
-  <button data-cmd="justifyFull" title="Justify"><span data-icon="alignjustify"></span></button>
+  <button data-cmd="bold" title="Bold (⌘B)" class="hbtn" style="font-weight:800">B</button>
+  <button data-cmd="italic" title="Italic (⌘I)" class="hbtn" style="font-style:italic;font-family:Georgia,serif">I</button>
+  <button data-cmd="strikeThrough" title="Strikethrough" style="text-decoration:line-through">S</button>
+  <button data-code title="Inline code"><span data-icon="code"></span></button>
+  <span class="div"></span>
   <button data-link="set" title="Add or edit a link"><span data-icon="link"></span></button>
   <button data-link="clear" title="Remove the link"><span data-icon="unlink"></span></button>
-  <button data-cmd="removeFormat" title="Clear formatting"><span data-icon="eraser"></span></button>
-  <span class="div" style="width:1px;height:1rem;background:hsl(var(--border));margin:0 .125rem"></span>
-  <button data-cols="1" title="One column"><span data-icon="col1"></span></button>
-  <button data-cols="2" title="Two columns — splits the selected text into its own block"><span data-icon="col2"></span></button>
-  <span class="div" style="width:1px;height:1rem;background:hsl(var(--border));margin:0 .125rem"></span>
   <button data-color="auto" title="Default text colour" class="cdot"><i style="background:var(--doc-body-color,var(--doc-text))"></i></button>
   <button data-color="muted" title="Muted" class="cdot"><i style="background:var(--doc-dim)"></i></button>
   <button data-color="accent" title="Accent" class="cdot"><i style="background:var(--doc-accent-vis)"></i></button>
   <button data-color="#9595B2" title="Lavender" class="cdot"><i style="background:#9595B2"></i></button>
   <button data-color="#F9F9FB" title="Highlight" class="cdot"><i style="background:#F9F9FB"></i></button>
   <label class="cdot" title="Pick a colour for the selection" style="cursor:pointer"><i id="selSwatch" style="background:conic-gradient(#e11,#e91,#1c1,#19e,#a1e,#e11)"></i><input type="color" id="selColor" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none"></label>
-  <span class="div" style="width:1px;height:1rem;background:hsl(var(--border));margin:0 .125rem"></span>
-  <button data-cmd="splitblock" title="Split into a new block here"><span data-icon="split"></span> Split</button>
+  <button data-cmd="removeFormat" title="Clear formatting"><span data-icon="eraser"></span></button>
+  <span class="div body-only"></span>
+  <button data-cmd="insertUnorderedList" class="body-only" title="Bulleted list"><span data-icon="list"></span></button>
+  <button data-cmd="insertOrderedList" class="body-only" title="Numbered list"><span data-icon="listnum"></span></button>
+  <button data-cmd="justifyLeft" class="body-only" title="Align left"><span data-icon="alignleft"></span></button>
+  <button data-cmd="justifyFull" class="body-only" title="Justify"><span data-icon="alignjustify"></span></button>
+  <button data-cols="1" class="body-only" title="One column"><span data-icon="col1"></span></button>
+  <button data-cols="2" class="body-only" title="Two columns — splits the selected text into its own block"><span data-icon="col2"></span></button>
+  <button data-cmd="splitblock" class="body-only" title="Split into a new block here"><span data-icon="split"></span> Split</button>
 </div>
 
 <div class="menu" id="menu"></div>
@@ -1129,6 +1142,7 @@ table.doc thead th{position:relative}
    ========================================================================== */
 const ICONS = {
   book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+  code:'<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>',
   plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
   minus:'<path d="M5 12h14"/>',
   upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
@@ -1472,6 +1486,7 @@ function newBlock(type){
   if(type==='h1'){ b.eyebrow='Section'; b.text='Section title'; b.newPage=true; }
   if(type==='h2'){ b.text='Subheading'; }
   if(type==='h3'){ b.text='Small heading'; }
+  if(type==='label'){ b.text='Label'; b.sizePt=9; }
   if(type==='body'){ b.html='<p>Write here. Select text to make it bold, italic or a list — or split the block at the cursor to push the rest onto the next page.</p>'; }
   if(type==='quote'){ b.text='A single sentence worth pulling out of the page.'; b.by='Attribution'; }
   if(type==='stat'){ b.v='RM 1.24b'; b.l='Group revenue'; b.note=''; }
@@ -2050,6 +2065,11 @@ function renderBlock(b, forMeasure){
   } else if(b.type === 'h2' || b.type === 'h3'){
     const num = D.settings.numberHeadings && hNums[b.id] ? `<span class="hnum">${hNums[b.id]}</span>` : '';
     el.innerHTML = num + `<span data-f="text" ${ce}>${esc(b.text)}</span>`;
+  } else if(b.type === 'label'){
+    /* a small eyebrow/tag; its text is rich (bold, colour, links…) and the
+       only block-level control is its size, kept in b.sizePt */
+    el.style.setProperty('--label-size', (b.sizePt || 9) + 'pt');
+    el.innerHTML = `<span class="labeltext" data-f="text" data-rich ${ce}>${b.text || 'Label'}</span>`;
   } else if(b.type === 'body'){
     if(b.cols === 2) el.dataset.cols = '2';
     el.innerHTML = b.html || '<p></p>';
@@ -2439,7 +2459,7 @@ function paintAuthorDots(){
 }
 
 /* ---------- selection + block toolbar ---------- */
-const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',chart:'Graph',blurb:'Blurb',image:'Image',divider:'Divider',spacer:'Spacer'};
+const NAMES = {h1:'Topic',h2:'Subhead',h3:'Small head',label:'Label',body:'Text',stat:'Statistic',grid:'Columns',quote:'Quote',stats:'Figures',table:'Table',chart:'Graph',blurb:'Blurb',image:'Image',divider:'Divider',spacer:'Spacer'};
 /* A bar belongs to the block's own container — the page body for top-level
    blocks, or the cell for something inside a column — so it lines up in both. */
 function barHost(el){
@@ -2640,6 +2660,12 @@ function blockBar(b){
   if(b.type === 'stats'){
     extra.push(btn(svg('plus'),'Add a figure',()=>{ if(b.items.length<4){ b.items.push({v:'0',l:'Label'}); commit(); } }),
                btn(svg('minus'),'Remove the last figure',()=>{ if(b.items.length>1){ b.items.pop(); commit(); } }));
+  }
+  if(b.type === 'label'){
+    extra.push(
+      btn('A−', 'Smaller label', () => { b.sizePt = Math.max(6, +(((b.sizePt || 9) - 0.5)).toFixed(1)); commit(); }),
+      btn('A+', 'Bigger label', () => { b.sizePt = Math.min(48, +(((b.sizePt || 9) + 0.5)).toFixed(1)); commit(); })
+    );
   }
   if(b.type === 'body'){
     const one = btn(svg('col1'), 'One column', () => applyColumnsToBlock(b, 1));
@@ -3162,11 +3188,25 @@ function sanitizeHtml(html){
       el.append(em);
     }
   });
-  const KEEP = { P:1, BR:1, B:1, STRONG:1, I:1, EM:1, UL:1, OL:1, LI:1, A:1 };
+  const KEEP = { P:1, BR:1, B:1, STRONG:1, I:1, EM:1, S:1, STRIKE:1, CODE:1, SPAN:1, UL:1, OL:1, LI:1, A:1 };
+  /* SPAN survives only as a styled run — a small allow-list of inline
+     properties (colour, weight, strike). Everything else on it (and every
+     other attribute on other tags, except A[href]) is dropped. */
+  const cleanSpan = el => {
+    const keep = [];
+    (el.getAttribute('style') || '').split(';').forEach(d => {
+      const m = d.match(/^\s*(color|font-weight|text-decoration|text-decoration-line)\s*:\s*([^;]+)$/i);
+      if(m && !/url\(|expression|javascript:/i.test(m[2])) keep.push(m[1].toLowerCase() + ':' + m[2].trim());
+    });
+    [...el.attributes].forEach(a => el.removeAttribute(a.name));
+    if(keep.length) el.setAttribute('style', keep.join(';'));
+    else el.replaceWith(...el.childNodes);
+  };
   (function walk(node){
     [...node.children].forEach(el => {
       walk(el);
       if(!KEEP[el.tagName]) el.replaceWith(...el.childNodes);
+      else if(el.tagName === 'SPAN') cleanSpan(el);
       else [...el.attributes].forEach(a => {
         if(!(el.tagName === 'A' && a.name === 'href')) el.removeAttribute(a.name);
       });
@@ -3566,13 +3606,32 @@ window.addEventListener('pointerup', () => {
 
 /* rich text */
 const fmt = $('fmtbar');
+/* the toolbar now serves every rich-text field, not just body blocks: any
+   editable host that persists HTML (data-f="html") or sanitized rich markup
+   (data-rich). Body keeps its extras (lists, columns, split) via .body-only. */
+function richHostFrom(node){
+  if(!node) return null;
+  const el = node.nodeType === 1 ? node : node.parentElement;
+  return el ? el.closest('[data-f="html"],[data-rich]') : null;
+}
+/* mirror the input handler's write path so an edit made through the toolbar
+   persists to the right field and repaginates */
+function commitRichHost(host){
+  if(!host) return;
+  const blk = host.closest('.blk'); if(!blk) return;
+  const b = findBlock(blk.dataset.id); if(!b) return;
+  if(host.dataset.f === 'html') b.html = cleanHtml(host);
+  else if(host.hasAttribute('data-rich')) setPath(b, host.dataset.f, sanitizeHtml(host.innerHTML) || '');
+  scheduleRepaginate(); save();
+}
 document.addEventListener('selectionchange', () => {
   if($('view-editor').hidden) return;
   const s = getSelection();
-  const inBody = bodyBlockFrom(s.anchorNode);
-  if(!inBody || s.isCollapsed){ fmt.removeAttribute('data-open'); return; }
+  const host = richHostFrom(s.anchorNode);
+  if(!host || s.isCollapsed){ fmt.removeAttribute('data-open'); return; }
   const r = s.getRangeAt(0).getBoundingClientRect();
   if(!r.width){ fmt.removeAttribute('data-open'); return; }
+  fmt.classList.toggle('for-body', host.dataset.f === 'html');
   fmt.setAttribute('data-open','');
   fmt.style.left = Math.max(8, Math.min(innerWidth - fmt.offsetWidth - 8, r.left + r.width/2 - fmt.offsetWidth/2)) + 'px';
   fmt.style.top = Math.max(60, r.top - fmt.offsetHeight - 8) + 'px';
@@ -3598,12 +3657,14 @@ function tidySpans(blk){
     if(!el.textContent) el.remove();
   });
   blk.querySelectorAll('span').forEach(el => {
-    if(!el.getAttribute('style')) el.replaceWith(...el.childNodes);
+    /* a span earns its place only if it carries a style or a preset class */
+    if(!el.getAttribute('style') && !el.className) el.replaceWith(...el.childNodes);
   });
-  blk.querySelectorAll('span[style]').forEach(el => {
+  const sig = el => (el.getAttribute('style') || '') + '|' + (el.className || '');
+  blk.querySelectorAll('span').forEach(el => {
+    if(!el.isConnected) return;
     let next = el.nextSibling;
-    while(next && next.nodeType === 1 && next.tagName === 'SPAN'
-          && next.getAttribute('style') === el.getAttribute('style')){
+    while(next && next.nodeType === 1 && next.tagName === 'SPAN' && sig(next) === sig(el)){
       const gone = next;
       next = next.nextSibling;
       el.append(...gone.childNodes);
@@ -3612,30 +3673,28 @@ function tidySpans(blk){
   });
   blk.normalize();
 }
-function colorSelection(css){
+/* wrap the current (remembered) selection in a fresh <span>, hand it to
+   `apply` to stamp a style, collapse redundant wrappers, then persist. */
+function styleSelection(apply){
   const s = getSelection();
   if(savedRange){ s.removeAllRanges(); s.addRange(savedRange); }
   if(!s.rangeCount || s.isCollapsed) return;
-  const blk = bodyBlockFrom(s.anchorNode);
-  if(!blk) return;
+  const host = richHostFrom(s.anchorNode);
+  if(!host) return;
   const range = s.getRangeAt(0);
   const span = document.createElement('span');
-  span.style.color = css;
   span.appendChild(range.extractContents());
-  span.querySelectorAll('span').forEach(el => {
-    if(el.style && el.style.color) el.style.removeProperty('color');
-    if(!el.getAttribute('style')) el.replaceWith(...el.childNodes);
-  });
+  apply(span);
   range.insertNode(span);
-  /* recolouring an existing run leaves the old wrapper around the new one —
-     collapse it so the markup doesn't accumulate layers */
+  /* re-styling an existing run leaves the old wrapper around the new one —
+     collapse single-child span parents so the markup doesn't accumulate */
   let parent = span.parentElement;
-  while(parent && parent !== blk && parent.tagName === 'SPAN' && parent.childNodes.length === 1){
+  while(parent && parent !== host && parent.tagName === 'SPAN' && parent.childNodes.length === 1){
     const grand = parent.parentElement;
     parent.replaceWith(span);
     parent = grand;
   }
-  tidySpans(blk);
+  tidySpans(host);
   s.removeAllRanges();
   if(span.isConnected){
     const r = document.createRange();
@@ -3643,8 +3702,41 @@ function colorSelection(css){
     s.addRange(r);
     savedRange = r.cloneRange();
   }
-  const b = findBlock(blk.dataset.id);
-  if(b){ b.html = cleanHtml(blk); scheduleRepaginate(); save(); }
+  commitRichHost(host);
+}
+function colorSelection(css){
+  styleSelection(span => {
+    span.style.color = css;
+    /* the new colour wins: strip colour off descendants, drop bare wrappers */
+    span.querySelectorAll('span').forEach(el => {
+      if(el.style && el.style.color) el.style.removeProperty('color');
+      if(!el.getAttribute('style') && !el.className) el.replaceWith(...el.childNodes);
+    });
+  });
+}
+/* inline monospace code — a plain toggle */
+function toggleCode(){
+  const s = getSelection();
+  if(savedRange){ s.removeAllRanges(); s.addRange(savedRange); }
+  if(!s.rangeCount || s.isCollapsed) return;
+  const host = richHostFrom(s.anchorNode);
+  if(!host) return;
+  const range = s.getRangeAt(0);
+  const start = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+  const code = start && start.closest ? start.closest('code') : null;
+  if(code){
+    code.replaceWith(...code.childNodes);
+  } else {
+    const c = document.createElement('code');
+    c.appendChild(range.extractContents());
+    c.querySelectorAll('code').forEach(el => el.replaceWith(...el.childNodes));
+    range.insertNode(c);
+    range.selectNodeContents(c);
+    s.removeAllRanges(); s.addRange(range);
+    savedRange = range.cloneRange();
+  }
+  host.normalize();
+  commitRichHost(host);
 }
 /* ==========================================================================
    LINKS
@@ -3746,14 +3838,11 @@ fmt.addEventListener('click', e => {
   const pick = e.target.closest('label.cdot');
   if(pick){ $('selColor').click(); return; }
   const btn = e.target.closest('button'); if(!btn) return;
+  if(btn.hasAttribute('data-code')){ toggleCode(); return; }
   if(btn.dataset.cmd === 'splitblock'){ splitAtCaret(); return; }
   document.execCommand(btn.dataset.cmd, false, null);
-  const anchor = getSelection().anchorNode;
-  const blk = anchor && anchor.parentElement && anchor.parentElement.closest('.blk');
-  if(blk){
-    const b = findBlock(blk.dataset.id);
-    if(b){ b.html = cleanHtml(blk); scheduleRepaginate(); save(); }
-  }
+  const host = richHostFrom(getSelection().anchorNode);
+  if(host) commitRichHost(host);
 });
 function splitAtCaret(){
   const s = getSelection(); if(!s.rangeCount) return;
@@ -3956,7 +4045,7 @@ const BLOCK_ICON = { body:'pilcrow', table:'table', chart:'chart', blurb:'blurb'
   stat:'stat', grid:'col3' };
 const ADD_MENU = [
   ['#','Text'],
-  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'], ['blurb','Blurb','blurb'],
+  ['h2','Subsection','h2'], ['h3','Small heading','h3'], ['label','Label','type'], ['body','Body text','pilcrow'], ['quote','Pull quote','quote'], ['blurb','Blurb','blurb'],
   ['#','Data'],
   ['stat','Statistic','stat'], ['stats','Key figures','hash'], ['table','Table','table'], ['chart','Graph','chart'],
   ['#','Layout'],
