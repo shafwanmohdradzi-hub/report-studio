@@ -4056,11 +4056,17 @@ function docxBodyHtml(el){
 }
 
 /* Transforms 2-4 run here: walk the converted DOM top-level and emit blocks.
-   One block per paragraph keeps re-import matching at paragraph granularity. */
+   Consecutive prose paragraphs (and lists) are coalesced into ONE body block so
+   a continuous body stays a single editable unit; a heading, table, image or
+   quote ends the run. Bodies taller than a page are split back apart only at
+   page boundaries later (splitTallBody), i.e. only when they flow to a new page. */
 function blocksFromDocxHtml(html){
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const out = [];
-  const push = b => { if(b) out.push(b); };
+  let buf = [];                                                // consecutive prose/list html, merged into one body block
+  const flush = () => { if(buf.length){ const b = newBlock('body'); b.html = buf.join(''); out.push(b); buf = []; } };
+  const push = b => { if(b){ flush(); out.push(b); } };        // any non-prose block ends the current run
+  const prose = h => { if(h) buf.push(h); };
   [...doc.body.children].forEach(el => {
     const tag = el.tagName.toLowerCase();
     if(/^h[1-5]$/.test(tag)){                                   // Transform 2 — section split (h1 = new page)
@@ -4076,25 +4082,82 @@ function blocksFromDocxHtml(html){
       if(rows && rows.length) push(tableFromRows(rows));
       return;
     }
-    if(tag === 'ul' || tag === 'ol'){ const h = sanitizeHtml(el.outerHTML); if(h){ const b = newBlock('body'); b.html = h; push(b); } return; }
+    if(tag === 'ul' || tag === 'ol'){ return prose(sanitizeHtml(el.outerHTML)); }   // lists flow with the prose run
     /* paragraph-level: caption, image, or prose */
     if(el.classList.contains('caption')){                      // Transform 4 — group caption with its image
       const cap = CLEAN(el.textContent);
       const prev = out[out.length - 1];
-      if(prev && (prev.type === 'image' || prev.type === 'chart')) prev.caption = cap;
-      else if(cap){ const b = newBlock('body'); b.html = '<p>' + esc(cap) + '</p>'; push(b); }
+      if(!buf.length && prev && (prev.type === 'image' || prev.type === 'chart')) prev.caption = cap;
+      else if(cap) prose('<p>' + esc(cap) + '</p>');
       return;
     }
     const imgs = [...el.querySelectorAll('img')];
     if(imgs.length){                                            // Transform 4 — image pass
+      flush();
       imgs.forEach(img => push(docxImageBlock(img)));
-      const rest = docxBodyHtml(el);
-      if(rest){ const b = newBlock('body'); b.html = rest; push(b); }
+      prose(docxBodyHtml(el));                                  // any text sharing the image's paragraph starts a fresh run
       return;
     }
     if(!CLEAN(el.textContent)) return;                          // drop empty paragraphs
-    const h = sanitizeHtml(el.outerHTML);
-    if(h){ const b = newBlock('body'); b.html = h; push(b); }
+    prose(sanitizeHtml(el.outerHTML));
+  });
+  flush();
+  return out;
+}
+/* Split a coalesced body block at paragraph boundaries into page-sized blocks —
+   the prose stays whole until it would overflow a page, then continues on the
+   next. Mirrors splitTallTable. Continuation parts carry `cont` so a later
+   re-import can merge them back for a clean, drift-free diff (see recoalesce). */
+function splitTallBody(b){
+  const { wrap, box } = probeBox();
+  wrap.innerHTML = '';
+  const el = renderBlock(b, true);
+  wrap.appendChild(el);
+  const fits = el.offsetHeight <= box.h + 0.6;
+  wrap.remove();
+  if(fits) return [b];
+  const frag = new DOMParser().parseFromString('<body>' + (b.html || '') + '</body>', 'text/html');
+  const nodes = [...frag.body.children].map(n => n.outerHTML);
+  if(nodes.length < 2) return [b];                             // a single un-splittable paragraph: leave it (overflow-flagged)
+  const parts = [];
+  let i = 0;
+  while(i < nodes.length){
+    const { wrap: w, box: bx } = probeBox();
+    const probe = renderBlock(Object.assign({}, b, { html: '' }), true);
+    w.appendChild(probe); probe.innerHTML = '';
+    let take = 0;
+    while(i + take < nodes.length){
+      probe.insertAdjacentHTML('beforeend', nodes[i + take]);
+      if(probe.offsetHeight > bx.h + 0.6 && take > 0){ probe.lastChild.remove(); break; }
+      take++;
+    }
+    w.remove();
+    if(take === 0) take = 1;
+    const part = JSON.parse(JSON.stringify(b));
+    part.id = uid();
+    part.html = nodes.slice(i, i + take).join('');
+    if(parts.length) part.cont = true;
+    parts.push(part);
+    i += take;
+  }
+  return parts;
+}
+/* expand every body block into its page-sized parts (non-body pass through) */
+function expandTallBodies(blocks){
+  const out = [];
+  blocks.forEach(b => { if(b.type === 'body') out.push(...splitTallBody(b)); else out.push(b); });
+  return out;
+}
+/* the inverse for diffing: merge page-split continuation parts back into one
+   logical body so re-import compares whole bodies, not shifting page fragments.
+   Clones bodies so the live document is never mutated during a diff. */
+function recoalesce(blocks){
+  const out = [];
+  (blocks || []).forEach(b => {
+    const prev = out[out.length - 1];
+    if(b.type === 'body' && b.cont && prev && prev.type === 'body') prev.html = (prev.html || '') + (b.html || '');
+    else if(b.type === 'body'){ const c = Object.assign({}, b); delete c.cont; out.push(c); }
+    else out.push(b);
   });
   return out;
 }
@@ -4122,6 +4185,7 @@ function showDocxDiagnostics(blocks){
 
 /* First import into an empty (or explicitly overwritten) report = full populate. */
 function docxFullPopulate(blocks, fileName){
+  blocks = expandTallBodies(blocks);                           // break coalesced bodies only where they'd flow to a new page
   blocks.forEach(b => { b.fp = fingerprint(b); });
   D.blocks = blocks;
   D.meta.importSource = { fileName: fileName, importedAt: Date.now() };
@@ -4216,6 +4280,7 @@ function alignSection(oldArr, newArr, ops){
 /* build the full merge plan: matched sections diff block-by-block, unmatched new
    sections are all-added, unmatched old sections are all-removed (appended last). */
 function docxDiff(oldBlocks, newBlocks){
+  oldBlocks = recoalesce(oldBlocks); newBlocks = recoalesce(newBlocks);   // diff whole bodies, not page fragments
   const oldSecs = splitSections(oldBlocks), newSecs = splitSections(newBlocks);
   const usedOld = new Set(), ops = [];
   newSecs.forEach(ns => {
@@ -4255,10 +4320,11 @@ function applyDocxMerge(plan, fileName){
     else if(op.kind === 'add'){ if(op.accepted) out.push(op.to); }
     else if(op.kind === 'remove'){ if(!op.accepted) out.push(op.block); }
   });
-  out.forEach(b => { b.fp = fingerprint(b); });
-  D.blocks = out;
+  const expanded = expandTallBodies(out);                      // re-split merged bodies at page boundaries before storing
+  expanded.forEach(b => { b.fp = fingerprint(b); });
+  D.blocks = expanded;
   D.meta.importSource = { fileName: fileName, importedAt: Date.now() };
-  sel = out[0] ? out[0].id : null;
+  sel = expanded[0] ? expanded[0].id : null;
   commit();
   const panel = $('docxPanel'); panel.hidden = true; panel.innerHTML = '';
   const c = plan.counts;
