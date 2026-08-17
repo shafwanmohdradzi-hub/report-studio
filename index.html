@@ -423,6 +423,28 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .addsub{margin-left:1.125rem;width:calc(100% - 1.125rem)}
 .treegap{height:.625rem}
 
+/* .docx import + re-import review, docked below the structure tree */
+.docx-import{margin-top:.75rem;padding-top:.75rem;border-top:1px solid hsl(var(--border))}
+.docx-panel{margin-top:.625rem;border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);overflow:hidden}
+.docx-panel .dp-head{display:flex;align-items:center;gap:.5rem;padding:.5rem .625rem;background:hsl(var(--muted)/.4);font-size:.75rem;font-weight:600}
+.docx-panel .dp-sum{color:hsl(var(--muted-foreground));font-weight:500}
+.docx-panel .dp-list{max-height:15rem;overflow:auto}
+.docx-row{display:flex;align-items:flex-start;gap:.5rem;padding:.4375rem .625rem;border-top:1px solid hsl(var(--border));font-size:.75rem}
+.docx-row .dr-tag{flex:0 0 auto;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:.0625rem .3125rem;border-radius:.25rem}
+.docx-row .dr-tag.edited{background:hsl(38 92% 50%/.16);color:hsl(30 90% 38%)}
+.docx-row .dr-tag.added{background:hsl(142 70% 45%/.16);color:hsl(142 60% 32%)}
+.docx-row .dr-tag.removed{background:hsl(0 84% 60%/.14);color:hsl(0 72% 46%)}
+.docx-row .dr-text{min-width:0;flex:1;color:hsl(var(--muted-foreground));overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.docx-row .dr-skip{flex:0 0 auto;width:1.25rem;height:1.25rem;border:0;background:none;color:hsl(var(--muted-foreground));border-radius:.25rem;cursor:pointer;display:grid;place-items:center}
+.docx-row .dr-skip:hover{background:hsl(var(--secondary));color:hsl(var(--foreground))}
+.docx-row.off{opacity:.4}
+.docx-panel .dp-foot{display:flex;gap:.375rem;padding:.5rem .625rem;border-top:1px solid hsl(var(--border))}
+.docx-diag{margin-top:.625rem;display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:hsl(var(--muted-foreground))}
+.docx-diag .dd-badge{font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:.0625rem .375rem;border-radius:.25rem}
+.docx-diag .dd-badge.low{background:hsl(142 70% 45%/.16);color:hsl(142 60% 32%)}
+.docx-diag .dd-badge.medium{background:hsl(38 92% 50%/.16);color:hsl(30 90% 38%)}
+.docx-diag .dd-badge.high{background:hsl(0 84% 60%/.14);color:hsl(0 72% 46%)}
+
 .menu{position:fixed;z-index:65;min-width:11.5rem;padding:.25rem;display:none;
   border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);background:hsl(var(--popover));
   color:hsl(var(--popover-foreground));box-shadow:0 8px 24px -8px rgb(0 0 0/.35)}
@@ -1143,6 +1165,12 @@ table.doc thead th{position:relative}
 
     <div class="pane" id="pane-structure">
       <div class="tree" id="tree"></div>
+      <div class="docx-import" id="docxImport">
+        <button class="btn btn-outline btn-sm" id="docxBtn" style="width:100%"><span data-icon="upload"></span> Import from .docx</button>
+        <input type="file" id="docxIn" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+        <p class="helptext" id="docxHelp" style="margin:.5rem 0 0">Drop a Word file to populate the report. Re-import an edited version later to merge only the changes.</p>
+        <div id="docxPanel" hidden></div>
+      </div>
     </div>
 
     <div class="pane" id="pane-design" hidden>
@@ -1470,6 +1498,9 @@ table.doc thead th{position:relative}
   </div>
 </div>
 
+<!-- .docx import — mammoth (UMD, exposes window.mammoth). Local vendor file so
+     it stays offline; loaded before the app script so the importer can use it. -->
+<script src="vendor/mammoth.browser.min.js"></script>
 <script>
 "use strict";
 
@@ -3957,6 +3988,184 @@ function sanitizeHtml(html){
   })(doc.body);
   return doc.body.innerHTML.replace(/(\s|&nbsp;)+/g, ' ').trim();
 }
+
+/* ==========================================================================
+   .docx IMPORT — mammoth converts a Word file (Google-Docs export or otherwise)
+   to semantic HTML; the four transforms below turn that into house blocks:
+   styleMap (Word styles -> block types), section split (each H1 = new section),
+   table pass (reuse the paste table machinery), image pass (base64 -> D.images,
+   grouped with its caption). Each block is stamped with a content `fp`
+   (fingerprint) so a later re-import can merge only the deltas — see Phase 2.
+   ========================================================================== */
+
+/* Transform 1 — styleMap: route named Word styles to predictable tags mammoth
+   then emits. Heading 1-5 already map by default; these cover the rest. */
+const DOCX_STYLE_MAP = [
+  "p[style-name='Title'] => h1:fresh",
+  "p[style-name='Heading 1'] => h1:fresh",
+  "p[style-name='Heading 2'] => h2:fresh",
+  "p[style-name='Heading 3'] => h3:fresh",
+  "p[style-name='Heading 4'] => h4:fresh",
+  "p[style-name='Heading 5'] => h5:fresh",
+  "p[style-name='Caption'] => p.caption:fresh",
+  "p[style-name='Quote'] => blockquote:fresh",
+  "p[style-name='Intense Quote'] => blockquote:fresh"
+];
+
+function htmlToText(html){
+  const d = new DOMParser().parseFromString(html || '', 'text/html');
+  return d.body.textContent || '';
+}
+/* plain text of a block, for fingerprinting/matching */
+function blockPlainText(b){
+  switch(b.type){
+    case 'body':  return htmlToText(b.html);
+    case 'h1':    return (b.eyebrow ? b.eyebrow + ' ' : '') + (b.text || '');
+    case 'h2': case 'h3': case 'h4': case 'h5': case 'label': return b.text || '';
+    case 'quote': return (b.text || '') + ' ' + (b.by || '');
+    case 'table': return [b.head || [], ...(b.rows || [])].map(r => (r || []).join(' | ')).join(' \n ');
+    case 'image': case 'chart': return b.caption || '';
+    case 'stat':  return [b.v, b.l, b.note].filter(Boolean).join(' ');
+    case 'stats': return (b.items || []).map(i => i.v + ' ' + i.l).join(' ');
+    case 'blurb': return htmlToText((b.title || '') + ' ' + (b.body || ''));
+    default:      return '';
+  }
+}
+const normText = s => CLEAN(s).toLowerCase();
+/* djb2 — a stable, dependency-free content hash (no crypto needed here) */
+function hashStr(s){ let h = 5381; for(let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); }
+function fingerprint(b){ return b.type + ':' + hashStr(normText(blockPlainText(b))); }
+
+/* an <img> in the converted HTML -> an image block, base64 parked in D.images */
+function docxImageBlock(img){
+  const src = img.getAttribute('src');
+  if(!src) return null;
+  const b = newBlock('image');
+  b.imgId = putImage(src);
+  b.vector = /^data:image\/svg/i.test(src);
+  const alt = CLEAN(img.getAttribute('alt') || '');
+  b.caption = alt;
+  return b;
+}
+/* a paragraph's text (images stripped) -> sanitised body html, or '' if empty */
+function docxBodyHtml(el){
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll('img').forEach(i => i.remove());
+  if(!CLEAN(clone.textContent)) return '';
+  return sanitizeHtml(clone.outerHTML) || '';
+}
+
+/* Transforms 2-4 run here: walk the converted DOM top-level and emit blocks.
+   One block per paragraph keeps re-import matching at paragraph granularity. */
+function blocksFromDocxHtml(html){
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const out = [];
+  const push = b => { if(b) out.push(b); };
+  [...doc.body.children].forEach(el => {
+    const tag = el.tagName.toLowerCase();
+    if(/^h[1-5]$/.test(tag)){                                   // Transform 2 — section split (h1 = new page)
+      const b = newBlock(tag);
+      if(tag === 'h1'){ b.eyebrow = ''; b.text = CLEAN(el.textContent) || 'Section'; b.newPage = true; }
+      else b.text = CLEAN(el.textContent);
+      return push(b);
+    }
+    if(tag === 'h6'){ const b = newBlock('h5'); b.text = CLEAN(el.textContent); return push(b); }
+    if(tag === 'blockquote'){ const b = newBlock('quote'); b.text = CLEAN(el.textContent); b.by = ''; return push(b); }
+    if(tag === 'table'){                                        // Transform 3 — table pass (reuse paste machinery)
+      const rows = parseHtmlTable(el.outerHTML);
+      if(rows && rows.length) push(tableFromRows(rows));
+      return;
+    }
+    if(tag === 'ul' || tag === 'ol'){ const h = sanitizeHtml(el.outerHTML); if(h){ const b = newBlock('body'); b.html = h; push(b); } return; }
+    /* paragraph-level: caption, image, or prose */
+    if(el.classList.contains('caption')){                      // Transform 4 — group caption with its image
+      const cap = CLEAN(el.textContent);
+      const prev = out[out.length - 1];
+      if(prev && (prev.type === 'image' || prev.type === 'chart')) prev.caption = cap;
+      else if(cap){ const b = newBlock('body'); b.html = '<p>' + esc(cap) + '</p>'; push(b); }
+      return;
+    }
+    const imgs = [...el.querySelectorAll('img')];
+    if(imgs.length){                                            // Transform 4 — image pass
+      imgs.forEach(img => push(docxImageBlock(img)));
+      const rest = docxBodyHtml(el);
+      if(rest){ const b = newBlock('body'); b.html = rest; push(b); }
+      return;
+    }
+    if(!CLEAN(el.textContent)) return;                          // drop empty paragraphs
+    const h = sanitizeHtml(el.outerHTML);
+    if(h){ const b = newBlock('body'); b.html = h; push(b); }
+  });
+  return out;
+}
+
+/* Cleanup-diagnostics: a Low/Medium/High read on manual work, shown after a
+   full import (mirrors the review panel's visual language). */
+function showDocxDiagnostics(blocks){
+  const panel = $('docxPanel');
+  const issues = [];
+  let empties = 0, longp = 0, big = 0;
+  blocks.forEach(b => {
+    if(b.type === 'table' && (!b.rows.length || b.rows.every(r => r.every(c => !CLEAN(c))))) empties++;
+    if(b.type === 'body' && htmlToText(b.html).length > 1200) longp++;
+    if(b.type === 'image' && (b.w || 0) > 2200) big++;
+  });
+  if(empties) issues.push(empties + ' empty table' + (empties > 1 ? 's' : ''));
+  if(longp)   issues.push(longp + ' very long paragraph' + (longp > 1 ? 's' : ''));
+  if(big)     issues.push(big + ' oversized image' + (big > 1 ? 's' : ''));
+  const load = issues.length === 0 ? 'low' : issues.length <= 2 ? 'medium' : 'high';
+  panel.hidden = false;
+  panel.className = 'docx-diag';
+  panel.innerHTML = `<span class="dd-badge ${load}">${load} cleanup</span>`
+    + `<span>${issues.length ? esc(issues.join(', ')) : 'Looks clean — no obvious cleanup needed'}</span>`;
+}
+
+/* First import into an empty (or explicitly overwritten) report = full populate. */
+function docxFullPopulate(blocks, fileName){
+  blocks.forEach(b => { b.fp = fingerprint(b); });
+  D.blocks = blocks;
+  D.meta.importSource = { fileName: fileName, importedAt: Date.now() };
+  sel = blocks[0] ? blocks[0].id : null;
+  commit();
+  showDocxDiagnostics(blocks);
+  toast('Imported ' + blocks.length + ' blocks from ' + fileName);
+}
+
+/* Re-import of an already-imported report — Phase 2 (diff-merge) lands here.
+   Until then, offer a guarded overwrite so the control is never a dead end. */
+function docxReimport(blocks, fileName){
+  if(confirm('This report was already imported from a .docx. The change-only merge isn’t built yet — overwrite the whole report with this file instead?')){
+    delete D.meta.importSource;
+    docxFullPopulate(blocks, fileName);
+  }
+}
+
+async function importDocxFile(file){
+  if(!window.mammoth){ toast('The .docx importer failed to load'); return; }
+  const btn = $('docxBtn');
+  btn.disabled = true;
+  try{
+    const buf = await file.arrayBuffer();
+    const res = await mammoth.convertToHtml({ arrayBuffer: buf }, { styleMap: DOCX_STYLE_MAP });
+    const blocks = blocksFromDocxHtml(res.value);
+    if(!blocks.length){ toast('No content found in that .docx'); return; }
+    if(D.meta && D.meta.importSource) return docxReimport(blocks, file.name);
+    if(D.blocks && D.blocks.length && !confirm('Importing will replace the current report content. Continue?')) return;
+    docxFullPopulate(blocks, file.name);
+  }catch(err){
+    console.error('.docx import failed', err);
+    toast('Could not read that .docx');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+$('docxBtn').onclick = () => $('docxIn').click();
+$('docxIn').onchange = () => {
+  const f = $('docxIn').files[0];
+  if(f) importDocxFile(f);
+  $('docxIn').value = '';
+};
 
 document.addEventListener('paste', e => {
   if($('view-editor').hidden) return;
