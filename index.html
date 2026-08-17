@@ -7370,7 +7370,16 @@ function setJsonIfChanged(map, key, obj){
    would be last-writer-wins). */
 function reconcileOrder(arr, ids){
   const idset = new Set(ids);
-  for(let i = arr.length - 1; i >= 0; i--){ if(!idset.has(arr.get(i))) arr.delete(i, 1); }
+  /* Drop entries that aren't ours AND any repeat of an id we've already kept.
+     A Yjs Array doesn't merge equal values, so a seed/persist race (or two peers
+     seeding the same report at once) can wedge the same id in twice; left in, it
+     would clone that block — and its page — again on every load. */
+  const kept = new Set();
+  for(let i = arr.length - 1; i >= 0; i--){
+    const v = arr.get(i);
+    if(!idset.has(v) || kept.has(v)) arr.delete(i, 1);
+    else kept.add(v);
+  }
   let cur = arr.toArray();
   for(let i = 0; i < ids.length; i++){
     if(cur[i] === ids[i]) continue;
@@ -7447,10 +7456,17 @@ function applyRemote(){
   if(pushT){ clearTimeout(pushT); pushT = null; pushLocal(); }
   applyingRemote = true;
   let seedFromLocal = false;
+  let orderDirty = false;
   try{
     const root = yRoot();
     const blocks = yBlocks();
-    const remoteIds = yOrder().toArray();
+    /* De-dupe the order the same way reconcileOrder does: a Yjs Array can carry
+       the same id twice after a seed/persist race, and mapping it 1:1 to blocks
+       would double every affected block (and its page) on load. If we did find
+       repeats, flag the order dirty so we rewrite the cleaned version back. */
+    const rawOrder = yOrder().toArray();
+    const remoteIds = [...new Set(rawOrder)];
+    orderDirty = remoteIds.length !== rawOrder.length;
     /* Never let an empty/stale room blank out a document that still has content.
        If the room has no blocks but ours does, keep ours (blocks AND theme/meta)
        and seed the room from it after this pass (pushLocal is a no-op while
@@ -7478,6 +7494,7 @@ function applyRemote(){
     if(collab && !collab.baseInit){ collab.baseInit = true; histReset(); }
   } finally { applyingRemote = false; }
   if(seedFromLocal){ collabShadow = emptyShadow(); pushLocal(); }
+  else if(orderDirty) schedulePush();   // rewrite the de-duped order back to the room
 }
 
 /* ---------- caret save / restore across a full re-render ---------- */
