@@ -4131,13 +4131,181 @@ function docxFullPopulate(blocks, fileName){
   toast('Imported ' + blocks.length + ' blocks from ' + fileName);
 }
 
-/* Re-import of an already-imported report — Phase 2 (diff-merge) lands here.
-   Until then, offer a guarded overwrite so the control is never a dead end. */
-function docxReimport(blocks, fileName){
-  if(confirm('This report was already imported from a .docx. The change-only merge isn’t built yet — overwrite the whole report with this file instead?')){
-    delete D.meta.importSource;
-    docxFullPopulate(blocks, fileName);
+/* ---------- Phase 2 — incremental re-import (diff-merge) ----------
+   A re-import of an already-imported report merges only the changed
+   paragraphs, preserving each surviving block's id, styling and layout.
+   The new Word file is authoritative for structure and order. */
+
+/* Dice coefficient over character bigrams — a cheap, stable fuzzy-text ratio
+   in [0,1] with no dependencies, used to spot "edited" (vs replaced) blocks. */
+function bigrams(s){ const g = []; for(let i = 0; i < s.length - 1; i++) g.push(s.slice(i, i + 2)); return g; }
+function simRatio(a, b){
+  if(a === b) return 1;
+  if(a.length < 2 || b.length < 2) return a === b ? 1 : 0;
+  const A = bigrams(a), B = bigrams(b), map = new Map();
+  A.forEach(g => map.set(g, (map.get(g) || 0) + 1));
+  let inter = 0;
+  B.forEach(g => { const c = map.get(g) || 0; if(c > 0){ inter++; map.set(g, c - 1); } });
+  return (2 * inter) / (A.length + B.length);
+}
+
+/* split a block list into sections at each h1; a run before the first h1 is an
+   unnamed "preamble" section (head === null). The h1 is blocks[0] of a section. */
+function splitSections(blocks){
+  const secs = [];
+  let cur = { head: null, blocks: [] };
+  (blocks || []).forEach(b => {
+    if(b.type === 'h1'){
+      if(cur.blocks.length) secs.push(cur);
+      cur = { head: b, blocks: [b] };
+    } else cur.blocks.push(b);
+  });
+  if(cur.blocks.length) secs.push(cur);
+  return secs;
+}
+/* how well two sections correspond (by their h1 title), 0..1 */
+function secScore(ns, os){
+  if(!ns.head && !os.head) return 1;                 // both preamble
+  if(!ns.head || !os.head) return 0;
+  if(fingerprint(ns.head) === fingerprint(os.head)) return 1;
+  return simRatio(normText(blockPlainText(ns.head)), normText(blockPlainText(os.head)));
+}
+/* LCS anchor pairs on exact equality — indices [i,j] of the longest common
+   subsequence, used to lock unchanged blocks in place before diffing the gaps. */
+function lcsIdx(A, B){
+  const n = A.length, m = B.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+  for(let i = n - 1; i >= 0; i--) for(let j = m - 1; j >= 0; j--)
+    dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const out = []; let i = 0, j = 0;
+  while(i < n && j < m){
+    if(A[i] === B[j]){ out.push([i, j]); i++; j++; }
+    else if(dp[i + 1][j] >= dp[i][j + 1]) i++; else j++;
   }
+  return out;
+}
+/* align one matched section's old vs new blocks, appending ops in new-doc order.
+   Exact fingerprint matches anchor as "keep"; within each gap, same-type blocks
+   with close text pair as "edit", the rest are "add" (new) / "remove" (old). */
+const DOCX_EDIT_SIM = 0.4;                            // min similarity to call it an edit, not add+remove
+function alignSection(oldArr, newArr, ops){
+  const ofp = oldArr.map(fingerprint), nfp = newArr.map(fingerprint);
+  const emitGap = (oGap, nGap) => {
+    const usedO = new Set();
+    nGap.forEach(nb => {
+      let best = -1, bs = 0;
+      oGap.forEach((ob, k) => {
+        if(usedO.has(k) || ob.type !== nb.type) return;
+        const s = simRatio(normText(blockPlainText(ob)), normText(blockPlainText(nb)));
+        if(s > bs){ bs = s; best = k; }
+      });
+      if(best >= 0 && bs >= DOCX_EDIT_SIM){ usedO.add(best); ops.push({ kind: 'edit', block: oGap[best], to: nb, accepted: true }); }
+      else ops.push({ kind: 'add', to: nb, accepted: true });
+    });
+    oGap.forEach((ob, k) => { if(!usedO.has(k)) ops.push({ kind: 'remove', block: ob, accepted: true }); });
+  };
+  const anchors = lcsIdx(ofp, nfp);
+  let oi = 0, nj = 0;
+  anchors.forEach(([ai, bj]) => {
+    emitGap(oldArr.slice(oi, ai), newArr.slice(nj, bj));
+    ops.push({ kind: 'keep', block: oldArr[ai] });
+    oi = ai + 1; nj = bj + 1;
+  });
+  emitGap(oldArr.slice(oi), newArr.slice(nj));
+}
+/* build the full merge plan: matched sections diff block-by-block, unmatched new
+   sections are all-added, unmatched old sections are all-removed (appended last). */
+function docxDiff(oldBlocks, newBlocks){
+  const oldSecs = splitSections(oldBlocks), newSecs = splitSections(newBlocks);
+  const usedOld = new Set(), ops = [];
+  newSecs.forEach(ns => {
+    let best = -1, bs = 0;
+    oldSecs.forEach((os, i) => { if(usedOld.has(i)) return; const s = secScore(ns, os); if(s > bs){ bs = s; best = i; } });
+    if(best >= 0 && bs >= 0.6){ usedOld.add(best); alignSection(oldSecs[best].blocks, ns.blocks, ops); }
+    else ns.blocks.forEach(nb => ops.push({ kind: 'add', to: nb, accepted: true }));
+  });
+  oldSecs.forEach((os, i) => { if(!usedOld.has(i)) os.blocks.forEach(ob => ops.push({ kind: 'remove', block: ob, accepted: true })); });
+  const counts = { edit: 0, add: 0, remove: 0 };
+  ops.forEach(op => { if(op.kind in counts) counts[op.kind]++; });
+  return { ops, counts };
+}
+/* copy only the content fields from the new block onto the surviving old block,
+   so its styling, spacing, page-break flags and id are untouched. */
+function applyEditContent(o, n){
+  switch(o.type){
+    case 'body':  o.html = n.html; break;
+    case 'h1':    o.text = n.text; if('eyebrow' in n) o.eyebrow = n.eyebrow; break;
+    case 'h2': case 'h3': case 'h4': case 'h5': case 'label': o.text = n.text; break;
+    case 'quote': o.text = n.text; o.by = n.by; break;
+    case 'table': o.head = n.head; o.rows = n.rows; normTable(o); break;   // normTable keeps widths/merges when shapes still fit
+    case 'image': o.caption = n.caption; break;
+    case 'stat':  o.v = n.v; o.l = n.l; o.note = n.note; break;
+    case 'stats': o.items = n.items; break;
+    case 'blurb': o.title = n.title; o.body = n.body; break;
+  }
+}
+/* materialise the plan honouring each op's accepted flag, re-fingerprint every
+   surviving block, then commit. Declined edits keep old content; declined
+   removals retain the block; declined additions are dropped. */
+function applyDocxMerge(plan, fileName){
+  const out = [];
+  plan.ops.forEach(op => {
+    if(op.kind === 'keep') out.push(op.block);
+    else if(op.kind === 'edit'){ if(op.accepted) applyEditContent(op.block, op.to); out.push(op.block); }
+    else if(op.kind === 'add'){ if(op.accepted) out.push(op.to); }
+    else if(op.kind === 'remove'){ if(!op.accepted) out.push(op.block); }
+  });
+  out.forEach(b => { b.fp = fingerprint(b); });
+  D.blocks = out;
+  D.meta.importSource = { fileName: fileName, importedAt: Date.now() };
+  sel = out[0] ? out[0].id : null;
+  commit();
+  const panel = $('docxPanel'); panel.hidden = true; panel.innerHTML = '';
+  const c = plan.counts;
+  toast('Merged ' + [c.edit && c.edit + ' edited', c.add && c.add + ' added', c.remove && c.remove + ' removed'].filter(Boolean).join(', ') || 'no changes');
+}
+/* the mandatory review panel: one row per change, each skippable, then Apply /
+   Replace all / Cancel. Reuses the .docx-panel styling shipped with Phase 1. */
+function renderDocxReview(plan, fileName, newBlocks){
+  const panel = $('docxPanel');
+  const changes = plan.ops.filter(op => op.kind !== 'keep');
+  if(!changes.length){
+    D.meta.importSource.importedAt = Date.now(); save();
+    panel.hidden = false; panel.className = 'docx-diag';
+    panel.innerHTML = `<span class="dd-badge low">up to date</span><span>No changes to merge from ${esc(fileName)}</span>`;
+    return;
+  }
+  const tag = { edit: 'edited', add: 'added', remove: 'removed' };
+  const label = op => { const b = op.to || op.block; return esc(CLEAN(blockPlainText(b)).slice(0, 90) || ('(' + b.type + ')')); };
+  const rows = changes.map((op, i) => `<div class="docx-row" data-i="${i}">`
+    + `<span class="dr-tag ${tag[op.kind]}">${tag[op.kind]}</span>`
+    + `<span class="dr-text">${label(op)}</span>`
+    + `<button class="dr-skip" title="Skip this change" data-i="${i}">×</button></div>`).join('');
+  const c = plan.counts;
+  panel.hidden = false;
+  panel.className = 'docx-panel';
+  panel.innerHTML = `<div class="dp-head">Review changes <span class="dp-sum">${c.edit} edited · ${c.add} added · ${c.remove} removed</span></div>`
+    + `<div class="dp-list">${rows}</div>`
+    + `<div class="dp-foot"><button class="btn btn-primary btn-sm" data-docx-apply style="flex:1">Apply changes</button>`
+    + `<button class="btn btn-ghost btn-sm" data-docx-replace title="Discard the report and repopulate from this file">Replace all</button>`
+    + `<button class="btn btn-ghost btn-sm" data-docx-cancel>Cancel</button></div>`;
+  panel.querySelectorAll('.dr-skip').forEach(btn => btn.onclick = () => {
+    const i = +btn.dataset.i; changes[i].accepted = !changes[i].accepted;
+    btn.closest('.docx-row').classList.toggle('off', !changes[i].accepted);
+  });
+  panel.querySelector('[data-docx-apply]').onclick = () => applyDocxMerge(plan, fileName);
+  panel.querySelector('[data-docx-cancel]').onclick = () => { panel.hidden = true; panel.innerHTML = ''; };
+  panel.querySelector('[data-docx-replace]').onclick = () => {
+    if(!confirm('Replace the whole report with this file? Existing styling and layout will be lost.')) return;
+    delete D.meta.importSource;
+    docxFullPopulate(newBlocks, fileName);
+  };
+}
+
+/* Re-import of an already-imported report: diff against the current blocks and
+   open the review panel. Empty/first imports never reach here (see importDocxFile). */
+function docxReimport(blocks, fileName){
+  renderDocxReview(docxDiff(D.blocks || [], blocks), fileName, blocks);
 }
 
 async function importDocxFile(file){
