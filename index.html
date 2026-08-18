@@ -336,17 +336,29 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .insbtn:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
 .insbtn svg{width:.9375rem;height:.9375rem;color:hsl(var(--muted-foreground));flex:0 0 auto}
 .helptext{font-size:.8125rem;color:hsl(var(--muted-foreground));margin:1rem 0 0}
+/* a small (i) that reveals an explanation on hover/focus — declutters the panel */
+.infotip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:1rem;height:1rem;
+  margin-left:.35rem;padding:0;border:0;background:none;color:hsl(var(--muted-foreground));cursor:help;vertical-align:-2px}
+.infotip svg{width:.9375rem;height:.9375rem}
+.infotip:hover,.infotip:focus-visible{color:hsl(var(--foreground));outline:none}
+.infotip::after{content:attr(data-tip);position:absolute;left:0;top:150%;width:15rem;white-space:normal;text-align:left;
+  text-transform:none;letter-spacing:normal;font-weight:400;font-size:.72rem;line-height:1.45;
+  background:hsl(var(--popover));color:hsl(var(--popover-foreground));border:1px solid hsl(var(--border));border-radius:8px;
+  padding:.5rem .625rem;box-shadow:0 10px 30px -8px rgb(0 0 0/.4);opacity:0;pointer-events:none;transform:translateY(4px);
+  transition:opacity .12s,transform .12s;z-index:50}
+.infotip:hover::after,.infotip:focus-visible::after{opacity:1;transform:translateY(0)}
+.acc-head .infotip{margin-left:-.25rem}
 .swatches{display:flex;gap:.375rem;flex-wrap:wrap;margin-bottom:.75rem}
-.sw{width:1.75rem;height:1.75rem;border-radius:999px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgb(0 0 0/.2)}
+.sw{width:1.25rem;height:1.25rem;border-radius:999px;border:2px solid transparent;cursor:pointer;box-shadow:inset 0 0 0 1px rgb(0 0 0/.2)}
 .sw[aria-pressed="true"]{border-color:hsl(var(--foreground))}
 .sw:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
 /* "Recently used" colours sit in their own labelled row above the presets */
 .recentrow[hidden]{display:none}
 .recentrow{margin:0 0 .5rem}
 .recentlbl{font-size:.6875rem;font-weight:500;color:hsl(var(--muted-foreground));text-transform:uppercase;letter-spacing:.05em;margin:0 0 .375rem}
-.recentsws{margin-bottom:0}
+.recentsws{margin-bottom:0;flex-wrap:nowrap;overflow:hidden}
 /* colour picker rendered as a round well */
-.colorfield{width:2.25rem;height:2.25rem;padding:0;border:1px solid hsl(var(--input));border-radius:999px;
+.colorfield{width:1.25rem;height:1.25rem;padding:0;border:1px solid hsl(var(--input));border-radius:999px;
   background:hsl(var(--background));overflow:hidden;cursor:pointer;-webkit-appearance:none;appearance:none}
 .colorfield::-webkit-color-swatch-wrapper{padding:0}
 .colorfield::-webkit-color-swatch{border:0;border-radius:999px}
@@ -546,7 +558,9 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   color:hsl(var(--muted-foreground));user-select:none}
 .folio em{display:block;font-style:normal;font-size:.625rem;opacity:.7;margin-top:.125rem}
 .folio.flagged{color:hsl(var(--destructive))}
-.page{width:210mm;min-height:297mm;height:297mm;background:var(--paper);position:relative;overflow:hidden;
+.page{width:210mm;min-height:297mm;height:297mm;position:relative;overflow:hidden;
+  background-color:var(--paper);background-image:var(--paper-fill,none);
+  background-size:var(--paper-size,cover);background-position:center;background-repeat:var(--paper-repeat,no-repeat);
   border-radius:2px;box-shadow:0 1px 2px rgb(0 0 0/.08), 0 12px 32px -12px rgb(0 0 0/.35)}
 @media screen{
   [data-paper="dark"] .page{box-shadow:0 0 0 1px #2B333C, 0 14px 36px -10px rgb(0 0 0/.6)}
@@ -562,18 +576,37 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
   font-family:var(--doc-body);font-size:var(--doc-body-size);line-height:var(--doc-body-leading);color:var(--doc-body-color,var(--doc-text))}
 code,.blk code{font-family:var(--doc-util),ui-monospace,monospace;font-size:.9em;
   background:var(--doc-hair3,rgba(0,0,0,.05));padding:.05em .3em;border-radius:2px}
-/* the band bleeds to the left edge like the footer does, and the rule runs
-   from that edge up to the text column so the label aligns with the body */
-.headband{position:absolute;left:0;right:0;top:0;height:var(--hh,13mm);padding-right:var(--ms);
-  display:flex;align-items:center;gap:2mm;color:var(--doc-dim)}
-.headband .hrule{flex:0 0 auto;width:calc(var(--ms) - 2mm);height:.4mm;background:var(--doc-accent-vis)}
-.headband .htext{flex:1;min-width:0;font-family:var(--doc-util);font-size:8pt;letter-spacing:.14em;
+/* Header and footer are full-width bands of one shared height (--bandh). The
+   chosen template lays out the label (the topic for a header, company · year
+   for a footer) and the mark. */
+.headband,.footstrip{position:absolute;left:0;right:0;height:var(--bandh,12mm);
+  display:flex;align-items:center;gap:2mm;color:var(--doc-dim);overflow:hidden}
+.headband{top:0}
+.footstrip{bottom:0}
+.band-label{flex:1;min-width:0;font-family:var(--doc-util);font-size:8pt;letter-spacing:.14em;
   text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.headband .hmark{flex:0 0 auto;display:flex;align-items:center;height:5.2mm}
-.headband .hmark svg{height:100%;width:auto;display:block;fill:currentColor}
-.headband .hmark img{height:100%;width:auto;display:block}
-.footstrip{position:absolute;left:0;right:0;bottom:0;line-height:0}
-.footstrip img{display:block;width:100%;height:auto}
+.band-rule{flex:0 0 auto;height:.4mm;background:var(--doc-accent-vis)}
+.band-mark{flex:0 0 auto;display:flex;align-items:center;height:5.2mm;margin-left:auto}
+.band-mark svg{height:100%;width:auto;display:block;fill:currentColor}
+.band-mark img{height:100%;width:auto;display:block}
+/* T1 Classic — accent rule from the edge, label, mark on the right */
+.band-tpl1{padding-right:var(--ms)}
+.band-tpl1 .band-rule{width:calc(var(--ms) - 2mm)}
+/* T2 Centred — label with a short accent underline, centred, no mark */
+.band-tpl2{justify-content:center;padding:0 var(--ms)}
+.band-tpl2 .band-ctr{display:flex;flex-direction:column;align-items:center;gap:1mm;min-width:0}
+.band-tpl2 .band-label{flex:0 1 auto;text-align:center}
+.band-tpl2 .band-crule{width:16mm;height:.5mm;background:var(--doc-accent-vis)}
+/* T3 Line — label left, mark right, hairline along the outer edge */
+.band-tpl3{padding:0 var(--ms)}
+.headband.band-tpl3{border-bottom:.3mm solid var(--doc-rule)}
+.footstrip.band-tpl3{border-top:.3mm solid var(--doc-rule)}
+/* T4 Bar — a solid accent band with a reversed label and mark */
+.band-tpl4{padding:0 var(--ms);background:var(--doc-accent-vis)}
+.band-tpl4 .band-label,.band-tpl4 .band-mark{color:var(--doc-thead-fg)}
+/* an uploaded image replaces the template entirely: full width, own height */
+.headband.band-img,.footstrip.band-img{height:auto;padding:0;display:block;line-height:0;overflow:visible;gap:0}
+.headband.band-img img,.footstrip.band-img img{display:block;width:100%;height:auto}
 .pagenum{position:absolute;font-family:var(--doc-util);font-size:8pt;color:var(--doc-num);font-variant-numeric:tabular-nums}
 .bandph.strip{justify-content:center;height:9mm;border-left:0;border-right:0;border-bottom:0;border-radius:0}
 .bandph{display:flex;align-items:center;height:100%;padding:0 2mm;border:1px dashed var(--doc-rule);
@@ -1007,7 +1040,7 @@ table.doc thead th{position:relative}
 @media print{
   #view-library{display:none!important}
   .ed-top,.ed-side,.editrail,.blkbar,.fmtbar,.pagegear,.pagepanel,.folio,.overflag,.toast,.coverEmpty,#measure,.dialog,.dialog-overlay,
-  .authordot,.peerdot,.peer-banner,.lockbanner,.insbar{display:none!important}
+  .mesh-ov,.authordot,.peerdot,.peer-banner,.lockbanner,.insbar{display:none!important}
   /* collaboration chrome never belongs in the exported file */
   .blk.peer-locked{opacity:1!important}
   .blk.peer-locked::after{display:none!important}
@@ -1051,7 +1084,7 @@ table.doc thead th{position:relative}
 /* Design → Palette: five reusable, named text colours. Hex is the primary
    field so the picker always reads in hex; the well opens the native picker. */
 .palrow{display:flex;align-items:center;gap:.375rem;margin-bottom:.375rem}
-.palwell{position:relative;flex:0 0 auto;width:1.75rem;height:1.75rem;border-radius:999px;overflow:hidden;
+.palwell{position:relative;flex:0 0 auto;width:1.25rem;height:1.25rem;border-radius:999px;overflow:hidden;
   box-shadow:inset 0 0 0 1px rgb(0 0 0/.2);cursor:pointer}
 .palwell span{display:block;width:100%;height:100%}
 .palwell input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
@@ -1094,14 +1127,56 @@ table.doc thead th{position:relative}
 .colorrow{display:flex;gap:.375rem;align-items:center}
 .colorrow .colorfield{flex:0 0 auto}
 .hexin{flex:1 1 auto;min-width:0;height:2.25rem;text-transform:uppercase;font-family:ui-monospace,monospace}
+/* multi-stop gradient editor — shared by the Design panel and the page panel */
+.grad-prev{height:2.75rem;border-radius:calc(var(--radius) - 2px);border:1px solid hsl(var(--border));background-size:cover;background-position:center}
+.grad-stops{display:flex;flex-direction:column;gap:.375rem;margin-top:.5rem}
+.grad-stop{display:flex;align-items:center;gap:.375rem}
+.grad-stop .colorfield{flex:0 0 auto}
+.grad-stop .grad-pos{flex:1 1 auto;min-width:0;height:2.25rem;font-size:.8125rem}
+.grad-stop .grad-del{flex:0 0 auto;width:2.25rem;height:2.25rem}
+.grad-stop .grad-del:disabled{opacity:.35;cursor:default}
+.grad-add{width:100%;margin-top:.5rem}
+/* mesh (points) gradient — panel list + on-page overlay */
+.mesh-list{display:flex;flex-direction:column;gap:.5rem;margin-top:.25rem}
+.mesh-row{display:flex;align-items:center;gap:.5rem;padding:.25rem;border-radius:calc(var(--radius) - 3px);border:1px solid transparent}
+.mesh-row.sel{border-color:hsl(var(--ring));background:hsl(var(--accent)/.5)}
+.mesh-row .colorfield{flex:0 0 auto}
+.mesh-sliders{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.25rem}
+.mesh-sl{display:flex;align-items:center;gap:.5rem;font-size:.6875rem;color:hsl(var(--muted-foreground))}
+.mesh-sl>span{flex:0 0 3.1rem}
+.mesh-sl input[type=range]{flex:1 1 auto;height:1rem}
+.mesh-ov{position:absolute;inset:0;z-index:8;cursor:crosshair}
+.mesh-pt{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:999px;border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.5),0 2px 7px rgba(0,0,0,.45);cursor:grab}
+.mesh-pt.sel{box-shadow:0 0 0 2px hsl(var(--ring)),0 0 0 4px #fff,0 2px 8px rgba(0,0,0,.5)}
+.mesh-ring{position:absolute;border:1.5px dashed rgba(255,255,255,.9);border-radius:999px;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.2)}
+.mesh-grab{position:absolute;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:999px;background:#fff;
+  border:1px solid rgba(0,0,0,.5);cursor:ew-resize;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+/* header/footer template picker — 4 equal-height, full-width band styles */
+.tplpick{display:grid;grid-template-columns:1fr 1fr;gap:.375rem;margin:.5rem 0}
+.tplbtn{display:flex;flex-direction:column;gap:.3125rem;padding:.4375rem;border:1px solid hsl(var(--border));
+  border-radius:calc(var(--radius) - 2px);background:hsl(var(--background));color:inherit;cursor:pointer;font:inherit;font-size:.6875rem}
+.tplbtn:hover{border-color:hsl(var(--ring))}
+.tplbtn[aria-pressed="true"]{border-color:hsl(var(--primary));box-shadow:0 0 0 1px hsl(var(--primary))}
+.tplbtn .tplname{font-weight:500;text-align:left}
+.tplmini{display:flex;align-items:center;gap:3px;height:15px;width:100%;padding:0 3px;border-radius:3px;background:hsl(var(--muted)/.7)}
+.tplmini.col{flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.tplmini.line{border-bottom:1.5px solid hsl(var(--muted-foreground)/.55)}
+.tplmini.bar{background:hsl(var(--primary));justify-content:space-between}
+.tplmini .dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
 /* Design preview dialog — live sample layout on the left, editable settings
    on the right, so a look can be tuned and seen at the same time. */
 .dlg-editor{max-width:62rem;width:calc(100vw - 3rem)}
-.ss-wrap{display:grid;grid-template-columns:minmax(0,1fr) 17rem;gap:1rem;max-height:68vh}
+.ss-wrap{display:grid;grid-template-columns:17rem minmax(0,1fr);gap:1rem;max-height:68vh}
 .ss-preview{overflow:auto;background:hsl(var(--muted)/.4);border:1px solid hsl(var(--border));border-radius:var(--radius);padding:1rem}
 .ss-page{background:var(--paper);border-radius:calc(var(--radius) - 2px);box-shadow:0 1px 4px rgb(0 0 0/.14);
   padding:1.5rem 1.75rem;font-family:var(--doc-body);font-size:var(--doc-body-size);
   line-height:var(--doc-body-leading);color:var(--doc-body-color,var(--doc-text))}
+/* the sample renders blocks without the .blk wrapper, so mirror its inter-block
+   rhythm here — otherwise a subheading sits flush against the body above it */
+.ss-page > [data-t="body"]{margin-bottom:4.5mm}
+.ss-page > [data-t="h2"],.ss-page > [data-t="h3"]{margin-top:6mm}
 .ss-controls{overflow:auto;display:flex;flex-direction:column;gap:.875rem;padding-right:.25rem}
 .pv-field .label{display:block;margin-bottom:.3125rem}
 .pv-seg{display:flex;gap:.25rem}
@@ -1217,7 +1292,7 @@ table.doc thead th{position:relative}
         <p class="helptext" id="themeNote" style="margin:.5rem 0 0">A theme stores every design setting — type, colours, margins, header, footer, page numbers and end mark — so you can reuse a look across reports and hand it to someone else.</p>
       </div>
       <div class="acc" data-acc="cover">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="image"></span><span class="acc-label">Cover</span><span class="acc-sum" id="sumCover"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="image"></span><span class="acc-label">Cover</span><span class="infotip" tabindex="0" role="img" aria-label="About Cover" data-tip="Set the cover image and how it's laid out — Image + plate, Image band, Framed image, or Image only. Darken the image so any overlaid text stays legible."><span data-icon="info"></span></span><span class="acc-sum" id="sumCover"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="field" style="display:flex;gap:.375rem">
             <button class="btn btn-outline btn-sm" id="coverPick" style="flex:1"><span data-icon="upload"></span> Upload cover image</button>
@@ -1234,7 +1309,7 @@ table.doc thead th{position:relative}
       </div>
 
       <div class="acc" data-acc="type">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="type"></span><span class="acc-label">Typography</span><span class="acc-sum" id="sumType"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="type"></span><span class="acc-label">Typography</span><span class="infotip" tabindex="0" role="img" aria-label="About Typography" data-tip="Choose a type set (Editorial, Corporate or Classic), the body-text size, and whether headings are numbered like 2.1."><span data-icon="info"></span></span><span class="acc-sum" id="sumType"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="tabs-list" id="typeSet">
             <button class="tabs-trigger" data-type="editorial" data-state="active">Editorial</button>
@@ -1247,44 +1322,60 @@ table.doc thead th{position:relative}
       </div>
 
       <div class="acc" data-acc="colour">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="droplet"></span><span class="acc-label">Colour</span><span class="acc-sum" id="sumColour"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="droplet"></span><span class="acc-label">Colour</span><span class="infotip" tabindex="0" role="img" aria-label="About Colour" data-tip="Set the document accent, paper background and body-text colour. Text, rules and figures are derived from the paper colour so contrast holds on any paper. To colour part of a paragraph, select the words and use the colour dots on the floating toolbar."><span data-icon="info"></span></span><span class="acc-sum" id="sumColour"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <p class="grouplbl">Accent</p>
           <div class="swatches" id="swatches"></div>
           <div class="field"><label class="label" for="accentCustom">Custom accent</label><input type="color" class="colorfield" id="accentCustom"></div>
-          <p class="grouplbl">Paper</p>
-          <div class="swatches" id="paperSwatches"></div>
-          <div class="field"><label class="label" for="paperCustom">Custom paper colour</label><input type="color" class="colorfield" id="paperCustom"></div>
-          <p class="helptext" id="paperNote" style="margin:0 0 1rem"></p>
+          <p class="grouplbl">Paper background<button type="button" class="infotip" aria-label="About paper backgrounds" data-tip="The page background can be a solid colour, a gradient, or an image. Gradient has two styles: Linear — an angle with colour stops; and Mesh — click the page to drop colour points, drag a point to move it, and drag its ring to change the spread (set each point's colour, opacity and spread in the list). Image lets you upload a picture and pick how it fits the page. Any single page can override this from its ⚙ gear."><span data-icon="info"></span></button></p>
+          <div class="pv-seg" id="bgTypeSet" style="margin-bottom:.625rem">
+            <button data-bg="solid" aria-pressed="true">Solid</button>
+            <button data-bg="gradient" aria-pressed="false">Gradient</button>
+            <button data-bg="image" aria-pressed="false">Image</button>
+          </div>
+          <div id="bgSolid">
+            <div class="swatches" id="paperSwatches"></div>
+            <div class="field"><label class="label" for="paperCustom">Custom paper colour</label><input type="color" class="colorfield" id="paperCustom"></div>
+          </div>
+          <div id="bgGradient" hidden><div id="docGrad"></div></div>
+          <div id="bgImage" hidden>
+            <div class="field" style="display:flex;gap:.375rem">
+              <button class="btn btn-outline btn-sm" id="bgImgPick" style="flex:1"><span data-icon="upload"></span> Upload background image</button>
+              <button class="btn btn-ghost btn-sm" id="bgImgClear">Clear</button>
+              <input type="file" id="bgImgIn" accept="image/*,.svg" hidden>
+            </div>
+            <div class="field"><label class="label" for="bgImgFit">Fit</label>
+              <select class="select" id="bgImgFit"><option value="cover">Cover — fill the page</option><option value="contain">Contain — fit inside</option><option value="tile">Tile — repeat</option><option value="stretch">Stretch — distort to fit</option></select>
+            </div>
+            <p class="helptext" id="bgImgNote" style="margin:0"></p>
+          </div>
+          <p class="helptext" id="paperNote" style="margin:.375rem 0 1rem"></p>
           <p class="grouplbl">Body text</p>
           <div class="swatches" id="textSwatches"></div>
           <div class="field"><label class="label" for="textCustom">Custom text colour</label><input type="color" class="colorfield" id="textCustom"></div>
           <p class="helptext" id="textNote" style="margin:0 0 .375rem"></p>
-          <p class="helptext" style="margin:0">This sets the whole document. To colour part of a paragraph, select the words and use the colour dots on the floating toolbar.</p>
         </div>
       </div>
 
       <div class="acc" data-acc="palette">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="droplet"></span><span class="acc-label">Palette</span><span class="acc-sum" id="sumPalette"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="droplet"></span><span class="acc-label">Palette</span><span class="infotip" tabindex="0" role="img" aria-label="About Palette" data-tip="Five reusable text colours. Type a hex or click a well; name them however you like — Tailwind names by default. They fill the colour button on the floating toolbar."><span data-icon="info"></span></span><span class="acc-sum" id="sumPalette"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
-          <p class="helptext" style="margin:0 0 .625rem">Five reusable text colours. Type a hex or click the well; name them however you like — Tailwind names by default. They fill the colour button on the floating toolbar.</p>
           <div id="paletteRows"></div>
         </div>
       </div>
 
       <div class="acc" data-acc="links">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="link"></span><span class="acc-label">Links</span><span class="acc-sum" id="sumLinks"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="link"></span><span class="acc-label">Links</span><span class="infotip" tabindex="0" role="img" aria-label="About Links" data-tip="Set the colour and underline for every link. Add links by selecting words and using the link button on the floating toolbar — they stay clickable in the exported PDF."><span data-icon="info"></span></span><span class="acc-sum" id="sumLinks"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <p class="grouplbl">Colour</p>
           <div class="swatches" id="linkSwatches"></div>
           <div class="field"><label class="label" for="linkCustom">Custom link colour</label><input type="color" class="colorfield" id="linkCustom"></div>
           <div class="switch-row"><span class="label">Underline links</span><button class="switch" id="linkUnderline" role="switch" aria-checked="true"></button></div>
-          <p class="helptext" style="margin:.375rem 0 0">Sets every link in the document. Add links by selecting words and using the link button on the floating toolbar — they stay clickable in the exported PDF.</p>
         </div>
       </div>
 
       <div class="acc" data-acc="page">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="file"></span><span class="acc-label">Page</span><span class="acc-sum" id="sumPage"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="file"></span><span class="acc-label">Page</span><span class="infotip" tabindex="0" role="img" aria-label="About Page" data-tip="Set the page margins. When exporting to PDF, choose Margins: None and Scale: 100%, and turn off the browser's own headers and footers."><span data-icon="info"></span></span><span class="acc-sum" id="sumPage"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="field"><label class="label" for="marginSel">Margins</label>
             <select class="select" id="marginSel"><option value="narrow">Narrow · 15 / 14 mm</option><option value="normal">Normal · 22 / 18 mm</option><option value="wide">Wide · 28 / 24 mm</option></select>
@@ -1293,32 +1384,41 @@ table.doc thead th{position:relative}
       </div>
 
       <div class="acc" data-acc="bands">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="layers"></span><span class="acc-label">Header &amp; footer</span><span class="acc-sum" id="sumBands"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="layers"></span><span class="acc-label">Header &amp; footer</span><span class="infotip" tabindex="0" role="img" aria-label="About header and footer" data-tip="Pick one of four full-width band templates — Classic, Centred, Line or Bar — for the header and footer, and set each band's height. The header shows the current topic (a topic's opening page is skipped); the footer shows the company and year from the cover. Or upload your own image — it replaces the template and spans the full page width."><span data-icon="info"></span></span><span class="acc-sum" id="sumBands"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="switch-row"><span class="label">Running header</span><button class="switch" id="showHead" role="switch" aria-checked="false"></button></div>
           <div id="headUpload">
-            <p class="helptext" style="margin:0 0 .5rem">A rule from the left edge, the current topic's name, and a mark on the right. The name follows whichever topic the page falls under, and a topic's opening page carries no header since its title is already there. The band matches the footer's height.</p>
+            <div id="headTplBox">
+              <p class="label" style="margin:.25rem 0 0">Template</p>
+              <div class="tplpick" id="headTplPick"></div>
+              <div class="field"><label class="label">Height <span class="muted" id="headHV"></span></label><input type="range" id="headH" min="6" max="36" step="1"></div>
+            </div>
             <div class="field" style="display:flex;gap:.375rem">
-              <button class="btn btn-outline btn-sm" id="headPick" style="flex:1"><span data-icon="upload"></span> Replace the mark</button>
-              <button class="btn btn-ghost btn-sm" id="headClear">Reset</button>
+              <button class="btn btn-outline btn-sm" id="headPick" style="flex:1"><span data-icon="upload"></span> Upload header image</button>
+              <button class="btn btn-ghost btn-sm" id="headClear">Clear</button>
               <input type="file" id="headIn" accept="image/*,.svg" hidden>
             </div>
             <p class="helptext" id="headNote" style="margin:0 0 .5rem"></p>
           </div>
           <div class="switch-row"><span class="label">Footer</span><button class="switch" id="showFoot" role="switch" aria-checked="false"></button></div>
-          <div class="field" id="footUpload" style="display:flex;gap:.375rem">
-            <button class="btn btn-outline btn-sm" id="footPick" style="flex:1"><span data-icon="upload"></span> Upload footer image</button>
-            <button class="btn btn-ghost btn-sm" id="footClear">Clear</button>
-            <input type="file" id="footIn" accept="image/*,.svg" hidden>
+          <div id="footUpload">
+            <div id="footTplBox">
+              <p class="label" style="margin:.25rem 0 0">Template</p>
+              <div class="tplpick" id="footTplPick"></div>
+              <div class="field"><label class="label">Height <span class="muted" id="footHV"></span></label><input type="range" id="footH" min="6" max="36" step="1"></div>
+            </div>
+            <div class="field" style="display:flex;gap:.375rem">
+              <button class="btn btn-outline btn-sm" id="footPick" style="flex:1"><span data-icon="upload"></span> Upload footer image</button>
+              <button class="btn btn-ghost btn-sm" id="footClear">Clear</button>
+              <input type="file" id="footIn" accept="image/*,.svg" hidden>
+            </div>
+            <p class="helptext" id="footNote"></p>
           </div>
-          <p class="helptext" id="footNote"></p>
-          <p class="helptext" style="margin:0">The header sits inside the top margin. The footer bleeds to the full page width, flush with the bottom edge. Both repeat on every content sheet, and PNG keeps a transparent background.</p>
-          <p class="helptext" style="margin:.375rem 0 0">The built-in mark takes the header's own colour so it works on any paper. An uploaded one keeps its own colours.</p>
         </div>
       </div>
 
       <div class="acc" data-acc="folio">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="hash"></span><span class="acc-label">Page numbers</span><span class="acc-sum" id="sumFolio"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="hash"></span><span class="acc-label">Page numbers</span><span class="infotip" tabindex="0" role="img" aria-label="About page numbers" data-tip="Show or hide page numbers and set their alignment, distance from the bottom edge, side inset and colour."><span data-icon="info"></span></span><span class="acc-sum" id="sumFolio"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="switch-row"><span class="label">Show page numbers</span><button class="switch" id="showNum" role="switch" aria-checked="true"></button></div>
           <div id="folioBox">
@@ -1341,7 +1441,7 @@ table.doc thead th{position:relative}
       </div>
 
       <div class="acc" data-acc="end">
-        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="flag"></span><span class="acc-label">End mark</span><span class="acc-sum" id="sumEnd"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
+        <button class="acc-head" aria-expanded="false"><span class="acc-ic" data-icon="flag"></span><span class="acc-label">End mark</span><span class="infotip" tabindex="0" role="img" aria-label="About end mark" data-tip="The mark on the closing page — the coloured logo or a plain single-colour version — with adjustable colour and opacity."><span data-icon="info"></span></span><span class="acc-sum" id="sumEnd"></span><span class="acc-chev" data-icon="chevron-down"></span></button>
         <div class="acc-body" hidden>
           <div class="field"><label class="label">Logo</label>
             <div class="tabs-list" id="endVariant">
@@ -1359,7 +1459,6 @@ table.doc thead th{position:relative}
         </div>
       </div>
 
-      <p class="helptext" style="margin:1rem 0 0">When printing, set Margins to None and Scale to 100%, and turn off browser headers and footers.</p>
     </div>
 
     <div class="pane" id="pane-theming" hidden>
@@ -1433,8 +1532,9 @@ table.doc thead th{position:relative}
 
 <div class="dialog dlg-editor" id="dlgStyle" role="dialog" aria-modal="true" aria-labelledby="dlgStyleTitle">
   <h2 id="dlgStyleTitle">Design preview</h2>
-  <p class="dsc">Edit type, colour and page on the right; the sample layout on the left updates as you go.</p>
+  <p class="dsc">Edit type, colour and page on the left; the sample layout on the right updates as you go.</p>
   <div class="ss-wrap">
+    <div class="ss-controls" id="ssControls"></div>
     <div class="ss-preview">
       <div class="ss-page" id="ssPage">
         <div data-t="label"><span class="labeltext" style="--label-size:9pt">Section label</span></div>
@@ -1452,7 +1552,6 @@ table.doc thead th{position:relative}
       </div>
       <div id="ssPalStrip"></div>
     </div>
-    <div class="ss-controls" id="ssControls"></div>
   </div>
   <div class="dialog-footer"><button class="btn btn-default" data-close>Done</button></div>
 </div>
@@ -1530,11 +1629,29 @@ table.doc thead th{position:relative}
 <!-- Per-page quick settings, opened from the gear that appears on page hover -->
 <div class="pagepanel" id="pageSettings" role="dialog" aria-label="Page settings">
   <div class="pp-head"><span data-icon="settings"></span> <span id="ppTitle">Page</span></div>
-  <p class="pp-lbl">Colour</p>
-  <div class="pp-swatches" id="ppSwatches"></div>
-  <div class="colorrow"><input type="color" class="colorfield" id="ppColor" aria-label="Page colour"><input type="text" class="input hexin" id="ppHex" maxlength="7" spellcheck="false" aria-label="Page colour hex"></div>
+  <p class="pp-lbl">Background</p>
+  <div class="pv-seg" id="ppBgSet" style="margin-bottom:.5rem">
+    <button data-bg="solid" aria-pressed="true">Solid</button>
+    <button data-bg="gradient" aria-pressed="false">Gradient</button>
+    <button data-bg="image" aria-pressed="false">Image</button>
+  </div>
+  <div id="ppSolid">
+    <div class="pp-swatches" id="ppSwatches"></div>
+    <div class="colorrow"><input type="color" class="colorfield" id="ppColor" aria-label="Page colour"><input type="text" class="input hexin" id="ppHex" maxlength="7" spellcheck="false" aria-label="Page colour hex"></div>
+  </div>
+  <div id="ppGradient" hidden><div id="ppGrad"></div></div>
+  <div id="ppImage" hidden>
+    <div class="field" style="display:flex;gap:.375rem;margin:0 0 .5rem">
+      <button class="btn btn-outline btn-sm" id="ppImgPick" style="flex:1"><span data-icon="upload"></span> Upload image</button>
+      <button class="btn btn-ghost btn-sm" id="ppImgClear">Clear</button>
+      <input type="file" id="ppImgIn" accept="image/*,.svg" hidden>
+    </div>
+    <div class="field" style="margin:0 0 .5rem"><label class="label" for="ppImgFit">Fit</label>
+      <select class="select" id="ppImgFit"><option value="cover">Cover</option><option value="contain">Contain</option><option value="tile">Tile</option><option value="stretch">Stretch</option></select>
+    </div>
+  </div>
   <p class="pp-note" id="ppNote"></p>
-  <button class="btn btn-ghost btn-sm" id="ppReset" style="width:100%;margin:.125rem 0 .5rem"><span data-icon="reset"></span> Restore default colour</button>
+  <button class="btn btn-ghost btn-sm" id="ppReset" style="width:100%;margin:.125rem 0 .5rem"><span data-icon="reset"></span> Restore default background</button>
   <div class="pp-toggles">
     <div class="switch-row"><span class="label">Header</span><button class="switch" id="ppHead" role="switch" aria-checked="false"></button></div>
     <div class="switch-row"><span class="label">Footer</span><button class="switch" id="ppFoot" role="switch" aria-checked="false"></button></div>
@@ -1658,7 +1775,7 @@ const PAPERS = [['#FFFFFF','White'],['#FAF7F0','Ivory'],['#F1F0EC','Soft grey'],
 const $ = id => document.getElementById(id);
 /* Single source of truth for the app version shown beside the logo. Bumped by
    0.1 on every commit by the pre-commit hook (scripts/bump-version.sh). */
-const APP_VERSION = '1.2';
+const APP_VERSION = '1.3';
 { const _v = document.getElementById('appVer'); if(_v) _v.textContent = 'v' + APP_VERSION; }
 const uid = () => Math.random().toString(36).slice(2, 9);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1751,6 +1868,9 @@ const imgWritten = new Set();
 const lastBody = new Map();
 function usedImageIds(doc){
   const ids = [doc.meta.cover.imgId, doc.meta.header.imgId, doc.meta.footer.imgId];
+  const s = doc.settings || {};
+  if(s.fill && s.fill.imgId) ids.push(s.fill.imgId);
+  if(s.pages) Object.keys(s.pages).forEach(k => { const f = s.pages[k] && s.pages[k].fill; if(f && f.imgId) ids.push(f.imgId); });
   (doc.blocks || []).forEach(b => { if(b.imgId) ids.push(b.imgId); });
   return ids.filter(Boolean);
 }
@@ -1863,15 +1983,43 @@ function blankDoc(name){
            tag:'', cover:{ imgId:null, scrim:45, layout:'plate', info:null },
            header:{ imgId:null, w:0, h:0 }, footer:{ imgId:null, w:0, h:0 } },
     settings:{ accent:'#0B5D57', type:'editorial', bodySize:106, margin:'normal',
-               showNum:true, showHead:false, showFoot:false, paperColor:'#FFFFFF',
+               showNum:true, showHead:false, showFoot:false, headerTemplate:1, footerTemplate:1, headerHeight:12, footerHeight:12, paperColor:'#FFFFFF',
                folio:{ align:'right', bottom:null, side:null, color:'auto' },
                end:{ variant:'plain', color:'auto', opacity:100 },
                textColor:'#9595B2', numberHeadings:false,
-               linkColor:'accent', linkUnderline:true },
+               linkColor:'accent', linkUnderline:true,
+               fill:{ type:'solid', mode:'linear', angle:135, stops:[], points:[], base:null, imgId:null, imgFit:'cover' } },
     toc:{ on:true, title:'Contents' },
     blocks:[]
   };
 }
+/* Paper background can be a solid colour (paperColor), a multi-stop linear
+   gradient, or an image. This normalises whatever a saved/imported/theme fill
+   holds so the rest of the code can trust its shape. */
+function normFill(f){
+  f = f || {};
+  const cl = (v, lo, hi, d) => { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
+  const type = (f.type === 'gradient' || f.type === 'image') ? f.type : 'solid';
+  const stops = Array.isArray(f.stops)
+    ? f.stops.map(s => ({ color:String((s && s.color) || '#000000'), pos:cl(s && s.pos, 0, 100, 0) }))
+    : [];
+  /* mesh mode: each point is a radial blob with its own colour, opacity and
+     spread, placed anywhere on the page (x/y are percentages) */
+  const mode = f.mode === 'points' ? 'points' : 'linear';
+  const points = Array.isArray(f.points)
+    ? f.points.map(p => ({
+        x:cl(p && p.x, 0, 100, 50), y:cl(p && p.y, 0, 100, 50),
+        color:(/^#[0-9a-f]{6}$/i.test(p && p.color) ? p.color : '#000000'),
+        opacity:cl(p && p.opacity, 0, 1, 0.85), spread:cl(p && p.spread, 5, 150, 45) }))
+    : [];
+  const base = /^#[0-9a-f]{6}$/i.test(f.base || '') ? f.base : null;
+  const fit = ['cover','contain','tile','stretch'].includes(f.imgFit) ? f.imgFit : 'cover';
+  return { type, mode, angle:(f.angle == null ? 135 : (+f.angle || 0)), stops, points, base, imgId:f.imgId || null, imgFit:fit };
+}
+/* header/footer template id, clamped to the four available layouts */
+function bandTpl(v){ v = Math.round(+v); return (v >= 1 && v <= 4) ? v : 1; }
+/* header/footer band height in mm, thin → big; defaults to 12 */
+function bandH(v){ v = +v; return isFinite(v) ? Math.max(6, Math.min(36, v)) : 12; }
 /* Blocks are a flat list except for grids, which hold their own cells. These
    three helpers are the only places that need to know that. */
 function allBlocks(list, out){
@@ -1983,8 +2131,16 @@ function migrate(raw){
   out.settings.end = Object.assign({ variant:'plain', color:'auto', opacity:100 }, out.settings.end || {});
   if(out.settings.linkColor == null) out.settings.linkColor = 'accent';
   if(out.settings.linkUnderline == null) out.settings.linkUnderline = true;
+  out.settings.headerTemplate = bandTpl(out.settings.headerTemplate);
+  out.settings.footerTemplate = bandTpl(out.settings.footerTemplate);
+  out.settings.headerHeight = bandH(out.settings.headerHeight);
+  out.settings.footerHeight = bandH(out.settings.footerHeight);
   if(!out.settings.paperColor) out.settings.paperColor = out.settings.paper === 'dark' ? '#111519' : '#FFFFFF';
   delete out.settings.paper;
+  out.settings.fill = normFill(out.settings.fill);
+  if(out.settings.pages) Object.keys(out.settings.pages).forEach(k => {
+    const p = out.settings.pages[k]; if(p && p.fill) p.fill = normFill(p.fill);
+  });
   out.meta = Object.assign(base.meta, raw.meta || {});
   out.meta.cover = Object.assign(base.meta.cover, (raw.meta && raw.meta.cover) || {});
   out.meta.header = Object.assign(base.meta.header, (raw.meta && raw.meta.header) || {});
@@ -2838,14 +2994,25 @@ function renderEnd(){
 /* the strip bleeds to both edges, so its height follows the artwork's ratio */
 /* hasFoot lets a single page decide its own footer (per-page override); it
    defaults to the document setting when omitted */
+/* header/footer bands are full page width; an uploaded image sets its own
+   height by aspect, otherwise the per-band height slider applies */
 function footerStripMm(hasFoot){
   if(hasFoot == null) hasFoot = D.settings.showFoot;
   if(!hasFoot) return 0;
   const f = D.meta.footer;
-  if(!imgSrc(f.imgId)) return 9;
-  if(!f.w || !f.h) return 0;
-  return PAGE_W_MM * (f.h / f.w);
+  if(imgSrc(f.imgId) && f.w && f.h) return PAGE_W_MM * (f.h / f.w);
+  return bandH(D.settings.footerHeight);
 }
+/* one band's inner markup for the chosen template (1–4); markHtml is optional
+   (the footer carries no mark) */
+function bandInner(tpl, label, markHtml){
+  const mark = markHtml ? `<span class="band-mark">${markHtml}</span>` : '';
+  if(tpl === 2) return `<span class="band-ctr"><span class="band-label">${label}</span><span class="band-crule"></span></span>`;
+  if(tpl === 3 || tpl === 4) return `<span class="band-label">${label}</span>${mark}`;
+  return `<span class="band-rule"></span><span class="band-label">${label}</span>${mark}`;
+}
+function bandMarkHtml(kind){ const img = imgSrc(D.meta[kind].imgId); return img ? `<img src="${img}" alt="">` : HEADER_MARK; }
+function footerLabel(){ return esc([D.meta.company, D.meta.year].map(s => (s || '').trim()).filter(Boolean).join('  ·  ')); }
 /* where the folio sits by default: clear of the footer strip if there is one */
 function autoFolioBottomMm(hasFoot){
   const base = MARGINS[D.settings.margin].top / 2 - 2;
@@ -2899,9 +3066,9 @@ function endSettings(){ return Object.assign({ variant:'plain', color:'auto', op
 function endFill(c){ return END_COLORS[c] || (/^#[0-9a-f]{6}$/i.test(c || '') ? c : END_COLORS.auto); }
 /* the header band takes the footer's height so the two are balanced */
 function headerBandMm(){
-  const strip = footerStripMm();
-  if(strip) return strip;
-  return Math.max(6, MARGINS[D.settings.margin].top - 9);
+  const h = D.meta.header;
+  if(imgSrc(h.imgId) && h.w && h.h) return PAGE_W_MM * (h.h / h.w);
+  return bandH(D.settings.headerHeight);
 }
 /* a topic's opening page already carries its title, so no running head there */
 function pageOpensTopic(pi){
@@ -2956,25 +3123,34 @@ function render(){
     const showHead = ov.head != null ? ov.head : D.settings.showHead;
     const showFoot = ov.foot != null ? ov.foot : D.settings.showFoot;
     const showNum  = ov.num  != null ? ov.num  : D.settings.showNum;
-    if(ov.paper) applyPagePaper(page, ov.paper);
+    if(ov.fill || ov.paper) applyPageOverride(page, ov);
     if(showHead && !pageOpensTopic(pi)){
-      const hb = document.createElement('div'); hb.className = 'headband';
-      hb.style.setProperty('--hh', headerBandMm() + 'mm');
-      const custom = imgSrc(D.meta.header.imgId);
-      hb.innerHTML = `<span class="hrule"></span>`
-        + `<span class="htext">${esc(topicForPage(pi))}</span>`
-        + `<span class="hmark">${custom ? `<img src="${custom}" alt="">` : HEADER_MARK}</span>`;
+      const hImg = imgSrc(D.meta.header.imgId);
+      const hb = document.createElement('div');
+      if(hImg){
+        hb.className = 'headband band-img'; hb.innerHTML = `<img src="${hImg}" alt="">`;
+      } else {
+        const tpl = bandTpl(D.settings.headerTemplate);
+        hb.className = 'headband band-tpl' + tpl;
+        hb.style.setProperty('--bandh', bandH(D.settings.headerHeight) + 'mm');
+        hb.innerHTML = bandInner(tpl, esc(topicForPage(pi)), HEADER_MARK);
+      }
       page.appendChild(hb);
     }
     const body = document.createElement('div'); body.className = 'pageBody';
     pg.forEach(b => body.appendChild(renderBlock(b, false)));
     page.appendChild(body);
     if(showFoot){
-      const fs = document.createElement('div'); fs.className = 'footstrip';
       const fImg = imgSrc(D.meta.footer.imgId);
-      fs.innerHTML = fImg
-        ? `<img src="${fImg}" alt="">`
-        : `<span class="bandph strip">Footer image — full width, flush to the edges</span>`;
+      const fs = document.createElement('div');
+      if(fImg){
+        fs.className = 'footstrip band-img'; fs.innerHTML = `<img src="${fImg}" alt="">`;
+      } else {
+        const tpl = bandTpl(D.settings.footerTemplate);
+        fs.className = 'footstrip band-tpl' + tpl;
+        fs.style.setProperty('--bandh', bandH(D.settings.footerHeight) + 'mm');
+        fs.innerHTML = bandInner(tpl, footerLabel(), '');   // footer carries no mark
+      }
       page.appendChild(fs);
     }
     if(showNum){
@@ -3008,6 +3184,7 @@ function render(){
   D.pageCount = pages.length;
   if(typeof applyLocksToDom === 'function') applyLocksToDom();
   paintAuthorDots();
+  reanchorMesh();
 }
 /* A coloured dot in each block's margin showing who last added/changed it during
    collaboration (from the block's `by` stamp), so changes are easy to review. */
@@ -5341,13 +5518,40 @@ function bandUpload(inputId, pickId, clearId, key, label){
       const o = D.meta[key];
       o.imgId = putImage(src); o.w = w; o.h = h;
       commit(); toast(label + ' added');
-    }, { mime:'image/png', maxW:1600 });
+    }, { maxW:2480, maxBytes:4200000, jpegQuality:0.92 });
     $(inputId).value = '';
   };
   $(clearId).onclick = () => { const o = D.meta[key]; o.imgId = null; o.w = 0; o.h = 0; commit(); };
 }
-bandUpload('headIn','headPick','headClear','header','Mark');
+bandUpload('headIn','headPick','headClear','header','Header image');
 bandUpload('footIn','footPick','footClear','footer','Footer image');
+
+/* Header & footer templates — four full-width band layouts of one shared
+   height. A small schematic previews each; the mark comes from the upload or
+   the built-in logo. */
+const BAND_TEMPLATES = [[1,'Classic'],[2,'Centred'],[3,'Line'],[4,'Bar']];
+function tplMiniHtml(n, mark){
+  const A = 'hsl(var(--primary))', L = 'hsl(var(--muted-foreground)/.55)', LT = 'hsl(var(--primary-foreground)/.85)';
+  const dot = c => mark ? `<i class="dot" style="background:${c}"></i>` : '';
+  if(n === 2) return `<span class="tplmini col"><i style="width:42%;height:2px;background:${L}"></i><i style="width:24%;height:2px;background:${A}"></i></span>`;
+  if(n === 3) return `<span class="tplmini line"><i style="flex:1;height:2px;background:${L}"></i>${dot(A)}</span>`;
+  if(n === 4) return `<span class="tplmini bar"><i style="width:${mark ? '45%' : '70%'};height:2px;background:${LT}"></i>${dot(LT)}</span>`;
+  return `<span class="tplmini"><i style="width:9px;height:2px;background:${A}"></i><i style="flex:1;height:2px;background:${L}"></i>${dot(A)}</span>`;
+}
+function buildBandTemplatePicker(hostId, key, mark){
+  const host = $(hostId); if(!host) return;
+  host.innerHTML = '';
+  BAND_TEMPLATES.forEach(([n, name]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tplbtn'; b.dataset.tpl = n;
+    b.innerHTML = tplMiniHtml(n, mark) + `<span class="tplname">${name}</span>`;
+    b.onclick = () => { D.settings[key] = n; commit(); };
+    host.appendChild(b);
+  });
+}
+buildBandTemplatePicker('headTplPick', 'headerTemplate', true);
+buildBandTemplatePicker('footTplPick', 'footerTemplate', false);
+on('headH', 'input', e => { D.settings.headerHeight = bandH(+e.target.value); $('headHV').textContent = D.settings.headerHeight + ' mm'; render(); save(); });
+on('footH', 'input', e => { D.settings.footerHeight = bandH(+e.target.value); $('footHV').textContent = D.settings.footerHeight + ' mm'; render(); save(); });
 
 /* ==========================================================================
    STRUCTURE — a tree derived from the flat block list
@@ -6273,19 +6477,335 @@ function paperTokens(paperColor, accent, textColor, linkColor, linkUnderline){
 /* the CSS custom properties paperTokens controls, so a page override can be
    cleared cleanly */
 const PAGE_VAR_KEYS = Object.keys(paperTokens('#FFFFFF','#000000','auto','accent',true)).filter(k => k[0] === '-');
-/* paint / clear a single page's paper (text auto-derived, so it stays legible) */
-function applyPagePaper(page, hex){
-  const tok = paperTokens(hex, D.settings.accent, 'auto', D.settings.linkColor, D.settings.linkUnderline);
+/* the extra vars a gradient/image fill drives, kept separate so clearing a page
+   override wipes both the ink tokens and the fill layer */
+const PAGE_FILL_KEYS = ['--paper-fill','--paper-size','--paper-repeat'];
+
+/* ---- background fills: solid | gradient | image ------------------------- */
+function fillStops(fill){
+  return (fill && Array.isArray(fill.stops) ? fill.stops : [])
+    .filter(x => x && /^#[0-9a-f]{6}$/i.test(x.color))
+    .map(x => ({ color:x.color, pos:Math.max(0, Math.min(100, +x.pos || 0)) }));
+}
+function gradientCss(fill){
+  const s = fillStops(fill);
+  if(s.length < 2) return null;
+  const sorted = s.slice().sort((a,b) => a.pos - b.pos);
+  const ang = fill && fill.angle != null ? +fill.angle : 135;
+  return `linear-gradient(${ang}deg,${sorted.map(x => `${x.color} ${x.pos}%`).join(',')})`;
+}
+function rgbaStr(hex, a){
+  const c = toRgb(hex);
+  return `rgba(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)},${Math.max(0, Math.min(1, +a || 0))})`;
+}
+/* a mesh is a stack of radial blobs, each fading to transparent at its spread,
+   composited over the base colour (which is carried by --paper underneath) */
+function meshCss(fill){
+  const pts = (fill && Array.isArray(fill.points)) ? fill.points.filter(p => /^#[0-9a-f]{6}$/i.test(p.color)) : [];
+  if(!pts.length) return null;
+  return pts.map(p => `radial-gradient(circle at ${p.x}% ${p.y}%, ${rgbaStr(p.color, p.opacity)} 0%, ${rgbaStr(p.color, 0)} ${p.spread}%)`).join(',');
+}
+/* the representative solid colour to derive legible ink tones from: for a
+   gradient, the average of its stops; otherwise the fallback (paperColor) */
+function fillBaseHex(fill, fallback){
+  fallback = /^#[0-9a-f]{6}$/i.test(fallback || '') ? fallback : '#FFFFFF';
+  if(fill && fill.type === 'gradient'){
+    if(fill.mode === 'points') return /^#[0-9a-f]{6}$/i.test(fill.base || '') ? fill.base : fallback;
+    const s = fillStops(fill);
+    if(s.length){
+      const a = s.reduce((o,x) => { const c = toRgb(x.color); o.r += c.r; o.g += c.g; o.b += c.b; return o; }, {r:0,g:0,b:0});
+      return toHex({ r:a.r/s.length, g:a.g/s.length, b:a.b/s.length });
+    }
+  }
+  return fallback;
+}
+/* the CSS background-image layer + sizing for a fill, or null for a plain solid */
+function fillLayer(fill){
+  if(!fill || !fill.type || fill.type === 'solid') return null;
+  if(fill.type === 'gradient'){
+    if(fill.mode === 'points'){ const m = meshCss(fill); return m ? { image:m, size:'cover', repeat:'no-repeat' } : null; }
+    const g = gradientCss(fill); return g ? { image:g, size:'cover', repeat:'no-repeat' } : null;
+  }
+  if(fill.type === 'image'){
+    const src = imgSrc(fill.imgId); if(!src) return null;
+    const fit = fill.imgFit || 'cover';
+    if(fit === 'tile')    return { image:`url("${src}")`, size:'auto', repeat:'repeat' };
+    if(fit === 'contain') return { image:`url("${src}")`, size:'contain', repeat:'no-repeat' };
+    if(fit === 'stretch') return { image:`url("${src}")`, size:'100% 100%', repeat:'no-repeat' };
+    return { image:`url("${src}")`, size:'cover', repeat:'no-repeat' };
+  }
+  return null;
+}
+function setFillVars(style, fill){
+  const layer = fillLayer(fill);
+  style.setProperty('--paper-fill', layer ? layer.image : 'none');
+  style.setProperty('--paper-size', layer ? layer.size : 'cover');
+  style.setProperty('--paper-repeat', layer ? layer.repeat : 'no-repeat');
+}
+/* paint a single page's paper — a full override (fill + auto-derived ink) or a
+   plain colour — and clear one back to the document default */
+function applyPageOverride(page, ov){
+  const fill = ov.fill;
+  const baseHex = fill ? fillBaseHex(fill, ov.paper || D.settings.paperColor) : (ov.paper || D.settings.paperColor);
+  const tok = paperTokens(baseHex, D.settings.accent, 'auto', D.settings.linkColor, D.settings.linkUnderline);
   PAGE_VAR_KEYS.forEach(k => page.style.setProperty(k, tok[k]));
   page.classList.toggle('paper-dark', !!tok.dark);
+  setFillVars(page.style, fill);
 }
-function clearPagePaper(page){ PAGE_VAR_KEYS.forEach(k => page.style.removeProperty(k)); page.classList.remove('paper-dark'); }
+function clearPagePaper(page){
+  PAGE_VAR_KEYS.forEach(k => page.style.removeProperty(k));
+  PAGE_FILL_KEYS.forEach(k => page.style.removeProperty(k));
+  page.classList.remove('paper-dark');
+}
+
+/* ==========================================================================
+   MESH OVERLAY — direct manipulation of a "points" gradient on the page:
+   click to drop a radial point, drag it to move, drag its ring to spread.
+   `mesh` tracks which fill and which page the overlay is editing; it attaches
+   to the first content page for the document background, or to a specific page
+   for a per-page override. Colours/opacity/spread are edited in the panel.
+   ========================================================================== */
+let mesh = { on:false, scope:null, getFill:null, onChange:null, pageEl:null, sel:null, drag:null };
+function meshDocPage(){ return document.querySelector('#deskInner .page[data-page="1"]') || document.querySelector('#deskInner .page[data-page]'); }
+function meshTarget(){
+  if(mesh.scope === 'page')
+    return currentPageEl() || (pageGearIdx != null ? document.querySelector('#deskInner .page[data-page="' + (pageGearIdx + 1) + '"]') : null);
+  return meshDocPage();
+}
+function farCorner(cx, cy, w, h){ return Math.max(Math.hypot(cx,cy), Math.hypot(w-cx,cy), Math.hypot(cx,h-cy), Math.hypot(w-cx,h-cy)); }
+function deactivateMesh(){ mesh.on = false; mesh.drag = null; document.querySelectorAll('.mesh-ov').forEach(n => n.remove()); }
+function activateMesh(scope, getFill, onChange){
+  mesh.scope = scope; mesh.getFill = getFill; mesh.onChange = onChange; mesh.on = true;
+  mountMesh();
+}
+function reanchorMesh(){ if(mesh.on) mountMesh(); }
+function mountMesh(){
+  document.querySelectorAll('.mesh-ov').forEach(n => n.remove());
+  if(!mesh.on) return;
+  const page = meshTarget(); mesh.pageEl = page || null;
+  if(!page) return;
+  const ov = document.createElement('div'); ov.className = 'mesh-ov';
+  ov.addEventListener('mousedown', meshBgDown);
+  page.appendChild(ov);
+  drawMeshHandles(ov);
+}
+function currentMeshOv(){ return mesh.pageEl && mesh.pageEl.querySelector(':scope > .mesh-ov'); }
+function drawMeshHandles(ov){
+  ov = ov || currentMeshOv(); if(!ov) return;
+  [...ov.querySelectorAll('.mesh-pt,.mesh-ring,.mesh-grab')].forEach(n => n.remove());
+  const f = mesh.getFill && mesh.getFill(); const pts = (f && f.points) || [];
+  const W = ov.clientWidth, H = ov.clientHeight;
+  pts.forEach((p, i) => {
+    const cx = p.x / 100 * W, cy = p.y / 100 * H;
+    if(i === mesh.sel){
+      const rad = Math.max(6, p.spread / 100 * farCorner(cx, cy, W, H));
+      const ring = document.createElement('div'); ring.className = 'mesh-ring';
+      ring.style.left = cx + 'px'; ring.style.top = cy + 'px';
+      ring.style.width = (2*rad) + 'px'; ring.style.height = (2*rad) + 'px'; ring.style.margin = (-rad) + 'px 0 0 ' + (-rad) + 'px';
+      ov.appendChild(ring);
+      const grab = document.createElement('div'); grab.className = 'mesh-grab';
+      grab.style.left = (cx + rad) + 'px'; grab.style.top = cy + 'px';
+      grab.addEventListener('mousedown', e => meshGrabDown(e, i));
+      ov.appendChild(grab);
+    }
+    const h = document.createElement('div'); h.className = 'mesh-pt' + (i === mesh.sel ? ' sel' : '');
+    h.style.left = cx + 'px'; h.style.top = cy + 'px';
+    h.style.background = /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#000000';
+    h.addEventListener('mousedown', e => meshPtDown(e, i));
+    ov.appendChild(h);
+  });
+}
+function meshPct(e, ov){
+  const r = ov.getBoundingClientRect();
+  return { x:Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)),
+           y:Math.max(0, Math.min(100, (e.clientY - r.top) / r.height * 100)) };
+}
+function meshBgDown(e){
+  if(e.button !== 0) return;
+  const ov = e.currentTarget, pos = meshPct(e, ov), f = mesh.getFill();
+  if(!f.points) f.points = [];
+  f.points.push({ x:pos.x, y:pos.y, color:D.settings.accent || '#0B5D57', opacity:.85, spread:45 });
+  mesh.sel = f.points.length - 1;
+  mesh.onChange(); drawMeshHandles(ov); syncGradPanel();
+  startMeshDrag('move', mesh.sel);
+  e.preventDefault();
+}
+function meshPtDown(e, i){ e.stopPropagation(); mesh.sel = i; drawMeshHandles(); syncGradPanel(); startMeshDrag('move', i); e.preventDefault(); }
+function meshGrabDown(e, i){ e.stopPropagation(); mesh.sel = i; startMeshDrag('spread', i); e.preventDefault(); }
+function startMeshDrag(kind, i){
+  mesh.drag = { kind, idx:i };
+  document.addEventListener('mousemove', meshMove);
+  document.addEventListener('mouseup', meshUp);
+}
+function meshMove(e){
+  if(!mesh.drag) return;
+  const ov = currentMeshOv(); if(!ov) return;
+  const f = mesh.getFill(), p = f.points[mesh.drag.idx]; if(!p) return;
+  if(mesh.drag.kind === 'move'){ const pos = meshPct(e, ov); p.x = pos.x; p.y = pos.y; }
+  else {
+    const r = ov.getBoundingClientRect(), W = ov.clientWidth, H = ov.clientHeight;
+    const rx = (e.clientX - r.left) / r.width * W, ry = (e.clientY - r.top) / r.height * H;
+    const cx = p.x / 100 * W, cy = p.y / 100 * H;
+    p.spread = Math.max(5, Math.min(150, Math.hypot(rx - cx, ry - cy) / farCorner(cx, cy, W, H) * 100));
+  }
+  mesh.onChange(); drawMeshHandles(ov);
+  e.preventDefault();
+}
+function meshUp(){ mesh.drag = null; document.removeEventListener('mousemove', meshMove); document.removeEventListener('mouseup', meshUp); save(); syncGradPanel(); }
+function docMeshChange(){ applyTheme(); save(); }
+function pageMeshChange(){ repaintCurrentPage(); save(); }
+/* rebuild whichever gradient panel is showing so its point list stays in sync */
+function syncGradPanel(){
+  if(mesh.scope === 'page' && !$('ppGradient').hidden) buildGradientEditor($('ppGrad'), () => pageFillObj(pageGearIdx), pageMeshChange);
+  else if(mesh.scope === 'doc' && !$('bgGradient').hidden) buildGradientEditor($('docGrad'), ensureDocFill, docMeshChange);
+}
+/* turn the on-page overlay on/off based on where a "points" gradient is being
+   edited: a per-page override (page panel open) wins over the document one */
+function updateMeshActivation(){
+  if(!D){ deactivateMesh(); return; }
+  if($('pageSettings').hasAttribute('data-open') && pageGearIdx != null){
+    const o = (D.settings.pages && D.settings.pages[pageGearIdx]) || {};
+    if(o.fill && o.fill.type === 'gradient' && o.fill.mode === 'points'){
+      activateMesh('page', () => pageFillObj(pageGearIdx), pageMeshChange); return;
+    }
+  }
+  const paneDesign = !$('pane-design').hidden;
+  const colourBody = document.querySelector('.acc[data-acc="colour"] .acc-body');
+  const colourOpen = colourBody && !colourBody.hidden;
+  const f = D.settings.fill;
+  if(paneDesign && colourOpen && f && f.type === 'gradient' && f.mode === 'points'){
+    activateMesh('doc', ensureDocFill, docMeshChange); return;
+  }
+  deactivateMesh();
+}
+
+/* Reusable multi-stop gradient editor: a live preview, an angle slider and a
+   row per colour stop (colour + position + remove), plus "add stop". Mutates
+   the fill object getFill() returns in place and calls onChange() after every
+   edit. Full-rebuilds only on add/remove so the native colour picker stays open
+   while a stop is dragged. */
+function buildGradientEditor(host, getFill, onChange){
+  host.innerHTML = '';
+  const wrap = document.createElement('div');
+  host.appendChild(wrap);
+  function preview(){
+    const f = getFill(), el = document.createElement('div'); el.className = 'grad-prev';
+    if((f.mode || 'linear') === 'points'){
+      el.style.backgroundColor = fillBaseHex(f, D.settings.paperColor);
+      const m = meshCss(f); if(m) el.style.backgroundImage = m;
+    } else el.style.backgroundImage = gradientCss(f) || 'none';
+    return el;
+  }
+  function refreshPreview(){ const old = wrap.querySelector('.grad-prev'); if(old) old.replaceWith(preview()); }
+  function modeSeg(){
+    const f = getFill();
+    const seg = document.createElement('div'); seg.className = 'pv-seg'; seg.style.margin = '0 0 .625rem';
+    [['linear','Linear'],['points','Mesh']].forEach(([k, label]) => {
+      const b = document.createElement('button'); b.textContent = label;
+      b.setAttribute('aria-pressed', String((f.mode || 'linear') === k));
+      b.onclick = () => {
+        const g = getFill(); if((g.mode || 'linear') === k) return;
+        g.mode = k;
+        if(k === 'points' && !(g.points && g.points.length)){
+          g.base = g.base || D.settings.paperColor || '#FFFFFF';
+          const ac = D.settings.accent || '#0B5D57';
+          g.points = [{ x:30, y:32, color:ac, opacity:.85, spread:55 }, { x:72, y:70, color:ac, opacity:.6, spread:55 }];
+        }
+        if(k === 'linear' && fillStops(g).length < 2)
+          g.stops = [{ color:D.settings.paperColor || '#FFFFFF', pos:0 }, { color:D.settings.accent || '#0B5D57', pos:100 }];
+        onChange(); draw(); updateMeshActivation();
+        if(k === 'points' && mesh.on && mesh.pageEl) mesh.pageEl.scrollIntoView({ block:'center', behavior:'smooth' });
+      };
+      seg.appendChild(b);
+    });
+    return seg;
+  }
+  function labelledRange(text, input){
+    const l = document.createElement('label'); l.className = 'mesh-sl';
+    l.innerHTML = `<span>${text}</span>`; l.appendChild(input); return l;
+  }
+  function renderLinear(g){
+    const ar = document.createElement('div'); ar.className = 'field'; ar.style.margin = '.625rem 0 .25rem';
+    ar.innerHTML = `<label class="label">Angle <span class="muted" data-av>${g.angle}°</span></label>`;
+    const ai = document.createElement('input'); ai.type = 'range'; ai.min = '0'; ai.max = '360'; ai.step = '5'; ai.value = g.angle;
+    ai.addEventListener('input', () => { g.angle = +ai.value; ar.querySelector('[data-av]').textContent = g.angle + '°'; refreshPreview(); onChange(); });
+    ar.appendChild(ai); wrap.appendChild(ar);
+    const list = document.createElement('div'); list.className = 'grad-stops';
+    g.stops.forEach((s, i) => {
+      const row = document.createElement('div'); row.className = 'grad-stop';
+      const col = document.createElement('input'); col.type = 'color'; col.className = 'colorfield';
+      col.value = /^#[0-9a-f]{6}$/i.test(s.color) ? s.color : '#000000'; col.setAttribute('aria-label', 'Stop colour');
+      col.addEventListener('input', () => { s.color = col.value; refreshPreview(); onChange(); });
+      const pos = document.createElement('input'); pos.type = 'number'; pos.className = 'input grad-pos';
+      pos.min = '0'; pos.max = '100'; pos.value = s.pos; pos.setAttribute('aria-label', 'Stop position %');
+      pos.addEventListener('input', () => { s.pos = Math.max(0, Math.min(100, +pos.value || 0)); refreshPreview(); onChange(); });
+      const del = document.createElement('button'); del.className = 'btn btn-ghost btn-icon btn-sm grad-del';
+      del.innerHTML = svg('trash'); del.title = 'Remove stop'; del.disabled = g.stops.length <= 2;
+      del.addEventListener('click', () => { if(g.stops.length <= 2) return; g.stops.splice(i, 1); onChange(); draw(); });
+      row.append(col, pos, del); list.appendChild(row);
+    });
+    wrap.appendChild(list);
+    const add = document.createElement('button'); add.className = 'btn btn-outline btn-sm grad-add';
+    add.innerHTML = svg('plus') + ' Add colour stop';
+    add.addEventListener('click', () => {
+      const st = g.stops.slice().sort((a,b) => a.pos - b.pos);
+      const last = st[st.length - 1] || { color:'#FFFFFF', pos:100 };
+      const prevS = st[st.length - 2] || st[0] || { pos:0 };
+      g.stops.push({ color:last.color, pos:Math.max(0, Math.min(100, Math.round((last.pos + prevS.pos) / 2))) });
+      onChange(); draw();
+    });
+    wrap.appendChild(add);
+  }
+  function renderPoints(g){
+    const base = document.createElement('div'); base.className = 'field'; base.style.margin = '.5rem 0 .375rem';
+    base.innerHTML = `<label class="label">Base colour</label>`;
+    const bc = document.createElement('input'); bc.type = 'color'; bc.className = 'colorfield';
+    bc.value = /^#[0-9a-f]{6}$/i.test(g.base || '') ? g.base : (D.settings.paperColor || '#FFFFFF');
+    bc.addEventListener('input', () => { g.base = bc.value; refreshPreview(); onChange(); });
+    base.appendChild(bc); wrap.appendChild(base);
+    const list = document.createElement('div'); list.className = 'mesh-list';
+    (g.points || []).forEach((p, i) => {
+      const row = document.createElement('div'); row.className = 'mesh-row' + (mesh.on && mesh.sel === i ? ' sel' : '');
+      const col = document.createElement('input'); col.type = 'color'; col.className = 'colorfield';
+      col.value = /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : '#000000'; col.setAttribute('aria-label', 'Point colour');
+      col.addEventListener('input', () => { p.color = col.value; refreshPreview(); onChange(); reanchorMesh(); });
+      const sliders = document.createElement('div'); sliders.className = 'mesh-sliders';
+      const op = document.createElement('input'); op.type = 'range'; op.min = '0'; op.max = '100'; op.value = Math.round(p.opacity * 100);
+      op.addEventListener('input', () => { p.opacity = +op.value / 100; refreshPreview(); onChange(); });
+      const sp = document.createElement('input'); sp.type = 'range'; sp.min = '5'; sp.max = '150'; sp.value = Math.round(p.spread);
+      sp.addEventListener('input', () => { p.spread = +sp.value; refreshPreview(); onChange(); reanchorMesh(); });
+      sliders.append(labelledRange('Opacity', op), labelledRange('Spread', sp));
+      const del = document.createElement('button'); del.className = 'btn btn-ghost btn-icon btn-sm grad-del';
+      del.innerHTML = svg('trash'); del.title = 'Remove point';
+      del.addEventListener('click', () => { g.points.splice(i, 1); if(mesh.sel === i) mesh.sel = null; onChange(); draw(); reanchorMesh(); });
+      row.append(col, sliders, del);
+      row.onmousedown = () => { mesh.sel = i; reanchorMesh(); };
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+    if(!(g.points || []).length){
+      const e = document.createElement('p'); e.className = 'helptext'; e.style.margin = '0';
+      e.textContent = 'No points yet — click the page to add one.'; wrap.appendChild(e);
+    }
+  }
+  function draw(){
+    wrap.innerHTML = '';
+    const f = getFill();
+    wrap.appendChild(modeSeg());
+    wrap.appendChild(preview());
+    if((f.mode || 'linear') === 'points') renderPoints(f); else renderLinear(f);
+    paintIcons(wrap);
+  }
+  draw();
+}
 function applyTheme(){
   const t = TYPES[D.settings.type], r = document.documentElement.style;
-  const pal = paperPalette(D.settings.paperColor);
+  const baseHex = fillBaseHex(D.settings.fill, D.settings.paperColor);
+  const pal = paperPalette(baseHex);
   document.documentElement.dataset.paper = pal.dark ? 'dark' : 'light';
-  const tok = paperTokens(D.settings.paperColor, D.settings.accent, D.settings.textColor, D.settings.linkColor, D.settings.linkUnderline);
+  const tok = paperTokens(baseHex, D.settings.accent, D.settings.textColor, D.settings.linkColor, D.settings.linkUnderline);
   PAGE_VAR_KEYS.forEach(k => r.setProperty(k, tok[k]));
+  setFillVars(r, D.settings.fill);
   r.setProperty('--doc-display', t.display);
   r.setProperty('--doc-body', t.body);
   r.setProperty('--doc-util', t.util);
@@ -6415,6 +6935,48 @@ PAPERS.forEach(([hex,name]) => {
   b.onclick = () => { D.settings.paperColor = hex; recordRecentColor(hex); applyTheme(); syncControls(); commit(); };
   paperSws.appendChild(b);
 });
+/* ---- document paper background: solid / gradient / image ---------------- */
+function ensureDocFill(){
+  if(!D.settings.fill) D.settings.fill = { type:'solid', angle:135, stops:[], imgId:null, imgFit:'cover' };
+  return D.settings.fill;
+}
+function setDocBgType(type){
+  const f = ensureDocFill();
+  if(type === 'gradient' && fillStops(f).length < 2)
+    f.stops = [{ color:D.settings.paperColor || '#FFFFFF', pos:0 }, { color:D.settings.accent || '#0B5D57', pos:100 }];
+  f.type = type;
+  applyTheme(); syncControls(); commit();
+}
+function bgImgNote(){
+  const el = $('bgImgNote'); if(!el) return;
+  const f = ensureDocFill();
+  el.textContent = f.imgId
+    ? 'Applies to every content page. Set a specific page under its gear to override.'
+    : 'Upload an image to use as the background of every content page.';
+}
+function syncBgControls(){
+  const f = ensureDocFill(), type = f.type || 'solid';
+  document.querySelectorAll('#bgTypeSet button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.bg === type)));
+  $('bgSolid').hidden = type !== 'solid';
+  $('bgGradient').hidden = type !== 'gradient';
+  $('bgImage').hidden = type !== 'image';
+  if(type === 'gradient') buildGradientEditor($('docGrad'), ensureDocFill, docMeshChange);
+  if(type === 'image'){ $('bgImgFit').value = f.imgFit || 'cover'; bgImgNote(); }
+  updateMeshActivation();
+}
+document.querySelectorAll('#bgTypeSet button').forEach(b => b.onclick = () => setDocBgType(b.dataset.bg));
+$('bgImgPick').onclick = () => $('bgImgIn').click();
+$('bgImgIn').onchange = () => {
+  const file = $('bgImgIn').files[0]; if(!file) return;
+  readAsset(file, (src, w, h, thumb, vector, info) => {
+    const f = ensureDocFill(); f.type = 'image'; f.imgId = putImage(src); f.imgInfo = info || null;
+    applyTheme(); syncControls(); commit();
+    toast('Background image added' + (info && info.fmt ? ' · ' + info.fmt : ''));
+  }, { maxW:2480, maxBytes:4200000, jpegQuality:0.92 });
+  $('bgImgIn').value = '';
+};
+$('bgImgClear').onclick = () => { const f = ensureDocFill(); f.imgId = null; f.imgInfo = null; applyTheme(); syncControls(); commit(); };
+on('bgImgFit', 'change', e => { ensureDocFill().imgFit = e.target.value; applyTheme(); save(); });
 const sws = $('swatches');
 ACCENTS.forEach(([hex,name]) => {
   const b = document.createElement('button');
@@ -6422,15 +6984,16 @@ ACCENTS.forEach(([hex,name]) => {
   b.onclick = () => { D.settings.accent = hex; recordRecentColor(hex); applyTheme(); syncControls(); commit(); };
   sws.appendChild(b);
 });
-/* a "Recently used" row above each of the report-wide colour presets */
+/* a "Recently used" row above each of the report-wide colour presets — capped
+   at the latest 5 so it always stays on a single row */
 mountRecentRow($('swatches'), 'swatches', swRecentBtn(() => D && D.settings.accent,
-  hex => { D.settings.accent = hex; applyTheme(); syncControls(); commit(); }));
+  hex => { D.settings.accent = hex; applyTheme(); syncControls(); commit(); }), 5);
 mountRecentRow($('paperSwatches'), 'swatches', swRecentBtn(() => D && D.settings.paperColor,
-  hex => { D.settings.paperColor = hex; applyTheme(); syncControls(); commit(); }));
+  hex => { D.settings.paperColor = hex; applyTheme(); syncControls(); commit(); }), 5);
 mountRecentRow($('textSwatches'), 'swatches', swRecentBtn(() => D && D.settings.textColor,
-  hex => { D.settings.textColor = hex; applyTheme(); syncControls(); save(); }));
+  hex => { D.settings.textColor = hex; applyTheme(); syncControls(); save(); }), 5);
 mountRecentRow($('linkSwatches'), 'swatches', swRecentBtn(() => D && D.settings.linkColor,
-  hex => { D.settings.linkColor = hex; applyTheme(); syncControls(); save(); }));
+  hex => { D.settings.linkColor = hex; applyTheme(); syncControls(); save(); }), 5);
 function setSwitch(el, on){ el.setAttribute('aria-checked', String(!!on)); }
 function bindSwitch(id, get, set){
   $(id).onclick = () => { set(!get()); setSwitch($(id), get()); commit(); };
@@ -6535,18 +7098,45 @@ function syncFolioRows(){
     note.textContent = 'Measured from the bottom edge of the sheet, not the text margin.';
   }
 }
+function bandImgNote(kind, el, hasImg){
+  if(!el) return;
+  const showing = kind === 'header' ? D.settings.showHead : D.settings.showFoot;
+  if(!showing){ if(kind === 'footer'){ el.textContent = ''; el.style.color = ''; } return; }
+  if(!hasImg){
+    if(kind === 'footer'){ el.textContent = 'Company and year come from the cover details.'; el.style.color = ''; }
+    return;   // header keeps the pagination note set by syncFolioRows()
+  }
+  const o = D.meta[kind], mm = MARGINS[D.settings.margin].top;
+  if(!o.w || !o.h){ el.textContent = 'Full-width image — replaces the template.'; el.style.color = ''; return; }
+  const h = PAGE_W_MM * (o.h / o.w);
+  el.textContent = `Full-width image · ${h.toFixed(1)} mm tall (margin is ${mm} mm).`;
+  el.style.color = h > mm ? 'hsl(var(--destructive))' : '';
+  if(h > mm) el.textContent += ' A wider, shorter image keeps it clear of the text.';
+}
 function syncBandRows(){
   syncFolioRows();
   syncEndRows();
   $('headUpload').hidden = !D.settings.showHead;
   $('footUpload').hidden = !D.settings.showFoot;
-  const note = $('footNote');
-  const f = D.meta.footer, mm = MARGINS[D.settings.margin].top;
-  if(!D.settings.showFoot || !imgSrc(f.imgId) || !f.w || !f.h){ note.textContent = ''; note.style.color = ''; return; }
-  const h = PAGE_W_MM * (f.h / f.w);
-  note.textContent = `Strip height ${h.toFixed(1)} mm at full width. Bottom margin is ${mm} mm.`;
-  note.style.color = h > mm ? 'hsl(var(--destructive))' : '';
-  if(h > mm) note.textContent += ' A wider, shorter image will keep it clear of the text.';
+  /* an uploaded image replaces the template band, so hide the template controls
+     and offer a Clear to return to the template */
+  const headImg = !!imgSrc(D.meta.header.imgId), footImg = !!imgSrc(D.meta.footer.imgId);
+  if($('headTplBox')) $('headTplBox').style.display = headImg ? 'none' : '';
+  if($('footTplBox')) $('footTplBox').style.display = footImg ? 'none' : '';
+  $('headClear').style.display = headImg ? '' : 'none';
+  $('footClear').style.display = footImg ? '' : 'none';
+  $('headPick').innerHTML = `<span data-icon="upload"></span> ${headImg ? 'Replace' : 'Upload'} header image`;
+  $('footPick').innerHTML = `<span data-icon="upload"></span> ${footImg ? 'Replace' : 'Upload'} footer image`;
+  paintIcons($('headPick')); paintIcons($('footPick'));
+  document.querySelectorAll('#headTplPick .tplbtn').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.tpl === bandTpl(D.settings.headerTemplate))));
+  document.querySelectorAll('#footTplPick .tplbtn').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.tpl === bandTpl(D.settings.footerTemplate))));
+  const hh = bandH(D.settings.headerHeight), fh = bandH(D.settings.footerHeight);
+  if($('headH') && document.activeElement !== $('headH')) $('headH').value = hh;
+  if($('headHV')) $('headHV').textContent = hh + ' mm';
+  if($('footH') && document.activeElement !== $('footH')) $('footH').value = fh;
+  if($('footHV')) $('footHV').textContent = fh + ' mm';
+  bandImgNote('header', $('headNote'), headImg);
+  bandImgNote('footer', $('footNote'), footImg);
 }
 document.querySelectorAll('#typeSet .tabs-trigger').forEach(b => b.onclick = () => {
   D.settings.type = b.dataset.type;
@@ -6600,6 +7190,7 @@ function syncControls(){
   textNote();
   document.querySelectorAll('#paperSwatches .sw').forEach(x =>
     x.setAttribute('aria-pressed', String((x.dataset.paper||'').toLowerCase() === String(D.settings.paperColor||'').toLowerCase())));
+  syncBgControls();
   paperNote();
   document.querySelectorAll('#swatches .sw').forEach((x,i) =>
     x.setAttribute('aria-pressed', String(ACCENTS[i] && ACCENTS[i][0] === D.settings.accent)));
@@ -6607,6 +7198,12 @@ function syncControls(){
     x.setAttribute('aria-pressed', String(String(x.dataset.link).toLowerCase() === String(D.settings.linkColor||'').toLowerCase())));
   $('linkCustom').value = /^#[0-9a-f]{6}$/i.test(D.settings.linkColor || '') ? D.settings.linkColor : '#2B3A8F';
   setSwitch($('linkUnderline'), D.settings.linkUnderline !== false);
+  /* show the nearest Tailwind name beside each custom colour well */
+  const twOf = (v, wellId) => nearestTw(/^#[0-9a-f]{6}$/i.test(v || '') ? v : $(wellId).value);
+  if($('accentTw')) $('accentTw').value = twOf(D.settings.accent, 'accentCustom');
+  if($('paperTw')) $('paperTw').value = twOf(D.settings.paperColor, 'paperCustom');
+  if($('textTw')) $('textTw').value = twOf(D.settings.textColor, 'textCustom');
+  if($('linkTw')) $('linkTw').value = twOf(D.settings.linkColor, 'linkCustom');
   syncPalette(); renderColorPop(); refreshHexFields(); refreshRecentColorRows();
   refreshThemeActive();
 }
@@ -6791,6 +7388,28 @@ function enhanceHex(colorId){
   hex.value = (c.value || '').toUpperCase();
 }
 ['accentCustom','paperCustom','textCustom','linkCustom','endCustom'].forEach(enhanceHex);
+/* a Tailwind name field in the same row as each well + hex, so the report
+   accent, paper, body text and link can also be picked by Tailwind name */
+function addDesignTw(colorId, twId, getVal, apply){
+  const well = $(colorId); if(!well) return;
+  const row = well.closest('.colorrow'); if(!row) return;
+  const nm = document.createElement('input');
+  nm.type = 'text'; nm.readOnly = true; nm.className = 'input palname'; nm.id = twId;
+  nm.title = 'Choose from the Tailwind colour library'; nm.setAttribute('aria-label', 'Tailwind colour');
+  row.appendChild(nm);
+  nm.addEventListener('click', () => {
+    const v = getVal(); const cur = /^#[0-9a-f]{6}$/i.test(v || '') ? v : well.value;
+    openTwLibrary(nm, nearestTw(cur), pick => { apply(pick.hex); recordRecentColor(pick.hex); });
+  });
+}
+addDesignTw('accentCustom', 'accentTw', () => D.settings.accent,
+  hex => { D.settings.accent = hex; applyTheme(); syncControls(); commit(); });
+addDesignTw('paperCustom', 'paperTw', () => D.settings.paperColor,
+  hex => { D.settings.paperColor = hex; applyTheme(); syncControls(); commit(); });
+addDesignTw('textCustom', 'textTw', () => D.settings.textColor,
+  hex => { D.settings.textColor = hex; applyTheme(); syncControls(); save(); });
+addDesignTw('linkCustom', 'linkTw', () => D.settings.linkColor,
+  hex => { D.settings.linkColor = hex; applyTheme(); syncControls(); save(); });
 
 /* ---------- design preview: a live sample layout with editable settings,
    so type/colour/page can be tuned and seen at once (replaces the Theme box) */
@@ -6805,14 +7424,22 @@ function pvColor(host, label, get, set, id){
   const row = document.createElement('div'); row.className = 'colorrow';
   const well = document.createElement('input'); well.type = 'color'; well.className = 'colorfield'; well.id = id + 'W';
   const hex = document.createElement('input'); hex.type = 'text'; hex.className = 'input hexin'; hex.maxLength = 7;
-  hex.spellcheck = false; hex.id = id + 'H'; hex.setAttribute('aria-label', label + ' hex');
-  row.append(well, hex); f.appendChild(row); host.appendChild(f);
+  hex.spellcheck = false; hex.id = id + 'H'; hex.setAttribute('aria-label', label + ' hex'); hex.style.flex = '0 0 6rem';
+  /* a readonly name that opens the Tailwind colour library, mirroring the
+     Palette rows — so paper, body text and accent can be picked by name too */
+  const nm = document.createElement('input'); nm.type = 'text'; nm.readOnly = true; nm.className = 'input palname'; nm.id = id + 'N';
+  nm.title = 'Choose from the Tailwind colour library'; nm.setAttribute('aria-label', label + ' Tailwind colour');
+  row.append(well, hex, nm); f.appendChild(row); host.appendChild(f);
   const apply = v => { set(v); pvApply(); };
   well.addEventListener('input', () => { hex.value = well.value.toUpperCase(); apply(well.value); });
   well.addEventListener('change', () => recordRecentColor(well.value));   // settled, not every drag step
   hex.addEventListener('input', () => {
     let v = hex.value.trim(); if(v && v[0] !== '#') v = '#' + v;
     if(/^#[0-9a-f]{6}$/i.test(v)){ well.value = v; apply(v); recordRecentColor(v); }
+  });
+  nm.addEventListener('click', () => {
+    const cur = /^#[0-9a-f]{6}$/i.test(get() || '') ? get() : well.value;
+    openTwLibrary(nm, nearestTw(cur), pick => { apply(pick.hex); recordRecentColor(pick.hex); });
   });
 }
 function buildPreviewControls(){
@@ -6873,6 +7500,8 @@ function pvColorSync(id, val, fallback){
   const ok = /^#[0-9a-f]{6}$/i.test(val || '');
   if(document.activeElement !== well) well.value = ok ? val : fallback;
   if(hex && document.activeElement !== hex) hex.value = (val || '').toUpperCase();
+  const nm = $(id + 'N');
+  if(nm) nm.value = nearestTw(ok ? val : (well.value || fallback));
 }
 function refreshPreviewPalette(){
   const el = $('ssPalStrip'); if(!el) return;
@@ -6926,10 +7555,42 @@ function effPage(idx){
   return {
     paper: o.paper || D.settings.paperColor || '#FFFFFF',
     paperOv: !!o.paper,
+    fill: o.fill || null,
+    bgType: o.fill ? (o.fill.type || 'solid') : 'solid',
+    ovAny: !!(o.paper || o.fill),
     head: o.head != null ? o.head : D.settings.showHead,
     foot: o.foot != null ? o.foot : D.settings.showFoot,
     num:  o.num  != null ? o.num  : D.settings.showNum
   };
+}
+/* the per-page fill object, created on demand; stops/imgId persist across
+   type switches so toggling solid↔gradient↔image never loses prior work */
+function pageFillObj(idx){
+  const o = pageOv(idx);
+  if(!o.fill) o.fill = { type:'gradient', angle:135, stops:[], imgId:null, imgFit:'cover' };
+  return o.fill;
+}
+/* repaint the live page element for an override without a full re-render, so
+   the docked panel keeps its position */
+function paintPageEl(page, idx){
+  const ov = (D.settings.pages && D.settings.pages[idx]) || {};
+  if(ov.fill || ov.paper) applyPageOverride(page, ov); else clearPagePaper(page);
+}
+function repaintCurrentPage(){ const el = currentPageEl(); if(el && pageGearIdx != null) paintPageEl(el, pageGearIdx); }
+function setPageBgType(type){
+  if(pageGearIdx == null) return;
+  const o = pageOv(pageGearIdx);
+  if(type === 'solid'){ delete o.fill; }
+  else {
+    const f = pageFillObj(pageGearIdx);
+    if(type === 'gradient' && fillStops(f).length < 2){
+      const base = o.paper || D.settings.paperColor || '#FFFFFF';
+      f.stops = [{ color:base, pos:0 }, { color:D.settings.accent || '#0B5D57', pos:100 }];
+    }
+    f.type = type;
+  }
+  prunePageOv(pageGearIdx);
+  repaintCurrentPage(); syncPagePanel(); save();
 }
 function addPageGear(page){
   const g = document.createElement('button');
@@ -6947,8 +7608,8 @@ function openPageSettings(pageEl, gearBtn){
   pageGearBtn = gearBtn || null;
   pageGearIdx = pageEl ? Number(pageEl.dataset.page) - 1 : null;    // 0-based override key
   if(pageGearBtn) pageGearBtn.classList.add('on');
+  p.setAttribute('data-open', '');   // mark open first so syncPagePanel() → updateMeshActivation() can mount the mesh overlay
   syncPagePanel();
-  p.setAttribute('data-open', '');
   dockPagePanel(pageEl);
 }
 function dockPagePanel(pageEl){
@@ -6964,6 +7625,7 @@ function closePageSettings(){
   $('pageSettings').removeAttribute('data-open');
   if(pageGearBtn) pageGearBtn.classList.remove('on');
   pageGearBtn = null; pageGearIdx = null;
+  updateMeshActivation();
 }
 /* after a re-render the old gear/page nodes are gone; grab the same page by
    index (falling back to the first) so the panel keeps tracking it */
@@ -6987,13 +7649,23 @@ function syncPagePanel(){
   if(document.activeElement !== $('ppHex')) $('ppHex').value = (e.paper || '').toUpperCase();
   document.querySelectorAll('#ppSwatches .sw').forEach(x =>
     x.setAttribute('aria-pressed', String((x.dataset.paper || '').toLowerCase() === String(e.paper).toLowerCase())));
-  $('ppNote').textContent = (e.paperOv ? 'This page only. ' : 'Using the Design colour. ')
-    + (paperPalette(e.paper).dark ? 'Dark paper — text is a light ink automatically.' : 'Light paper — text stays dark.');
-  $('ppReset').style.display = e.paperOv ? '' : 'none';
+  document.querySelectorAll('#ppBgSet button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.bg === e.bgType)));
+  $('ppSolid').hidden = e.bgType !== 'solid';
+  $('ppGradient').hidden = e.bgType !== 'gradient';
+  $('ppImage').hidden = e.bgType !== 'image';
+  if(e.bgType === 'gradient') buildGradientEditor($('ppGrad'), () => pageFillObj(pageGearIdx), pageMeshChange);
+  if(e.bgType === 'image') $('ppImgFit').value = (e.fill && e.fill.imgFit) || 'cover';
+  const note = e.bgType === 'gradient' ? 'Gradient on this page only.'
+    : e.bgType === 'image' ? ((e.fill && e.fill.imgId) ? 'Image on this page only.' : 'Upload an image for this page.')
+    : (e.paperOv ? 'This page only. ' : 'Using the Design colour. ')
+      + (paperPalette(e.paper).dark ? 'Dark paper — text is a light ink automatically.' : 'Light paper — text stays dark.');
+  $('ppNote').textContent = note;
+  $('ppReset').style.display = e.ovAny ? '' : 'none';
   setSwitch($('ppHead'), e.head);
   setSwitch($('ppFoot'), e.foot);
   setSwitch($('ppNum'), e.num);
   refreshRecentColorRows();
+  updateMeshActivation();
 }
 /* store an override only when it differs from the Design base, so a page that
    matches the base keeps inheriting future base changes */
@@ -7003,16 +7675,15 @@ function setPageColorOverride(hex){
   const o = pageOv(pageGearIdx), same = hex.toLowerCase() === base;
   if(same) delete o.paper; else o.paper = hex;
   prunePageOv(pageGearIdx);
-  const el = currentPageEl();
-  if(el){ same ? clearPagePaper(el) : applyPagePaper(el, hex); }
+  repaintCurrentPage();
   syncPagePanel(); save();
 }
 function restorePageColor(){
   if(pageGearIdx == null) return;
   const o = D.settings.pages && D.settings.pages[pageGearIdx];
-  if(o){ delete o.paper; prunePageOv(pageGearIdx); }
+  if(o){ delete o.paper; delete o.fill; prunePageOv(pageGearIdx); }
   const el = currentPageEl(); if(el) clearPagePaper(el);
-  syncPagePanel(); save(); toast('Page colour back to the Design default');
+  syncPagePanel(); save(); toast('Page background back to the Design default');
 }
 function togglePageFlag(key){
   if(pageGearIdx == null) return;
@@ -7040,6 +7711,28 @@ function togglePageFlag(key){
   on('ppColor', 'input', e => { $('ppHex').value = e.target.value.toUpperCase(); setPageColorOverride(e.target.value); });
   on('ppColor', 'change', e => recordRecentColor(e.target.value));
   on('ppHex', 'input', e => { let v = e.target.value.trim(); if(v && v[0] !== '#') v = '#' + v; if(/^#[0-9a-f]{6}$/i.test(v)){ $('ppColor').value = v; setPageColorOverride(v); recordRecentColor(v); } });
+  document.querySelectorAll('#ppBgSet button').forEach(b => b.onclick = () => setPageBgType(b.dataset.bg));
+  $('ppImgPick').onclick = () => $('ppImgIn').click();
+  $('ppImgIn').onchange = () => {
+    const file = $('ppImgIn').files[0]; if(!file || pageGearIdx == null) return;
+    readAsset(file, (src, w, h, thumb, vector, info) => {
+      const f = pageFillObj(pageGearIdx); f.type = 'image'; f.imgId = putImage(src); f.imgInfo = info || null;
+      prunePageOv(pageGearIdx);
+      repaintCurrentPage(); syncPagePanel(); save();
+      toast('Page background image added');
+    }, { maxW:2480, maxBytes:4200000, jpegQuality:0.92 });
+    $('ppImgIn').value = '';
+  };
+  $('ppImgClear').onclick = () => {
+    if(pageGearIdx == null) return;
+    const f = pageFillObj(pageGearIdx); f.imgId = null; f.imgInfo = null;
+    repaintCurrentPage(); syncPagePanel(); save();
+  };
+  on('ppImgFit', 'change', e => {
+    if(pageGearIdx == null) return;
+    pageFillObj(pageGearIdx).imgFit = e.target.value;
+    repaintCurrentPage(); save();
+  });
   $('ppReset').onclick = restorePageColor;
   $('ppHead').onclick = () => togglePageFlag('head');
   $('ppFoot').onclick = () => togglePageFlag('foot');
@@ -7048,7 +7741,7 @@ function togglePageFlag(key){
 window.addEventListener('resize', () => dockPagePanel());
 desk.addEventListener('scroll', () => dockPagePanel(), { passive:true });
 document.addEventListener('mousedown', e => {
-  if($('pageSettings').hasAttribute('data-open') && !e.target.closest('#pageSettings') && !e.target.closest('.pagegear')) closePageSettings();
+  if($('pageSettings').hasAttribute('data-open') && !e.target.closest('#pageSettings') && !e.target.closest('.pagegear') && !e.target.closest('.mesh-ov')) closePageSettings();
 });
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('pageSettings').hasAttribute('data-open')) closePageSettings(); });
 
@@ -7082,6 +7775,11 @@ function normalizeSettings(s){
   if(out.linkColor == null) out.linkColor = 'accent';
   if(out.linkUnderline == null) out.linkUnderline = true;
   if(!out.paperColor) out.paperColor = '#FFFFFF';
+  out.headerTemplate = bandTpl(out.headerTemplate);
+  out.footerTemplate = bandTpl(out.footerTemplate);
+  out.headerHeight = bandH(out.headerHeight);
+  out.footerHeight = bandH(out.footerHeight);
+  out.fill = normFill(out.fill);
   return out;
 }
 function themeFromCurrent(name){
@@ -7199,7 +7897,7 @@ $('themeDelete').onclick = () => {
 /* the design fields a theme captures, in a fixed order so two settings objects
    compare equal regardless of how their keys were originally ordered */
 const THEME_MATCH_FIELDS = ['accent','type','paperColor','textColor','margin','bodySize',
-  'linkColor','linkUnderline','numberHeadings','showNum','showHead','showFoot'];
+  'linkColor','linkUnderline','numberHeadings','showNum','showHead','showFoot','headerTemplate','footerTemplate','headerHeight','footerHeight','fill'];
 function themeKey(settings){
   const s = normalizeSettings(settings || {});
   const pick = {};
@@ -7341,6 +8039,7 @@ function setAcc(name){
 document.querySelectorAll('#pane-design .acc-head').forEach(head => head.onclick = () => {
   const name = head.closest('.acc').dataset.acc;
   setAcc(openAcc === name ? null : name);
+  updateMeshActivation();
 });
 function dots(colors){
   return '<span class="acc-dots">' + colors.map(c => `<i style="background:${c}"></i>`).join('') + '</span>';
@@ -7359,8 +8058,9 @@ function accSummaries(){
   const m = MARGINS[D.settings.margin];
   set('sumPage', `${D.settings.margin} · ${m.top} / ${m.side} mm`);
   const bands = [];
-  if(D.settings.showHead) bands.push(imgSrc(D.meta.header.imgId) ? 'header, own mark' : 'header');
-  if(D.settings.showFoot) bands.push(imgSrc(D.meta.footer.imgId) ? 'footer' : 'footer, empty');
+  const TPLN = { 1:'Classic', 2:'Centred', 3:'Line', 4:'Bar' };
+  if(D.settings.showHead) bands.push('header · ' + (imgSrc(D.meta.header.imgId) ? 'image' : TPLN[bandTpl(D.settings.headerTemplate)]));
+  if(D.settings.showFoot) bands.push('footer · ' + (imgSrc(D.meta.footer.imgId) ? 'image' : TPLN[bandTpl(D.settings.footerTemplate)]));
   set('sumBands', bands.length ? esc(bands.join(' + ')) : 'off');
   const f = folioPlacement();
   set('sumFolio', D.settings.showNum ? `${f.align} · ${f.bottom.toFixed(1)} mm` : 'off');
@@ -7373,6 +8073,7 @@ document.querySelectorAll('.ed-side .tabs-trigger[data-tab]').forEach(t => t.onc
   document.querySelectorAll('.ed-side .tabs-trigger[data-tab]').forEach(x => x.dataset.state = x === t ? 'active' : 'inactive');
   ['structure','design','theming'].forEach(n => $('pane-'+n).hidden = n !== t.dataset.tab);
   if(t.dataset.tab === 'theming') refreshThemeActive();
+  updateMeshActivation();
 });
 
 /* zoom */
