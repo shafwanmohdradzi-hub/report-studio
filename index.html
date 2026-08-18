@@ -424,7 +424,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px hsl(v
 .treegap{height:.625rem}
 
 /* .docx import + re-import review, docked below the structure tree */
-.docx-import{margin-top:.75rem;padding-top:.75rem;border-top:1px solid hsl(var(--border))}
+#pane-structure{display:flex;flex-direction:column}
+.docx-import{margin-top:auto;padding-top:.75rem;border-top:1px solid hsl(var(--border))}
 .docx-panel{margin-top:.625rem;border:1px solid hsl(var(--border));border-radius:calc(var(--radius) - 2px);overflow:hidden}
 .docx-panel .dp-head{display:flex;align-items:center;gap:.5rem;padding:.5rem .625rem;background:hsl(var(--muted)/.4);font-size:.75rem;font-weight:600}
 .docx-panel .dp-sum{color:hsl(var(--muted-foreground));font-weight:500}
@@ -1024,6 +1025,29 @@ table.doc thead th{position:relative}
 .themebar{padding:.75rem;margin:0 0 1rem;border:1px solid hsl(var(--border));border-radius:var(--radius);background:hsl(var(--muted)/.4)}
 .themebtns{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.5rem}
 .themebtns .btn{flex:1 1 auto}
+.themetools{display:flex;flex-wrap:wrap;gap:.375rem}
+.themetools .btn{flex:1 1 auto}
+.themegrid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.themegrid:empty{display:none}
+.themecard{position:relative;text-align:left;border:1px solid hsl(var(--border));border-radius:var(--radius);background:hsl(var(--background));overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.themecard:hover{border-color:hsl(var(--ring))}
+.themecard:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}
+.themecard[data-active="true"]{border-color:hsl(var(--primary));box-shadow:0 0 0 1px hsl(var(--primary))}
+.themecard .tc-prev{height:4.25rem;padding:.5rem .625rem;display:flex;flex-direction:column;justify-content:center;gap:.15rem;border-bottom:1px solid hsl(var(--border));overflow:hidden}
+.themecard .tc-h{font-size:1.0625rem;line-height:1.05;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.themecard .tc-b{font-size:.6875rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.themecard .tc-meta{padding:.4375rem .625rem}
+.themecard .tc-name{font-size:.8125rem;font-weight:600;color:hsl(var(--foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.themecard .tc-sub{display:flex;align-items:center;gap:.3125rem;margin-top:.1875rem}
+.themecard .tc-dots{display:inline-flex;gap:.1875rem}
+.themecard .tc-dots i{width:.625rem;height:.625rem;border-radius:999px;box-shadow:inset 0 0 0 1px rgb(0 0 0/.18)}
+.themecard .tc-tag{font-size:.6875rem;color:hsl(var(--muted-foreground));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.themecard .tc-del{position:absolute;top:.375rem;right:.375rem;width:1.375rem;height:1.375rem;display:none;align-items:center;justify-content:center;border:0;border-radius:999px;background:hsl(var(--background)/.9);color:hsl(var(--muted-foreground));cursor:pointer;padding:0;box-shadow:0 1px 3px rgb(0 0 0/.18)}
+.themecard .tc-del:hover{background:hsl(var(--destructive,0 72% 51%));color:#fff}
+.themecard:hover .tc-del,.themecard:focus-within .tc-del{display:inline-flex}
+.themecard .tc-del svg{width:.8125rem;height:.8125rem}
+.themecard .tc-badge{display:none}
+.themecard[data-active="true"] .tc-badge{display:inline-block;position:absolute;top:.375rem;left:.375rem;z-index:1;font-size:.625rem;font-weight:600;line-height:1;padding:.1875rem .3125rem;border-radius:999px;background:hsl(var(--primary));color:hsl(var(--primary-foreground))}
 /* Design → Palette: five reusable, named text colours. Hex is the primary
    field so the picker always reads in hex; the well opens the native picker. */
 .palrow{display:flex;align-items:center;gap:.375rem;margin-bottom:.375rem}
@@ -1160,6 +1184,7 @@ table.doc thead th{position:relative}
       <div class="tabs-list" role="tablist">
         <button class="tabs-trigger" role="tab" data-state="active" data-tab="structure">Structure</button>
         <button class="tabs-trigger" role="tab" data-state="inactive" data-tab="design">Design</button>
+        <button class="tabs-trigger" role="tab" data-state="inactive" data-tab="theming">Theme</button>
       </div>
     </div>
 
@@ -1336,6 +1361,21 @@ table.doc thead th{position:relative}
 
       <p class="helptext" style="margin:1rem 0 0">When printing, set Margins to None and Scale to 100%, and turn off browser headers and footers.</p>
     </div>
+
+    <div class="pane" id="pane-theming" hidden>
+      <p class="helptext" style="margin:0 0 1rem">Pick a theme to restyle the whole report at once — fonts, colours, body-text size, margins, header &amp; footer and end mark all change together. Save your current design as a theme to reuse it on other reports, or share it as a file.</p>
+      <div class="themetools">
+        <button class="btn btn-default btn-sm" id="themeSaveG"><span data-icon="plus"></span> Save current design</button>
+        <button class="btn btn-outline btn-sm" id="themeExportG"><span data-icon="download"></span> Export current</button>
+        <button class="btn btn-outline btn-sm" id="themeImportG"><span data-icon="upload"></span> Import theme file</button>
+        <input type="file" id="themeInG" accept="application/json,.json" hidden>
+      </div>
+      <p class="grouplbl" style="margin-top:1.25rem">Built-in themes</p>
+      <div class="themegrid" id="themeGridBuiltin"></div>
+      <p class="grouplbl" id="themeSavedLbl" style="margin-top:1.25rem" hidden>Saved &amp; imported</p>
+      <div class="themegrid" id="themeGridUser"></div>
+      <p class="helptext" id="themeEmptyNote" style="margin:.25rem 0 0" hidden>No saved themes yet. Adjust the design however you like, then choose <em>Save current design</em> above to keep it here.</p>
+    </div>
   </aside>
 
   <main class="desk" id="desk"><div class="deskInner" id="deskInner"></div></main>
@@ -1354,12 +1394,16 @@ table.doc thead th{position:relative}
     <div><label class="label" for="nCompany">Company</label><input class="input" id="nCompany" placeholder="Company name"></div>
     <div><label class="label" for="nYear">Year</label><input class="input" id="nYear"></div>
   </div>
-  <div class="field"><label class="label" for="nStart">Starting point</label>
-    <select class="select" id="nStart">
-      <option value="sample">Worked example — a filled-in report to edit</option>
-      <option value="skeleton">Standard sections — empty headings to fill</option>
-      <option value="blank">Blank — cover and contents only</option>
-    </select></div>
+  <div class="field field-row">
+    <div><label class="label" for="nStart">Starting point</label>
+      <select class="select" id="nStart">
+        <option value="blank">Blank — cover and contents only</option>
+        <option value="skeleton">Standard sections — empty headings to fill</option>
+        <option value="sample">Worked example — a filled-in report to edit</option>
+      </select></div>
+    <div><label class="label" for="nTheme">Theme</label>
+      <select class="select" id="nTheme"></select></div>
+  </div>
   <div class="dialog-footer">
     <button class="btn btn-ghost" data-close>Cancel</button>
     <button class="btn btn-default" id="createBtn">Create report</button>
@@ -2170,11 +2214,24 @@ async function updateSharedReport(code){
     toast('Updated to the latest version'); drawLibrary();
   }catch(e){ console.error('update', e); toast('Could not fetch the update'); }
 }
+/* fill the New-report Theme dropdown from the built-in + saved themes; the
+   default keeps the blank template's own styling */
+function populateNewThemeSelect(){
+  const sel = $('nTheme'); if(!sel) return;
+  let html = '<option value="">Default — blank template style</option>';
+  html += '<optgroup label="Built-in">' +
+    BUILTIN_THEMES.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('') + '</optgroup>';
+  if(typeof userThemes !== 'undefined' && userThemes.length) html += '<optgroup label="Saved">' +
+    userThemes.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('') + '</optgroup>';
+  sel.innerHTML = html;
+}
 function openNewDialog(){
   $('nName').value = '';
   $('nCompany').value = '';
   $('nYear').value = String(new Date().getFullYear());
-  $('nStart').value = 'sample';
+  $('nStart').value = 'blank';
+  populateNewThemeSelect();
+  $('nTheme').value = '';
   showDialog('dlgNew','nName');
 }
 $('createBtn').onclick = async () => {
@@ -2186,6 +2243,14 @@ $('createBtn').onclick = async () => {
   const start = $('nStart').value;
   if(start === 'sample') seedSample(doc);
   else if(start === 'skeleton') seedSkeleton(doc);
+  const themeId = $('nTheme') ? $('nTheme').value : '';
+  if(themeId){
+    const t = allThemes().find(x => x.id === themeId);
+    if(t){
+      doc.settings = normalizeSettings(JSON.parse(JSON.stringify(t.settings)));
+      if(t.coverLayout) doc.meta.cover.layout = t.coverLayout;
+    }
+  }
   closeDialog();
   await saveDoc(doc); await touchIndex(doc, true);
   cloudPush(doc);
@@ -6539,6 +6604,7 @@ function syncControls(){
   $('linkCustom').value = /^#[0-9a-f]{6}$/i.test(D.settings.linkColor || '') ? D.settings.linkColor : '#2B3A8F';
   setSwitch($('linkUnderline'), D.settings.linkUnderline !== false);
   syncPalette(); renderColorPop(); refreshHexFields(); refreshRecentColorRows();
+  refreshThemeActive();
 }
 
 /* ==========================================================================
@@ -7042,6 +7108,7 @@ function populateThemeSelect(){
   sel.innerHTML = html;
   if(prev && allThemes().some(t => t.id === prev)) sel.value = prev;
   updateThemeButtons();
+  renderThemeGallery();
 }
 function updateThemeButtons(){
   const t = allThemes().find(x => x.id === $('themeSel').value);
@@ -7052,6 +7119,7 @@ function applyThemeObject(t){
   D.settings = normalizeSettings(JSON.parse(JSON.stringify(t.settings)));
   if(t.coverLayout) D.meta.cover.layout = t.coverLayout;
   applyTheme(); syncControls(); render(); save();
+  refreshThemeActive();
   toast('Loaded “' + t.name + '”');
 }
 
@@ -7116,6 +7184,139 @@ $('themeDelete').onclick = () => {
   populateThemeSelect();
   toast('Theme deleted');
 };
+
+/* ==========================================================================
+   THEME GALLERY — the "Theme" tab: a visual picker of built-in and saved
+   themes. Selecting a card applies the whole look (fonts, colours, text size,
+   margins, header/footer, end mark) via applyThemeObject(). Rebuilt whenever
+   the theme list changes (through populateThemeSelect); the active card is
+   highlighted by matching the current design against each theme.
+   ========================================================================== */
+/* the design fields a theme captures, in a fixed order so two settings objects
+   compare equal regardless of how their keys were originally ordered */
+const THEME_MATCH_FIELDS = ['accent','type','paperColor','textColor','margin','bodySize',
+  'linkColor','linkUnderline','numberHeadings','showNum','showHead','showFoot'];
+function themeKey(settings){
+  const s = normalizeSettings(settings || {});
+  const pick = {};
+  THEME_MATCH_FIELDS.forEach(f => pick[f] = s[f]);
+  pick.folio = s.folio; pick.end = s.end;
+  return JSON.stringify(pick);
+}
+/* resolve the swatch colours and fonts a theme would produce, for its preview */
+function themePreview(settings){
+  const s = normalizeSettings(settings || {});
+  const tok = paperTokens(s.paperColor, s.accent, s.textColor, s.linkColor, s.linkUnderline);
+  const ty = TYPES[s.type] || TYPES.editorial;
+  return { paper:tok['--paper'], body:tok['--doc-body-color'], accent:tok['--doc-accent-vis'],
+    display:ty.display, bodyFont:ty.body };
+}
+const TYPE_NAMES = { editorial:'Editorial', corporate:'Corporate', classic:'Classic' };
+function makeThemeCard(t, builtin){
+  const p = themePreview(t.settings), ns = normalizeSettings(t.settings);
+  const tag = (TYPE_NAMES[ns.type] || 'Editorial') + ' · ' + (ns.bodySize/10).toFixed(1) + 'pt';
+  const card = document.createElement('div');
+  card.className = 'themecard';
+  card.setAttribute('role', 'button');
+  card.tabIndex = 0;
+  card.dataset.loadTheme = t.id;
+  card.dataset.themeKey = themeKey(t.settings);
+  card.setAttribute('aria-label', 'Apply theme ' + t.name);
+  card.title = 'Apply “' + t.name + '”';
+  card.innerHTML =
+    '<span class="tc-badge">Active</span>' +
+    '<div class="tc-prev"><div class="tc-h">Aa</div><div class="tc-b">The quick brown fox</div></div>' +
+    (builtin ? '' : `<button class="tc-del" title="Delete theme" aria-label="Delete theme ${esc(t.name)}" data-del-theme="${esc(t.id)}">${svg('trash')}</button>`) +
+    `<div class="tc-meta"><div class="tc-name">${esc(t.name)}</div>` +
+      `<div class="tc-sub"><span class="tc-dots"></span><span class="tc-tag">${esc(tag)}</span></div></div>`;
+  const prev = card.querySelector('.tc-prev'); prev.style.background = p.paper;
+  const h = card.querySelector('.tc-h'); h.style.fontFamily = p.display; h.style.color = p.accent;
+  const b = card.querySelector('.tc-b'); b.style.fontFamily = p.bodyFont; b.style.color = p.body;
+  const dots = card.querySelector('.tc-dots');
+  [p.accent, p.paper, p.body].forEach(c => { const i = document.createElement('i'); i.style.background = c; dots.appendChild(i); });
+  return card;
+}
+function renderThemeGallery(){
+  const gb = $('themeGridBuiltin'), gu = $('themeGridUser');
+  if(!gb || !gu) return;
+  gb.innerHTML = ''; gu.innerHTML = '';
+  BUILTIN_THEMES.forEach(t => gb.appendChild(makeThemeCard(t, true)));
+  userThemes.forEach(t => gu.appendChild(makeThemeCard(t, false)));
+  const has = userThemes.length > 0;
+  if($('themeSavedLbl')) $('themeSavedLbl').hidden = !has;
+  if($('themeEmptyNote')) $('themeEmptyNote').hidden = has;
+  refreshThemeActive();
+}
+/* mark whichever card matches the current design, without rebuilding the grid */
+function refreshThemeActive(){
+  if(typeof D === 'undefined' || !D) return;
+  const key = themeKey(D.settings);
+  document.querySelectorAll('#pane-theming .themecard').forEach(c => {
+    c.dataset.active = String(c.dataset.themeKey === key);
+  });
+}
+function loadThemeById(id){
+  const t = allThemes().find(x => x.id === id);
+  if(t) applyThemeObject(t);
+}
+function deleteUserTheme(id){
+  const t = userThemes.find(x => x.id === id);
+  if(!t) return;
+  if(!confirm('Delete the theme “' + t.name + '”? This can’t be undone.')) return;
+  userThemes = userThemes.filter(x => x.id !== id);
+  persistThemes();
+  populateThemeSelect();
+  toast('Theme deleted');
+}
+function handleThemeImport(f){
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    let o;
+    try{ o = JSON.parse(rd.result); }catch(_){ toast('That file isn’t a theme'); return; }
+    if(!isThemeFile(o)){ toast('That file isn’t a theme'); return; }
+    const t = { studioTheme:1, id:'u:'+uid(),
+      name:(o.name || f.name.replace(/\.(theme\.)?json$/i, '') || 'Imported theme'),
+      created:Date.now(), settings:o.settings, coverLayout:o.coverLayout };
+    userThemes.push(t);
+    persistThemes();
+    populateThemeSelect();
+    applyThemeObject(t);
+  };
+  rd.readAsText(f);
+}
+[$('themeGridBuiltin'), $('themeGridUser')].forEach(grid => {
+  if(!grid) return;
+  grid.addEventListener('click', e => {
+    const del = e.target.closest('[data-del-theme]');
+    if(del){ e.stopPropagation(); deleteUserTheme(del.dataset.delTheme); return; }
+    const card = e.target.closest('[data-load-theme]');
+    if(card) loadThemeById(card.dataset.loadTheme);
+  });
+  grid.addEventListener('keydown', e => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const card = e.target.closest('[data-load-theme]');
+    if(card){ e.preventDefault(); loadThemeById(card.dataset.loadTheme); }
+  });
+});
+if($('themeSaveG')) $('themeSaveG').onclick = () => { $('themeName').value = ''; showDialog('dlgTheme', 'themeName'); };
+if($('themeExportG')) $('themeExportG').onclick = () => {
+  const name = (D && D.name) || 'theme';
+  const t = themeFromCurrent(name);
+  const blob = new Blob([JSON.stringify(t, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (name.replace(/[^\w-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'theme') + '.theme.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Theme exported');
+};
+if($('themeImportG')) $('themeImportG').onclick = () => $('themeInG').click();
+if($('themeInG')) $('themeInG').onchange = e => { const f = e.target.files[0]; e.target.value = ''; handleThemeImport(f); };
+
+/* first paint of both the (hidden) legacy select and the gallery, then load
+   any saved themes from storage — deferred to here so the gallery's constants
+   and helpers above are initialised before renderThemeGallery() first runs */
 populateThemeSelect();
 loadThemes();
 
@@ -7166,7 +7367,8 @@ function accSummaries(){
 /* tabs */
 document.querySelectorAll('.ed-side .tabs-trigger[data-tab]').forEach(t => t.onclick = () => {
   document.querySelectorAll('.ed-side .tabs-trigger[data-tab]').forEach(x => x.dataset.state = x === t ? 'active' : 'inactive');
-  ['structure','design'].forEach(n => $('pane-'+n).hidden = n !== t.dataset.tab);
+  ['structure','design','theming'].forEach(n => $('pane-'+n).hidden = n !== t.dataset.tab);
+  if(t.dataset.tab === 'theming') refreshThemeActive();
 });
 
 /* zoom */
