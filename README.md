@@ -34,7 +34,22 @@ alongside `index.html`.
 index.html     the whole application
 fonts/         6 self-hosted families, woff2, latin + latin-ext
 fonts/OFL-*    licences (SIL Open Font License)
+scripts/       bump-version.sh — pre-commit version bump
+.githooks/     pre-commit hook (see Versioning)
 ```
+
+## Versioning
+
+The version shown beside the logo (`APP_VERSION` in `index.html`) is bumped
+by **0.1 on every commit**. The logic lives in `scripts/bump-version.sh`,
+run by a `pre-commit` hook. Enable it once per clone with:
+
+```
+git config core.hooksPath .githooks
+```
+
+(or copy `.githooks/pre-commit` into `.git/hooks/`). Skip a bump for a
+one-off commit with `git commit --no-verify`.
 
 ## Where things are stored
 

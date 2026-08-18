@@ -1,0 +1,7 @@
+#!/bin/sh
+# Increment the app version by 0.1 on every commit (shown beside the logo).
+# Install once per clone:  git config core.hooksPath .githooks
+# (or copy this file into .git/hooks/pre-commit)
+TOP="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+[ -x "$TOP/scripts/bump-version.sh" ] && "$TOP/scripts/bump-version.sh"
+exit 0
